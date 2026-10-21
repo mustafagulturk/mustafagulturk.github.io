@@ -5,37 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mustafa Gültürk | Yazılım Geliştirici</title>
   <meta name="description" content="Mustafa Gültürk - yeni mezun yazılım geliştirici. Projeler, yetenekler ve iletişim bilgileri.">
+  <meta name="theme-color" content="#0b1120">
+  <meta property="og:title" content="Mustafa Gültürk | Yazılım Geliştirici">
+  <meta property="og:description" content="Yeni mezun yazılım geliştirici. Projelerime ve iletişim bilgilerime göz atın.">
+  <meta property="og:url" content="https://mustafagulturk.github.io">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script>
+    // Tema, sayfa çizilmeden önce uygulanır (yanıp sönmeyi önler)
+    try {
+      const t = localStorage.getItem("tema");
+      if (t) document.documentElement.dataset.theme = t;
+      else if (matchMedia("(prefers-color-scheme: light)").matches) document.documentElement.dataset.theme = "light";
+    } catch (e) {}
+  </script>
 </head>
 <body>
+  <div id="ilerleme" class="progress"></div>
+
   <header class="nav">
     <div class="container nav-inner">
       <a href="#" class="logo">mg<span>.</span></a>
-      <nav>
+      <nav id="menu">
         <a href="#hakkimda">Hakkımda</a>
         <a href="#yetenekler">Yetenekler</a>
         <a href="#projeler">Projeler</a>
+        <a href="#github">GitHub</a>
         <a href="#iletisim">İletişim</a>
       </nav>
-      <button id="tema" class="tema-btn" aria-label="Temayı değiştir">◐</button>
+      <button id="tema" class="icon-btn" aria-label="Temayı değiştir">◐</button>
+      <button id="menu-btn" class="icon-btn menu-btn" aria-label="Menüyü aç" aria-expanded="false">☰</button>
     </div>
   </header>
 
   <main>
     <section class="hero container">
+      <div class="glow" aria-hidden="true"></div>
       <p class="mono">Merhaba, ben</p>
       <h1>Mustafa Gültürk</h1>
-      <h2>Yeni mezun yazılım geliştirici</h2>
+      <h2><span id="yazi" class="typed">Yazılım Geliştirici</span><span class="caret">|</span></h2>
       <p class="lead">
         Kullanıcıların gerçekten işine yarayan web ve mobil uygulamalar geliştiriyorum.
         Temiz kod yazmayı, yeni teknolojiler öğrenmeyi ve fikirleri çalışan ürünlere dönüştürmeyi seviyorum.
       </p>
       <div class="cta">
         <a class="btn btn-primary" href="#projeler">Projelerimi gör</a>
-        <a class="btn" href="https://github.com/mustafagulturk" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn" href="#iletisim">İletişime geç</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong id="stat-repo">–</strong><span>Açık repo</span></div>
+        <div><strong>Gaziantep</strong><span>Konum</span></div>
+        <div><strong class="dot-live">Açık</strong><span>İş fırsatlarına</span></div>
       </div>
     </section>
 
@@ -48,15 +72,38 @@
             kendi projelerimi geliştirerek yazılımın farklı alanlarında deneyim kazandım.
           </p>
           <p>
+            Bir projeye başladığımda sadece çalışmasını değil, okunabilir, sürdürülebilir ve
+            kullanıcı dostu olmasını da önemsiyorum. Takım çalışmasına, geri bildirime ve
+            sürekli öğrenmeye açığım.
+          </p>
+          <p>
             Şu anda junior yazılım geliştirici pozisyonlarında yeni fırsatlar arıyorum.
-            Bu sitede yaptığım projeleri ve kullandığım teknolojileri bulabilirsin.
           </p>
         </div>
         <ul class="facts">
           <li><span>Konum</span>Gaziantep, Türkiye</li>
           <li><span>Durum</span>İş fırsatlarına açık</li>
           <li><span>Odak</span>Web ve mobil geliştirme</li>
+          <li><span>Diller</span>Türkçe, İngilizce</li>
         </ul>
+      </div>
+
+      <div class="timeline">
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
+          <h4>Mezuniyet</h4>
+          <p>Lisans eğitimimi tamamladım ve yazılım geliştirme alanında kariyerime başladım.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
+          <h4>Berber Randevu Uygulaması</h4>
+          <p>Gerçek bir işletme ihtiyacından yola çıkan randevu yönetim uygulamasını geliştirdim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2024</span>
+          <h4>İlk web projem</h4>
+          <p>Memleketim Gaziantep'i tanıtan web sitesiyle web geliştirmeye adım attım.</p>
+        </div>
       </div>
     </section>
 
@@ -64,65 +111,92 @@
       <h3 class="section-title"><span class="mono">02.</span> Yetenekler</h3>
       <div class="skills">
         <div class="skill-group">
+          <div class="skill-icon">&lt;/&gt;</div>
           <h4>Frontend</h4>
-          <ul><li>HTML</li><li>CSS</li><li>JavaScript</li></ul>
+          <ul><li>HTML5</li><li>CSS3</li><li>JavaScript</li><li>Responsive tasarım</li></ul>
         </div>
         <div class="skill-group">
+          <div class="skill-icon">{ }</div>
           <h4>Backend</h4>
           <ul><li>REST API</li><li>SQL</li><li>Veritabanı tasarımı</li></ul>
         </div>
         <div class="skill-group">
+          <div class="skill-icon">⌘</div>
           <h4>Araçlar</h4>
-          <ul><li>Git &amp; GitHub</li><li>VS Code</li><li>Responsive tasarım</li></ul>
+          <ul><li>Git &amp; GitHub</li><li>VS Code</li><li>Terminal</li></ul>
+        </div>
+        <div class="skill-group">
+          <div class="skill-icon">✦</div>
+          <h4>Yetkinlikler</h4>
+          <ul><li>Problem çözme</li><li>Takım çalışması</li><li>Hızlı öğrenme</li></ul>
         </div>
       </div>
     </section>
 
     <section id="projeler" class="container section">
-      <h3 class="section-title"><span class="mono">03.</span> Projeler</h3>
+      <h3 class="section-title"><span class="mono">03.</span> Öne Çıkan Projeler</h3>
       <div class="projects">
         <article class="card">
           <div class="card-top">
             <span class="folder">▣</span>
-            <a href="https://github.com/mustafagulturk/berber-uygulama" target="_blank" rel="noopener" aria-label="GitHub">↗</a>
+            <a href="https://github.com/mustafagulturk/berber-uygulama" target="_blank" rel="noopener" aria-label="Berber uygulaması GitHub">↗</a>
           </div>
           <h4>Berber Randevu Uygulaması</h4>
-          <p>Berber dükkanları için randevu alma ve yönetim uygulaması. Müşteriler uygun saatleri görüp randevu oluşturabilir.</p>
+          <p>Berber dükkanları için randevu alma ve yönetim uygulaması. Müşteriler uygun saatleri görüp randevu oluşturabilir, işletme de günlük programını tek yerden takip eder.</p>
           <ul class="tags"><li>Randevu yönetimi</li><li>Mobil</li></ul>
         </article>
 
         <article class="card">
           <div class="card-top">
             <span class="folder">▣</span>
-            <a href="https://github.com/mustafagulturk/Gazianteptanitim" target="_blank" rel="noopener" aria-label="GitHub">↗</a>
+            <a href="https://github.com/mustafagulturk/Gazianteptanitim" target="_blank" rel="noopener" aria-label="Gaziantep tanıtım GitHub">↗</a>
           </div>
           <h4>Gaziantep Tanıtım Sitesi</h4>
           <p>Gaziantep'in tarihi yerlerini, mutfağını ve kültürünü tanıtan bir web sitesi.</p>
           <ul class="tags"><li>HTML</li><li>CSS</li></ul>
         </article>
 
-        <article class="card card-soon">
-          <div class="card-top"><span class="folder">▣</span></div>
-          <h4>Yakında</h4>
-          <p>Yeni projeler üzerinde çalışıyorum. Gelişmeleri GitHub profilimden takip edebilirsin.</p>
-          <ul class="tags"><li>Devam ediyor</li></ul>
+        <article class="card">
+          <div class="card-top">
+            <span class="folder">▣</span>
+            <a href="https://github.com/mustafagulturk/mustafagulturk.github.io" target="_blank" rel="noopener" aria-label="Portfolyo GitHub">↗</a>
+          </div>
+          <h4>Kişisel Portfolyo</h4>
+          <p>Şu an baktığın site. Framework kullanmadan yazıldı. Açık/koyu tema, animasyonlar ve GitHub API'den canlı veri çekme özellikleri var.</p>
+          <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li><li>GitHub API</li></ul>
         </article>
       </div>
     </section>
 
+    <section id="github" class="container section">
+      <h3 class="section-title"><span class="mono">04.</span> GitHub'daki Son Çalışmalarım</h3>
+      <p class="section-sub">Bu liste GitHub API'den canlı olarak çekilir.</p>
+      <div id="repolar" class="repos">
+        <div class="repo skeleton"></div><div class="repo skeleton"></div><div class="repo skeleton"></div>
+      </div>
+      <div class="center">
+        <a class="btn" href="https://github.com/mustafagulturk?tab=repositories" target="_blank" rel="noopener">Tüm repoları gör</a>
+      </div>
+    </section>
+
     <section id="iletisim" class="container section contact">
-      <h3 class="section-title"><span class="mono">04.</span> İletişim</h3>
-      <p>Bir iş fırsatı, proje ya da sadece merhaba demek için bana yazabilirsin.</p>
+      <h3 class="section-title"><span class="mono">05.</span> İletişim</h3>
+      <h4 class="contact-big">Birlikte çalışalım</h4>
+      <p>Bir iş fırsatı, proje ya da sadece merhaba demek için bana yazabilirsin. En kısa sürede dönüş yaparım.</p>
       <div class="cta">
         <a class="btn btn-primary" href="mailto:mustafagulturk153@gmail.com">E-posta gönder</a>
+        <button id="kopyala" class="btn" type="button">E-postayı kopyala</button>
         <a class="btn" href="https://github.com/mustafagulturk" target="_blank" rel="noopener">GitHub</a>
       </div>
     </section>
   </main>
 
   <footer class="container footer">
-    <p>© <span id="yil"></span> Mustafa Gültürk</p>
+    <p>© <span id="yil"></span> Mustafa Gültürk · Sıfırdan HTML, CSS ve JavaScript ile yazıldı</p>
   </footer>
+
+  <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
+  <div id="bildirim" class="toast" role="status"></div>
 
   <script src="script.js"></script>
 </body>
