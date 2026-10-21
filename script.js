@@ -313,3 +313,77 @@ if (!azHareket) parcaciklar();
 diliUygula();
 repolariYukle();
 kaydirma();
+
+// Öne çıkan proje: görünürken videoyu oynat, tıklayınca önizleme penceresini aç
+const EKRANLAR = [
+  ["musteri-menu", "Müşteri menüsü: kategoriler, arama ve etiketler", "Customer menu: categories, search and tags"],
+  ["sepet", "Sepet ve sipariş notu", "Cart and order note"],
+  ["siparis-takip", "Canlı sipariş takibi", "Live order tracking"],
+  ["degerlendirme", "Teslimden sonra değerlendirme", "Review after delivery"],
+  ["mutfak-cagri", "Mutfak paneli ve garson / hesap çağrıları", "Kitchen board with waiter and bill requests"],
+  ["yonetim", "Yönetim paneli: ciro, haftalık grafik, çok satanlar", "Admin dashboard: revenue, weekly chart, best sellers"],
+  ["masalar", "Masalar ve QR kodları", "Tables and QR codes"],
+  ["menu-yonetimi", "Menü yönetimi", "Menu management"],
+];
+const onizleme = $("#onizleme");
+const onizlemeVideo = $("#onizleme-video");
+const kartMedya = $(".featured-media");
+const kartVideo = kartMedya.querySelector("video");
+let galeriSira = 0;
+
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+  new IntersectionObserver(([g]) => {
+    if (g.isIntersecting) kartVideo.play().then(() => kartMedya.classList.add("oynuyor")).catch(() => {});
+    else kartVideo.pause();
+  }, { threshold: 0.4 }).observe(kartMedya);
+}
+
+const noktalar = $("#galeri-noktalar");
+EKRANLAR.forEach(([ad], i) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.innerHTML = `<img src="assets/qr/${ad}.webp" alt="" loading="lazy">`;
+  b.addEventListener("click", () => galeriGoster(i));
+  noktalar.append(b);
+});
+
+function galeriGoster(i) {
+  galeriSira = (i + EKRANLAR.length) % EKRANLAR.length;
+  const [ad, tr, en] = EKRANLAR[galeriSira];
+  const resim = $("#galeri-resim");
+  resim.src = `assets/qr/${ad}.webp`;
+  resim.alt = dil === "en" ? en : tr;
+  resim.style.animation = "none";
+  resim.offsetWidth;
+  resim.style.animation = "";
+  $("#galeri-yazi").textContent = `${galeriSira + 1} / ${EKRANLAR.length} · ${resim.alt}`;
+  noktalar.querySelectorAll("button").forEach((b, j) => b.setAttribute("aria-current", j === galeriSira));
+}
+
+function sekmeAc(ad) {
+  onizleme.querySelectorAll("[data-sekme]").forEach((b) => b.setAttribute("aria-selected", b.dataset.sekme === ad));
+  onizleme.querySelectorAll("[data-panel]").forEach((p) => (p.hidden = p.dataset.panel !== ad));
+  if (ad === "video") onizlemeVideo.play().catch(() => {});
+  else {
+    onizlemeVideo.pause();
+    galeriGoster(galeriSira);
+  }
+}
+
+document.querySelectorAll("[data-onizle]").forEach((b) =>
+  b.addEventListener("click", () => {
+    onizleme.showModal();
+    sekmeAc(b.dataset.onizle);
+  })
+);
+onizleme.querySelectorAll("[data-sekme]").forEach((b) => b.addEventListener("click", () => sekmeAc(b.dataset.sekme)));
+$(".gal-prev").addEventListener("click", () => galeriGoster(galeriSira - 1));
+$(".gal-next").addEventListener("click", () => galeriGoster(galeriSira + 1));
+$("[data-kapat]").addEventListener("click", () => onizleme.close());
+onizleme.addEventListener("click", (e) => { if (e.target === onizleme) onizleme.close(); });
+onizleme.addEventListener("close", () => onizlemeVideo.pause());
+onizleme.addEventListener("keydown", (e) => {
+  if ($('[data-panel="galeri"]').hidden) return;
+  if (e.key === "ArrowRight") galeriGoster(galeriSira + 1);
+  if (e.key === "ArrowLeft") galeriGoster(galeriSira - 1);
+});

@@ -126,6 +126,11 @@
         </div>
         <div class="tl-item">
           <span class="tl-date">2026</span>
+          <h4 data-i18n="qr.tlt">QR Sipariş Sistemi</h4>
+          <p data-i18n="qr.tlp">Next.js, TypeScript ve PostgreSQL ile canlı mutfak paneli olan full-stack bir restoran sipariş sistemi geliştirdim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
           <h4 data-i18n="p.berber">Berber Randevu Uygulaması</h4>
           <p data-i18n="tl.2p">Gerçek bir işletme ihtiyacından yola çıkan randevu yönetim uygulamasını geliştirdim.</p>
         </div>
@@ -143,17 +148,17 @@
         <div class="skill-group spot">
           <div class="skill-icon">&lt;/&gt;</div>
           <h4>Frontend</h4>
-          <ul><li>HTML5</li><li>CSS3</li><li>JavaScript</li><li data-i18n="sk.responsive">Responsive tasarım</li></ul>
+          <ul><li>HTML5</li><li>CSS3</li><li>JavaScript</li><li>TypeScript</li><li>React / Next.js</li><li>Tailwind CSS</li><li data-i18n="sk.responsive">Responsive tasarım</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">{ }</div>
           <h4>Backend</h4>
-          <ul><li>REST API</li><li>SQL</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
+          <ul><li>Node.js</li><li>REST API</li><li>PostgreSQL</li><li>Drizzle ORM</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">⌘</div>
           <h4 data-i18n="sk.tools">Araçlar</h4>
-          <ul><li>Git &amp; GitHub</li><li>VS Code</li><li>Terminal</li></ul>
+          <ul><li>Git &amp; GitHub</li><li>GitHub Actions</li><li>Docker</li><li>Vitest</li><li>VS Code</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">✦</div>
@@ -165,6 +170,29 @@
 
     <section id="projeler" class="container section">
       <h3 class="section-title"><span class="mono">03.</span> <span data-i18n="p.title">Öne Çıkan Projeler</span></h3>
+      <article class="featured spot">
+        <button type="button" class="featured-media" data-onizle="video" aria-label="QR Sipariş demo videosunu aç">
+          <video poster="assets/qr/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/qr/demo.mp4" type="video/mp4"><source src="assets/qr/demo.webm" type="video/webm"></video>
+          <span class="play" aria-hidden="true">▶</span>
+          <span class="live-badge"><i></i> <span data-i18n="qr.live">Canlı akış</span></span>
+        </button>
+        <div class="featured-body">
+          <p class="mono" data-i18n="qr.kicker">Öne çıkan proje</p>
+          <h4 data-i18n="qr.title">QR Sipariş · Restoran Sipariş Sistemi</h4>
+          <p data-i18n="qr.desc">Müşteri masadaki QR kodu okutup menüden sipariş verir, sipariş anında mutfak ekranına düşer ve durumu canlı olarak müşteriye geri döner. Garson çağırma, hesap isteme, değerlendirme, menü ve masa yönetimi, satış raporları ve CSV dışa aktarma içerir.</p>
+          <ul class="featured-points">
+            <li data-i18n="qr.f1">Server-Sent Events ile gerçek zamanlı mutfak paneli</li>
+            <li data-i18n="qr.f2">Rol tabanlı giriş (yönetici / mutfak), JWT oturum</li>
+            <li data-i18n="qr.f3">Gerçek PostgreSQL üzerinde entegrasyon testleri ve CI</li>
+          </ul>
+          <ul class="tags"><li>Next.js 15</li><li>TypeScript</li><li>PostgreSQL</li><li>Drizzle ORM</li><li>Tailwind</li><li>SSE</li><li>Vitest</li><li>Docker</li></ul>
+          <div class="featured-actions">
+            <button type="button" class="btn btn-primary" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <a class="btn" href="https://github.com/mustafagulturk/qr-siparis" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+          </div>
+        </div>
+      </article>
+
       <div class="projects stagger">
         <article class="card spot tilt">
           <div class="card-top">
@@ -227,6 +255,32 @@
       </div>
     </section>
   </main>
+
+  <dialog id="onizleme" class="preview" aria-labelledby="onizleme-baslik">
+    <div class="preview-head">
+      <h4 id="onizleme-baslik">QR Sipariş</h4>
+      <div class="preview-tabs" role="tablist">
+        <button type="button" role="tab" data-sekme="video" aria-selected="true" data-i18n="qr.tab.video">Demo video</button>
+        <button type="button" role="tab" data-sekme="galeri" aria-selected="false" data-i18n="qr.tab.gallery">Ekranlar</button>
+      </div>
+      <button type="button" class="icon-btn preview-close" data-kapat aria-label="Kapat">✕</button>
+    </div>
+    <div class="preview-pane" data-panel="video">
+      <video id="onizleme-video" poster="assets/qr/poster.webp" controls muted loop playsinline preload="none"><source src="assets/qr/demo.mp4" type="video/mp4"><source src="assets/qr/demo.webm" type="video/webm"></video>
+      <p class="preview-cap" data-i18n="qr.cap.video">Solda müşteri telefonu, sağda mutfak ekranı. Sipariş verilir, mutfakta anında belirir, durum değişikliği müşteriye canlı yansır ve garson çağrısı mutfağa düşer.</p>
+    </div>
+    <div class="preview-pane" data-panel="galeri" hidden>
+      <div class="gallery">
+        <button type="button" class="gal-prev icon-btn" aria-label="Önceki">‹</button>
+        <figure>
+          <img id="galeri-resim" alt="" decoding="async">
+          <figcaption id="galeri-yazi"></figcaption>
+        </figure>
+        <button type="button" class="gal-next icon-btn" aria-label="Sonraki">›</button>
+      </div>
+      <div id="galeri-noktalar" class="gal-thumbs"></div>
+    </div>
+  </dialog>
 
   <footer class="container footer">
     <p>© <span id="yil"></span> Mustafa Gültürk · <span data-i18n="footer">Sıfırdan HTML, CSS ve JavaScript ile yazıldı</span></p>
