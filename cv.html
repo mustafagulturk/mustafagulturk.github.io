@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mustafa Gültürk | CV</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --accent: #0369a1; --text: #0f172a; --muted: #475569; --border: #e2e8f0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Inter", system-ui, sans-serif; background: #e2e8f0; color: var(--text); line-height: 1.5; font-size: 14px; }
+    .toolbar { display: flex; justify-content: center; gap: 12px; padding: 16px; }
+    .toolbar a, .toolbar button {
+      font: inherit; font-weight: 500; padding: 10px 18px; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--accent); color: var(--accent); background: #fff; text-decoration: none;
+    }
+    .toolbar button { background: var(--accent); color: #fff; }
+    .page { background: #fff; width: min(210mm, 100% - 32px); margin: 0 auto 32px; padding: 18mm 16mm; box-shadow: 0 10px 30px #0f172a22; }
+    header { border-bottom: 3px solid var(--accent); padding-bottom: 14px; margin-bottom: 18px; }
+    h1 { font-size: 28px; }
+    .role { color: var(--accent); font-weight: 600; font-size: 16px; }
+    .contact { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; color: var(--muted); }
+    .contact a { color: inherit; text-decoration: none; }
+    .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 28px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin: 18px 0 8px; }
+    h2:first-child { margin-top: 0; }
+    .item { margin-bottom: 12px; }
+    .item h3 { font-size: 14px; }
+    .item .meta { color: var(--muted); font-size: 12px; }
+    .item ul { padding-left: 18px; margin-top: 4px; }
+    p, li { color: #1e293b; }
+    .side ul { list-style: none; display: grid; gap: 4px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tags span { border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: 12px; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .page { padding: 24px 18px; } }
+    @media print {
+      @page { size: A4; margin: 0; }
+      body { background: #fff; }
+      .toolbar { display: none; }
+      .page { box-shadow: none; margin: 0; width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <a href="./">← Siteye dön</a>
+    <button type="button" onclick="print()">PDF olarak indir / Yazdır</button>
+  </div>
+
+  <article class="page">
+    <header>
+      <h1>Mustafa Gültürk</h1>
+      <div class="role">Junior Yazılım Geliştirici</div>
+      <div class="contact">
+        <span>Gaziantep, Türkiye</span>
+        <a href="mailto:mustafagulturk153@gmail.com">mustafagulturk153@gmail.com</a>
+        <a href="https://github.com/mustafagulturk">github.com/mustafagulturk</a>
+        <a href="https://mustafagulturk.github.io">mustafagulturk.github.io</a>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div>
+        <h2>Profil</h2>
+        <p>
+          Web ve mobil uygulama geliştirmeye odaklanan yeni mezun yazılım geliştirici.
+          Okunabilir ve sürdürülebilir kod yazmaya önem veririm. Kendi projelerimle öğrenmeye
+          devam ediyorum ve junior pozisyonlarda bir ekibe katkı sağlamak istiyorum.
+        </p>
+
+        <h2>Projeler</h2>
+        <div class="item">
+          <h3>Berber Randevu Uygulaması</h3>
+          <div class="meta">2026 · github.com/mustafagulturk/berber-uygulama</div>
+          <ul>
+            <li>Berber dükkanları için randevu alma ve yönetim uygulaması geliştirdim.</li>
+            <li>Müşterilerin uygun saatleri görüp randevu oluşturabildiği bir akış tasarladım.</li>
+          </ul>
+        </div>
+        <div class="item">
+          <h3>Kişisel Portfolyo Sitesi</h3>
+          <div class="meta">2026 · mustafagulturk.github.io</div>
+          <ul>
+            <li>Framework kullanmadan HTML, CSS ve JavaScript ile sıfırdan geliştirdim.</li>
+            <li>GitHub REST API ile repoları ve dil istatistiklerini canlı olarak listeledim.</li>
+            <li>Türkçe/İngilizce dil desteği, açık/koyu tema ve erişilebilirlik özellikleri ekledim.</li>
+          </ul>
+        </div>
+        <div class="item">
+          <h3>Gaziantep Tanıtım Sitesi</h3>
+          <div class="meta">2024 · github.com/mustafagulturk/Gazianteptanitim</div>
+          <ul>
+            <li>Şehrin tarihi yerlerini, mutfağını ve kültürünü tanıtan bir web sitesi hazırladım.</li>
+          </ul>
+        </div>
+
+        <h2>Eğitim</h2>
+        <div class="item">
+          <h3>Lisans Derecesi</h3>
+          <div class="meta">Mezuniyet: 2026</div>
+        </div>
+      </div>
+
+      <aside class="side">
+        <h2>Teknik Beceriler</h2>
+        <div class="tags">
+          <span>HTML5</span><span>CSS3</span><span>JavaScript</span><span>REST API</span>
+          <span>SQL</span><span>Git</span><span>GitHub</span><span>Responsive tasarım</span>
+        </div>
+
+        <h2>Yetkinlikler</h2>
+        <ul>
+          <li>Problem çözme</li>
+          <li>Takım çalışması</li>
+          <li>Hızlı öğrenme</li>
+          <li>Geri bildirime açıklık</li>
+        </ul>
+
+        <h2>Diller</h2>
+        <ul>
+          <li>Türkçe: Ana dil</li>
+          <li>İngilizce</li>
+        </ul>
+      </aside>
+    </div>
+  </article>
+</body>
+</html>

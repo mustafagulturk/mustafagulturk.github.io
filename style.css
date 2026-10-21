@@ -208,3 +208,38 @@ button.btn { background: none; font: inherit; cursor: pointer; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
 }
+
+/* --- 3. tur --- */
+.lang-btn { font-family: "JetBrains Mono", monospace; font-size: .8rem; font-weight: 700; margin-left: 8px; }
+.facts b { font-weight: 500; }
+
+.scroll-hint {
+  position: absolute; bottom: 24px; left: 50%; width: 26px; height: 42px;
+  border: 2px solid var(--muted); border-radius: 14px; transform: translateX(-50%);
+}
+.scroll-hint span {
+  position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px;
+  border-radius: 2px; background: var(--accent); animation: wheel 1.6s infinite;
+}
+@keyframes wheel { to { transform: translateY(14px); opacity: 0; } }
+
+.spot { position: relative; isolation: isolate; }
+.spot::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; opacity: 0;
+  background: radial-gradient(300px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%);
+  transition: opacity .3s;
+}
+.spot:hover::before { opacity: 1; }
+
+.lang-stats { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.lang-stats h4 { margin-bottom: 12px; }
+.lang-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--border); }
+.lang-bar span { height: 100%; transition: width .8s; }
+.lang-list { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 14px; font-size: .9rem; color: var(--muted); }
+.lang-list b { color: var(--text); font-weight: 600; }
+
+@media (max-width: 700px) {
+  .scroll-hint { display: none; }
+  .lang-btn { margin-left: auto; }
+  #tema { margin-left: 0; }
+}

@@ -13,9 +13,13 @@ Kişisel portfolyo sitem. Projelerimi, yeteneklerimi ve iletişim bilgilerimi i�
 
 ## Özellikler
 
+- **Türkçe / İngilizce dil desteği**: Tek tıkla dil değişir, seçim hatırlanır.
+- **Yazdırılabilir CV sayfası** (`cv.html`): Tarayıcıdan tek tıkla A4 PDF olarak indirilebilir.
+- **Dil istatistikleri**: Tüm repolardaki kod dağılımı GitHub API ile hesaplanıp grafikle gösterilir.
 - **GitHub API entegrasyonu**: Son güncellenen repolar dil, yıldız ve tarih bilgisiyle canlı olarak listelenir.
 - **Açık / koyu tema**: Sistem tercihine uyar, seçim tarayıcıda saklanır ve sayfa açılırken yanıp sönme olmaz.
 - **Daktilo efekti** ve ekrana giren bölümler için yumuşak animasyonlar.
+- Kartlarda fareyi takip eden ışık efekti.
 - **Kaydırma ilerleme çubuğu**, aktif menü vurgusu ve yukarı çık butonu.
 - **Mobil uyumlu**: Küçük ekranlarda açılır menü var.
 - **Erişilebilirlik**: `prefers-reduced-motion` desteği ve ARIA etiketleri.
