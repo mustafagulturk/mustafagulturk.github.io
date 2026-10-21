@@ -243,3 +243,71 @@ button.btn { background: none; font: inherit; cursor: pointer; }
   .lang-btn { margin-left: auto; }
   #tema { margin-left: 0; }
 }
+
+/* --- 4. tur: tema geçişi ve efektler --- */
+
+/* Dairesel tema geçişi (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { z-index: 9999; }
+.tema-gecis * { transition: none !important; }
+
+/* Güneş ↔ ay ikonu */
+.theme-toggle { display: grid; place-items: center; }
+.theme-toggle svg { overflow: visible; }
+.gunes-merkez { transition: r .4s cubic-bezier(.5, 1.25, .75, 1.25); transform-origin: center; }
+.ay-kesik { transition: cx .4s ease, cy .4s ease; }
+.gunes-isinlar { transform-origin: center; transition: transform .5s cubic-bezier(.5, 1.5, .75, 1.25), opacity .3s; }
+:root:not([data-theme="light"]) .gunes-merkez { r: 9px; }
+:root:not([data-theme="light"]) .ay-kesik { cx: 17px; cy: 7px; }
+:root:not([data-theme="light"]) .gunes-isinlar { transform: rotate(-90deg) scale(.4); opacity: 0; }
+
+/* Erişilebilirlik */
+.skip-link {
+  position: fixed; left: 16px; top: -60px; z-index: 50; padding: 10px 16px; border-radius: 8px;
+  background: var(--accent); color: var(--bg); font-weight: 600; transition: top .2s;
+}
+.skip-link:focus { top: 12px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+
+/* Kaydırınca gizlenen menü */
+.nav { transition: transform .3s; }
+.nav.gizli { transform: translateY(-100%); }
+
+/* Hero arka plan parçacıkları */
+.particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+.hero > :not(canvas):not(.glow):not(.scroll-hint) { animation: yukselen .8s both; }
+.hero > :nth-child(3) { animation-delay: .05s; }
+.hero > :nth-child(4) { animation-delay: .15s; }
+.hero > :nth-child(5) { animation-delay: .25s; }
+.hero > :nth-child(6) { animation-delay: .35s; }
+.hero > :nth-child(7) { animation-delay: .45s; }
+.hero > :nth-child(8) { animation-delay: .55s; }
+.hero > :nth-child(9) { animation-delay: .65s; }
+@keyframes yukselen { from { opacity: 0; transform: translateY(24px); } }
+
+/* Sosyal ikonlar */
+.socials { display: flex; gap: 18px; margin-top: 24px; }
+.socials a { color: var(--muted); transition: color .2s, transform .2s; }
+.socials a:hover { color: var(--accent); transform: translateY(-3px); }
+
+/* Kartlar sırayla belirir */
+.reveal:not(.visible) .stagger > * { opacity: 0; }
+.reveal.visible .stagger > * { animation: yukselen .6s backwards; animation-delay: calc(var(--i, 0) * 90ms + .1s); }
+
+/* 3D eğim */
+.tilt { transform-style: preserve-3d; will-change: transform; }
+.card.tilt:hover { transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px); }
+
+/* Başlık altındaki çizgi kayarak gelir */
+.section-title::after { transform: scaleX(0); transform-origin: left; transition: transform .8s .2s; }
+.reveal.visible .section-title::after { transform: scaleX(1); }
+
+/* Butonlarda parlama */
+.btn { position: relative; overflow: hidden; }
+.btn::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .25), transparent 70%);
+}
+.btn:hover::after { transform: translateX(120%); transition: transform .6s; }

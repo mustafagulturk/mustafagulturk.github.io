@@ -1,5 +1,6 @@
 // İngilizce çeviriler. Türkçe metinler doğrudan HTML'de durur.
 const CEVIRI_EN = {
+  "skip": "Skip to content",
   "nav.about": "About",
   "nav.skills": "Skills",
   "nav.projects": "Projects",

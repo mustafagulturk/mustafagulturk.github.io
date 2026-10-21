@@ -1,16 +1,33 @@
 const kok = document.documentElement;
 const $ = (s) => document.querySelector(s);
 
-// Tema değiştirme
+const azHareket = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Tema değiştirme: butondan başlayıp tüm ekranı kaplayan dairesel geçiş
 const temaBtn = $("#tema");
-const temaIkonu = () => (temaBtn.textContent = kok.dataset.theme === "light" ? "☾" : "☀");
-temaBtn.addEventListener("click", () => {
+function temayiDegistir() {
   const yeni = kok.dataset.theme === "light" ? "dark" : "light";
   kok.dataset.theme = yeni;
   try { localStorage.setItem("tema", yeni); } catch (e) {}
-  temaIkonu();
+}
+temaBtn.addEventListener("click", async () => {
+  if (!document.startViewTransition || azHareket) return temayiDegistir();
+
+  const r = temaBtn.getBoundingClientRect();
+  const x = r.left + r.width / 2;
+  const y = r.top + r.height / 2;
+  const yaricap = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+
+  kok.classList.add("tema-gecis");
+  const gecis = document.startViewTransition(temayiDegistir);
+  await gecis.ready;
+  kok.animate(
+    { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${yaricap}px at ${x}px ${y}px)`] },
+    { duration: 650, easing: "cubic-bezier(.65, 0, .35, 1)", pseudoElement: "::view-transition-new(root)" }
+  );
+  await gecis.finished;
+  kok.classList.remove("tema-gecis");
 });
-temaIkonu();
 
 // Mobil menü
 const menu = $("#menu");
@@ -71,13 +88,19 @@ function daktilo() {
   }
   setTimeout(daktilo, bekle);
 }
-if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setTimeout(daktilo, 2000);
+if (!azHareket) setTimeout(daktilo, 2000);
 
 // Kaydırma: ilerleme çubuğu, yukarı butonu, aktif menü bağlantısı
 const ilerleme = $("#ilerleme");
 const yukari = $("#yukari");
 const bolumler = [...document.querySelectorAll("main section[id]")];
+const nav = $(".nav");
+let sonY = scrollY;
 function kaydirma() {
+  // Aşağı kaydırırken menüyü gizle, yukarı kaydırınca göster
+  if (!menu.classList.contains("open")) nav.classList.toggle("gizli", scrollY > 300 && scrollY > sonY);
+  sonY = scrollY;
+
   const max = document.body.scrollHeight - innerHeight;
   ilerleme.style.width = `${max > 0 ? (scrollY / max) * 100 : 0}%`;
   yukari.classList.toggle("show", scrollY > 600);
@@ -103,6 +126,10 @@ bolumler.forEach((s) => {
   s.classList.add("reveal");
   gozlemci.observe(s);
 });
+
+const siraVer = () =>
+  document.querySelectorAll(".stagger").forEach((k) => [...k.children].forEach((c, i) => c.style.setProperty("--i", i)));
+siraVer();
 
 // E-postayı kopyala
 const bildirim = $("#bildirim");
@@ -143,6 +170,7 @@ function repolariCiz() {
         <span>${new Date(r.pushed_at).toLocaleDateString(m.tarih, { month: "short", year: "numeric" })}</span>
       </div>
     </a>`).join("");
+  siraVer();
 }
 
 // Tüm repolardaki dil kullanımını (byte olarak) toplayıp çubuk grafik çizer
@@ -171,7 +199,7 @@ async function repolariYukle() {
     const res = await fetch("https://api.github.com/users/mustafagulturk/repos?sort=updated&per_page=30");
     if (!res.ok) throw new Error(res.status);
     repoVerisi = (await res.json()).filter((r) => !r.fork);
-    $("#stat-repo").textContent = repoVerisi.length;
+    sayac($("#stat-repo"), repoVerisi.length);
     repolariCiz();
     dilleriYukle(repoVerisi);
   } catch (e) {
@@ -189,6 +217,98 @@ document.addEventListener("pointermove", (e) => {
   kart.style.setProperty("--mx", `${e.clientX - r.left}px`);
   kart.style.setProperty("--my", `${e.clientY - r.top}px`);
 });
+
+// Sayıyı 0'dan hedefe doğru sayarak gösterir
+function sayac(el, hedef) {
+  if (azHareket) return (el.textContent = hedef);
+  const bas = performance.now();
+  const adim = (t) => {
+    const k = Math.min((t - bas) / 1000, 1);
+    el.textContent = Math.round(hedef * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(adim);
+  };
+  requestAnimationFrame(adim);
+}
+
+// Proje kartlarında fareye göre 3D eğim
+document.querySelectorAll(".tilt").forEach((kart) => {
+  kart.addEventListener("pointermove", (e) => {
+    const r = kart.getBoundingClientRect();
+    kart.style.setProperty("--ry", `${((e.clientX - r.left) / r.width - 0.5) * 10}deg`);
+    kart.style.setProperty("--rx", `${((e.clientY - r.top) / r.height - 0.5) * -10}deg`);
+  });
+  kart.addEventListener("pointerleave", () => {
+    kart.style.removeProperty("--rx");
+    kart.style.removeProperty("--ry");
+  });
+});
+
+// Hero arka planında birbirine bağlanan parçacıklar
+function parcaciklar() {
+  const tuval = $("#parcacik");
+  const ctx = tuval.getContext("2d");
+  const fare = { x: -999, y: -999 };
+  let noktalar = [];
+  let gorunur = true;
+
+  function boyutla() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    tuval.width = tuval.offsetWidth * dpr;
+    tuval.height = tuval.offsetHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const adet = Math.min(70, Math.floor((tuval.offsetWidth * tuval.offsetHeight) / 14000));
+    noktalar = Array.from({ length: adet }, () => ({
+      x: Math.random() * tuval.offsetWidth,
+      y: Math.random() * tuval.offsetHeight,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+    }));
+  }
+
+  function ciz() {
+    if (!gorunur) return;
+    const w = tuval.offsetWidth, h = tuval.offsetHeight;
+    const renk = getComputedStyle(kok).getPropertyValue("--accent").trim();
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = ctx.strokeStyle = renk;
+    for (const n of noktalar) {
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > w) n.vx *= -1;
+      if (n.y < 0 || n.y > h) n.vy *= -1;
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.arc(n.x, n.y, 1.6, 0, Math.PI * 2); ctx.fill();
+    }
+    const hepsi = [...noktalar, fare];
+    for (let i = 0; i < hepsi.length; i++) {
+      for (let j = i + 1; j < hepsi.length; j++) {
+        const d = Math.hypot(hepsi[i].x - hepsi[j].x, hepsi[i].y - hepsi[j].y);
+        if (d < 120) {
+          ctx.globalAlpha = (1 - d / 120) * 0.25;
+          ctx.beginPath(); ctx.moveTo(hepsi[i].x, hepsi[i].y); ctx.lineTo(hepsi[j].x, hepsi[j].y); ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(ciz);
+  }
+
+  tuval.parentElement.addEventListener("pointermove", (e) => {
+    const r = tuval.getBoundingClientRect();
+    fare.x = e.clientX - r.left;
+    fare.y = e.clientY - r.top;
+  });
+  tuval.parentElement.addEventListener("pointerleave", () => (fare.x = fare.y = -999));
+  addEventListener("resize", boyutla);
+  // Hero ekrandan çıkınca animasyonu durdur
+  new IntersectionObserver(([g]) => {
+    const once = gorunur;
+    gorunur = g.isIntersecting;
+    if (gorunur && !once) requestAnimationFrame(ciz);
+  }).observe(tuval);
+
+  boyutla();
+  requestAnimationFrame(ciz);
+}
+if (!azHareket) parcaciklar();
 
 diliUygula();
 repolariYukle();

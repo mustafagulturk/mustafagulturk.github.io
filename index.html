@@ -10,6 +10,9 @@
   <meta property="og:description" content="Yeni mezun yazılım geliştirici. Projelerime ve iletişim bilgilerime göz atın.">
   <meta property="og:url" content="https://mustafagulturk.github.io">
   <meta property="og:type" content="website">
+  <meta property="og:image" content="https://mustafagulturk.github.io/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://mustafagulturk.github.io/">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,6 +28,7 @@
   </script>
 </head>
 <body>
+  <a class="skip-link" href="#hakkimda" data-i18n="skip">İçeriğe geç</a>
   <div id="ilerleme" class="progress"></div>
 
   <header class="nav">
@@ -38,13 +42,25 @@
         <a href="#iletisim" data-i18n="nav.contact">İletişim</a>
       </nav>
       <button id="dil" class="icon-btn lang-btn" aria-label="Dili değiştir">EN</button>
-      <button id="tema" class="icon-btn" aria-label="Temayı değiştir">◐</button>
+      <button id="tema" class="icon-btn theme-toggle" aria-label="Temayı değiştir">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <mask id="ay-maske"><rect width="24" height="24" fill="#fff"/><circle class="ay-kesik" cx="24" cy="10" r="6" fill="#000"/></mask>
+          <circle class="gunes-merkez" cx="12" cy="12" r="5" mask="url(#ay-maske)" fill="currentColor"/>
+          <g class="gunes-isinlar" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>
+          </g>
+        </svg>
+      </button>
       <button id="menu-btn" class="icon-btn menu-btn" aria-label="Menüyü aç" aria-expanded="false">☰</button>
     </div>
   </header>
 
-  <main>
+  <main id="icerik">
     <section class="hero container">
+      <canvas id="parcacik" class="particles" aria-hidden="true"></canvas>
       <div class="glow" aria-hidden="true"></div>
       <p class="mono" data-i18n="hero.hi">Merhaba, ben</p>
       <h1>Mustafa Gültürk</h1>
@@ -57,6 +73,17 @@
         <a class="btn btn-primary" href="#projeler" data-i18n="hero.cta1">Projelerimi gör</a>
         <a class="btn" href="cv.html" data-i18n="hero.cv">CV'mi görüntüle</a>
         <a class="btn" href="#iletisim" data-i18n="hero.cta2">İletişime geç</a>
+      </div>
+      <div class="socials">
+        <a href="https://github.com/mustafagulturk" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z"/></svg>
+        </a>
+        <a href="mailto:mustafagulturk153@gmail.com" aria-label="E-posta">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+        </a>
+        <a href="cv.html" aria-label="CV">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+        </a>
       </div>
       <div class="hero-stats">
         <div><strong id="stat-repo">–</strong><span data-i18n="stat.repos">Açık repo</span></div>
@@ -91,7 +118,7 @@
         </ul>
       </div>
 
-      <div class="timeline">
+      <div class="timeline stagger">
         <div class="tl-item">
           <span class="tl-date">2026</span>
           <h4 data-i18n="tl.1t">Mezuniyet</h4>
@@ -112,7 +139,7 @@
 
     <section id="yetenekler" class="container section">
       <h3 class="section-title"><span class="mono">02.</span> <span data-i18n="nav.skills">Yetenekler</span></h3>
-      <div class="skills">
+      <div class="skills stagger">
         <div class="skill-group spot">
           <div class="skill-icon">&lt;/&gt;</div>
           <h4>Frontend</h4>
@@ -138,8 +165,8 @@
 
     <section id="projeler" class="container section">
       <h3 class="section-title"><span class="mono">03.</span> <span data-i18n="p.title">Öne Çıkan Projeler</span></h3>
-      <div class="projects">
-        <article class="card spot">
+      <div class="projects stagger">
+        <article class="card spot tilt">
           <div class="card-top">
             <span class="folder">▣</span>
             <a href="https://github.com/mustafagulturk/berber-uygulama" target="_blank" rel="noopener" aria-label="Berber uygulaması GitHub">↗</a>
@@ -149,7 +176,7 @@
           <ul class="tags"><li data-i18n="p.tag.appt">Randevu yönetimi</li><li data-i18n="p.tag.mobile">Mobil</li></ul>
         </article>
 
-        <article class="card spot">
+        <article class="card spot tilt">
           <div class="card-top">
             <span class="folder">▣</span>
             <a href="https://github.com/mustafagulturk/Gazianteptanitim" target="_blank" rel="noopener" aria-label="Gaziantep tanıtım GitHub">↗</a>
@@ -159,7 +186,7 @@
           <ul class="tags"><li>HTML</li><li>CSS</li></ul>
         </article>
 
-        <article class="card spot">
+        <article class="card spot tilt">
           <div class="card-top">
             <span class="folder">▣</span>
             <a href="https://github.com/mustafagulturk/mustafagulturk.github.io" target="_blank" rel="noopener" aria-label="Portfolyo GitHub">↗</a>
@@ -181,7 +208,7 @@
         <ul id="dil-liste" class="lang-list"></ul>
       </div>
 
-      <div id="repolar" class="repos">
+      <div id="repolar" class="repos stagger">
         <div class="repo skeleton"></div><div class="repo skeleton"></div><div class="repo skeleton"></div>
       </div>
       <div class="center">
