@@ -126,6 +126,11 @@
         </div>
         <div class="tl-item">
           <span class="tl-date">2026</span>
+          <h4 data-i18n="dp.tlt">Depom · Stok Yönetimi</h4>
+          <p data-i18n="dp.tlp">ASP.NET Core, PostgreSQL ve React ile çok depolu, canlı bildirimli bir stok ve satın alma yönetim sistemi geliştirdim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
           <h4 data-i18n="qr.tlt">QR Sipariş Sistemi</h4>
           <p data-i18n="qr.tlp">Next.js, TypeScript ve PostgreSQL ile canlı mutfak paneli olan full-stack bir restoran sipariş sistemi geliştirdim.</p>
         </div>
@@ -153,12 +158,12 @@
         <div class="skill-group spot">
           <div class="skill-icon">{ }</div>
           <h4>Backend</h4>
-          <ul><li>Node.js</li><li>REST API</li><li>PostgreSQL</li><li>Drizzle ORM</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
+          <ul><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js</li><li>REST API</li><li>SignalR</li><li>PostgreSQL</li><li>Drizzle ORM</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">⌘</div>
           <h4 data-i18n="sk.tools">Araçlar</h4>
-          <ul><li>Git &amp; GitHub</li><li>GitHub Actions</li><li>Docker</li><li>Vitest</li><li>VS Code</li></ul>
+          <ul><li>Git &amp; GitHub</li><li>GitHub Actions</li><li>Docker</li><li>Vitest</li><li>xUnit</li><li>VS Code</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">✦</div>
@@ -170,8 +175,32 @@
 
     <section id="projeler" class="container section">
       <h3 class="section-title"><span class="mono">03.</span> <span data-i18n="p.title">Öne Çıkan Projeler</span></h3>
+      <article class="featured featured-ters spot">
+        <button type="button" class="featured-media" data-proje="depom" data-onizle="video" aria-label="Depom demo videosunu aç">
+          <video poster="assets/depom/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/depom/demo.mp4" type="video/mp4"><source src="assets/depom/demo.webm" type="video/webm"></video>
+          <span class="play" aria-hidden="true">▶</span>
+          <span class="live-badge"><i></i> <span data-i18n="dp.live">Canlı bildirim</span></span>
+        </button>
+        <div class="featured-body">
+          <p class="mono" data-i18n="qr.kicker">Öne çıkan proje</p>
+          <h4 data-i18n="dp.title">Depom · Stok ve Depo Yönetimi</h4>
+          <p data-i18n="dp.desc">Birden fazla depoyla çalışan bir toptancı için stok giriş, çıkış ve transferleri, satın alma siparişleri, kısmi mal kabul ve barkodla toplu sayım. Bir personelin yaptığı işlem diğer herkesin ekranına anında düşer, kritik stoktan her tedarikçiye ayrı sipariş tek tıkla hazırlanır.</p>
+          <ul class="featured-points">
+            <li data-i18n="dp.f1">Eşzamanlı isteklerde stoğu eksiye düşürmeyen tek sorguluk atomik güncelleme</li>
+            <li data-i18n="dp.f2">SignalR ile canlı bildirim, Ctrl+K komut paleti, barkodlu etiket yazdırma</li>
+            <li data-i18n="dp.f3">Gerçek PostgreSQL üzerinde 25 xUnit entegrasyon testi, Docker ve CI</li>
+          </ul>
+          <ul class="tags"><li>ASP.NET Core 8</li><li>C#</li><li>EF Core</li><li>PostgreSQL</li><li>SignalR</li><li>React</li><li>TypeScript</li><li>Tailwind</li><li>xUnit</li><li>Docker</li></ul>
+          <div class="featured-actions">
+            <button type="button" class="btn btn-primary" data-proje="depom" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <button type="button" class="btn" data-proje="depom" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button>
+            <a class="btn" href="https://github.com/mustafagulturk/stok-yonetimi" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+          </div>
+        </div>
+      </article>
+
       <article class="featured spot">
-        <button type="button" class="featured-media" data-onizle="video" aria-label="QR Sipariş demo videosunu aç">
+        <button type="button" class="featured-media" data-proje="qr" data-onizle="video" aria-label="QR Sipariş demo videosunu aç">
           <video poster="assets/qr/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/qr/demo.mp4" type="video/mp4"><source src="assets/qr/demo.webm" type="video/webm"></video>
           <span class="play" aria-hidden="true">▶</span>
           <span class="live-badge"><i></i> <span data-i18n="qr.live">Canlı akış</span></span>
@@ -187,7 +216,8 @@
           </ul>
           <ul class="tags"><li>Next.js 15</li><li>TypeScript</li><li>PostgreSQL</li><li>Drizzle ORM</li><li>Tailwind</li><li>SSE</li><li>Vitest</li><li>Docker</li></ul>
           <div class="featured-actions">
-            <button type="button" class="btn btn-primary" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <button type="button" class="btn btn-primary" data-proje="qr" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <button type="button" class="btn" data-proje="qr" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button>
             <a class="btn" href="https://github.com/mustafagulturk/qr-siparis" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
           </div>
         </div>
@@ -266,8 +296,9 @@
       <button type="button" class="icon-btn preview-close" data-kapat aria-label="Kapat">✕</button>
     </div>
     <div class="preview-pane" data-panel="video">
-      <video id="onizleme-video" poster="assets/qr/poster.webp" controls muted loop playsinline preload="none"><source src="assets/qr/demo.mp4" type="video/mp4"><source src="assets/qr/demo.webm" type="video/webm"></video>
-      <p class="preview-cap" data-i18n="qr.cap.video">Solda müşteri telefonu, sağda mutfak ekranı. Sipariş verilir, mutfakta anında belirir, durum değişikliği müşteriye canlı yansır ve garson çağrısı mutfağa düşer.</p>
+      <video id="onizleme-video" controls muted loop playsinline preload="none"></video>
+      <p class="preview-cap" data-cap="depom" data-i18n="dp.cap.video">Sağ üstte başka bir personelin yaptığı çıkış anında bildirim olarak düşer. Ardından komut paleti, kritik stoktan otomatik sipariş, barkod okutarak sayım ve etiket yazdırma.</p>
+      <p class="preview-cap" data-cap="qr" data-i18n="qr.cap.video">Solda müşteri telefonu, sağda mutfak ekranı. Sipariş verilir, mutfakta anında belirir, durum değişikliği müşteriye canlı yansır ve garson çağrısı mutfağa düşer.</p>
     </div>
     <div class="preview-pane" data-panel="galeri" hidden>
       <div class="gallery">

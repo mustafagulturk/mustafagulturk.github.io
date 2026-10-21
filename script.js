@@ -315,7 +315,8 @@ repolariYukle();
 kaydirma();
 
 // Öne çıkan proje: görünürken videoyu oynat, tıklayınca önizleme penceresini aç
-const EKRANLAR = [
+const PROJELER = {
+  qr: { ad: "QR Sipariş", ekranlar: [
   ["musteri-menu", "Müşteri menüsü: kategoriler, arama ve etiketler", "Customer menu: categories, search and tags"],
   ["sepet", "Sepet ve sipariş notu", "Cart and order note"],
   ["siparis-takip", "Canlı sipariş takibi", "Live order tracking"],
@@ -324,34 +325,62 @@ const EKRANLAR = [
   ["yonetim", "Yönetim paneli: ciro, haftalık grafik, çok satanlar", "Admin dashboard: revenue, weekly chart, best sellers"],
   ["masalar", "Masalar ve QR kodları", "Tables and QR codes"],
   ["menu-yonetimi", "Menü yönetimi", "Menu management"],
-];
+  ] },
+  depom: { ad: "Depom", ekranlar: [
+  ["panel", "Panel: stok değeri, hareket grafiği, kritik stok", "Dashboard: stock value, movement chart, critical stock"],
+  ["bildirimler", "Başka bir personelin işlemi canlı akışta", "Another staff member's action in the live feed"],
+  ["komut-paleti", "Ctrl+K komut paleti ile ürün ve işlem arama", "Ctrl+K command palette for products and actions"],
+  ["sayim-fark", "Barkodla toplu sayım ve fark tutarı", "Barcode stock count with value of differences"],
+  ["otomatik-siparis", "Kritik stoktan tedarikçi başına taslak sipariş", "Draft orders per supplier from critical stock"],
+  ["mal-kabul", "Kısmi mal kabul", "Partial goods receipt"],
+  ["ice-aktar", "CSV ile toplu ürün içe aktarma ve önizleme", "Bulk product import from CSV with preview"],
+  ["etiketler", "EAN-13 barkodlu raf etiketleri", "Shelf labels with EAN-13 barcodes"],
+  ["panel-koyu", "Koyu tema", "Dark theme"],
+  ] },
+};
 const onizleme = $("#onizleme");
 const onizlemeVideo = $("#onizleme-video");
-const kartMedya = $(".featured-media");
-const kartVideo = kartMedya.querySelector("video");
+let proje = "qr";
+let EKRANLAR = PROJELER.qr.ekranlar;
 let galeriSira = 0;
 
 if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
-  new IntersectionObserver(([g]) => {
-    if (g.isIntersecting) kartVideo.play().then(() => kartMedya.classList.add("oynuyor")).catch(() => {});
-    else kartVideo.pause();
-  }, { threshold: 0.4 }).observe(kartMedya);
+  document.querySelectorAll(".featured-media").forEach((kartMedya) => {
+    const kartVideo = kartMedya.querySelector("video");
+    new IntersectionObserver(([g]) => {
+      if (g.isIntersecting) kartVideo.play().then(() => kartMedya.classList.add("oynuyor")).catch(() => {});
+      else kartVideo.pause();
+    }, { threshold: 0.4 }).observe(kartMedya);
+  });
 }
 
 const noktalar = $("#galeri-noktalar");
-EKRANLAR.forEach(([ad], i) => {
-  const b = document.createElement("button");
-  b.type = "button";
-  b.innerHTML = `<img src="assets/qr/${ad}.webp" alt="" loading="lazy">`;
-  b.addEventListener("click", () => galeriGoster(i));
-  noktalar.append(b);
-});
+
+/** Önizleme penceresini seçilen projenin video ve ekranlarıyla doldurur. */
+function projeSec(ad) {
+  if (ad === proje && noktalar.childElementCount) return;
+  proje = ad;
+  EKRANLAR = PROJELER[ad].ekranlar;
+  galeriSira = 0;
+  $("#onizleme-baslik").textContent = PROJELER[ad].ad;
+  onizleme.querySelectorAll("[data-cap]").forEach((p) => (p.hidden = p.dataset.cap !== ad));
+  onizlemeVideo.poster = `assets/${ad}/poster.webp`;
+  onizlemeVideo.innerHTML = `<source src="assets/${ad}/demo.mp4" type="video/mp4"><source src="assets/${ad}/demo.webm" type="video/webm">`;
+  onizlemeVideo.load();
+  noktalar.replaceChildren(...EKRANLAR.map(([dosya], i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = `<img src="assets/${ad}/${dosya}.webp" alt="" loading="lazy">`;
+    b.addEventListener("click", () => galeriGoster(i));
+    return b;
+  }));
+}
 
 function galeriGoster(i) {
   galeriSira = (i + EKRANLAR.length) % EKRANLAR.length;
   const [ad, tr, en] = EKRANLAR[galeriSira];
   const resim = $("#galeri-resim");
-  resim.src = `assets/qr/${ad}.webp`;
+  resim.src = `assets/${proje}/${ad}.webp`;
   resim.alt = dil === "en" ? en : tr;
   resim.style.animation = "none";
   resim.offsetWidth;
@@ -372,6 +401,7 @@ function sekmeAc(ad) {
 
 document.querySelectorAll("[data-onizle]").forEach((b) =>
   b.addEventListener("click", () => {
+    projeSec(b.dataset.proje || "qr");
     onizleme.showModal();
     sekmeAc(b.dataset.onizle);
   })
