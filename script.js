@@ -153,6 +153,15 @@ const kacis = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeA
 
 let repoVerisi = null;
 
+// GitHub'da açıklaması boş olan repolar için yedek açıklamalar
+const ACIKLAMALAR = {
+  "stok-yonetimi": { tr: "Depom: çok depolu stok ve satın alma yönetimi. ASP.NET Core, PostgreSQL, React.", en: "Depom: multi-warehouse stock and purchasing management. ASP.NET Core, PostgreSQL, React." },
+  "qr-siparis": { tr: "Restoranlar için QR menü ve canlı mutfak paneli. Next.js, PostgreSQL.", en: "QR menu and live kitchen board for restaurants. Next.js, PostgreSQL." },
+  "mustafagulturk.github.io": { tr: "Şu an baktığın portfolyo sitesi.", en: "The portfolio site you're looking at." },
+  "Gazianteptanitim": { tr: "Gaziantep'i tanıtan ilk web projem.", en: "My first web project, introducing Gaziantep." },
+  "berber-uygulama": { tr: "Berber dükkanları için randevu uygulaması.", en: "Appointment app for barber shops." },
+};
+
 function repolariCiz() {
   const kutu = $("#repolar");
   const m = METIN[dil];
@@ -163,7 +172,7 @@ function repolariCiz() {
   kutu.innerHTML = repoVerisi.slice(0, 6).map((r) => `
     <a class="repo spot" href="${kacis(r.html_url)}" target="_blank" rel="noopener">
       <h4>${kacis(r.name)}</h4>
-      <p>${kacis(r.description || m.aciklamaYok)}</p>
+      <p>${kacis(r.description || (ACIKLAMALAR[r.name] ?? {})[dil] || m.aciklamaYok)}</p>
       <div class="repo-meta">
         ${r.language ? `<span><i class="lang-dot" style="background:${RENKLER[r.language] || "var(--accent)"}"></i>${kacis(r.language)}</span>` : ""}
         <span>★ ${r.stargazers_count}</span>
@@ -417,3 +426,13 @@ onizleme.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") galeriGoster(galeriSira + 1);
   if (e.key === "ArrowLeft") galeriGoster(galeriSira - 1);
 });
+
+// Hero görselleri fareyle hafifçe hareket eder
+const heroArt = $(".hero-art");
+if (heroArt && !azHareket && matchMedia("(pointer: fine)").matches) {
+  $(".hero").addEventListener("pointermove", (e) => {
+    const r = heroArt.parentElement.getBoundingClientRect();
+    heroArt.style.setProperty("--px", ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+    heroArt.style.setProperty("--py", ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+  });
+}
