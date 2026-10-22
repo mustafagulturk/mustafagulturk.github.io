@@ -77,7 +77,7 @@ const CEVIRI_EN = {
   "p.gaz": "Gaziantep Guide Website",
   "p.gazd": "A website introducing the historic sites, cuisine and culture of Gaziantep.",
   "p.port": "Personal Portfolio",
-  "p.portd": "The site you're looking at. Built without a framework, with bilingual support, light/dark theme, animations and live data from the GitHub API.",
+  "p.portd": "The site you're looking at. Built without a framework: a Three.js 3D scene the camera glides through as you scroll, bilingual support, light/dark theme and live data from the GitHub API.",
   "gh.title": "Recent Work on GitHub",
   "gh.sub": "This section is fetched live from the GitHub API.",
   "gh.langs": "Languages I use most",
@@ -86,7 +86,7 @@ const CEVIRI_EN = {
   "c.p": "Whether it's a job opportunity, a project or just to say hi, feel free to reach out. I'll get back to you as soon as possible.",
   "c.mail": "Send an email",
   "c.copy": "Copy email",
-  "footer": "Hand-written with HTML, CSS and JavaScript",
+  "footer": "Hand-written with HTML, CSS, JavaScript and Three.js",
 };
 
 const METIN = {

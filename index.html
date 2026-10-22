@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261022">
+  <link rel="stylesheet" href="style.css?v=20261022b">
   <script>
     // Tema, sayfa çizilmeden önce uygulanır (yanıp sönmeyi önler)
     try {
@@ -294,8 +294,8 @@
             <a href="https://github.com/mustafagulturk/mustafagulturk.github.io" target="_blank" rel="noopener" aria-label="Portfolyo GitHub">↗</a>
           </div>
           <h4 data-i18n="p.port">Kişisel Portfolyo</h4>
-          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. İki dil desteği, açık/koyu tema, animasyonlar ve GitHub API'den canlı veri çekme özellikleri var.</p>
-          <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li><li>GitHub API</li><li>i18n</li></ul>
+          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Kaydırdıkça kameranın içinde gezdiği Three.js ile 3D bir sahne, iki dil desteği, açık/koyu tema ve GitHub API'den canlı veri var.</p>
+          <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li><li>Three.js</li><li>WebGL</li><li>GitHub API</li><li>i18n</li></ul>
         </article>
       </div>
     </section>
@@ -360,13 +360,15 @@
   </dialog>
 
   <footer class="container footer">
-    <p>© <span id="yil"></span> Mustafa Gültürk · <span data-i18n="footer">Sıfırdan HTML, CSS ve JavaScript ile yazıldı</span></p>
+    <p>© <span id="yil"></span> Mustafa Gültürk · <span data-i18n="footer">Sıfırdan HTML, CSS, JavaScript ve Three.js ile yazıldı</span></p>
   </footer>
 
   <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
   <div id="bildirim" class="toast" role="status"></div>
 
-  <script src="i18n.js?v=20261022"></script>
-  <script src="script.js?v=20261022"></script>
+  <script src="i18n.js?v=20261022b"></script>
+  <script src="script.js?v=20261022b"></script>
+  <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
+  <script type="module" src="sahne.js?v=20261022b"></script>
 </body>
 </html>

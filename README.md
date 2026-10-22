@@ -19,6 +19,7 @@ Kişisel portfolyo sitem. Projelerimi, yeteneklerimi ve iletişim bilgilerimi i�
 - **GitHub API entegrasyonu**: Son güncellenen repolar dil, yıldız ve tarih bilgisiyle canlı olarak listelenir.
 - **Açık / koyu tema**: View Transitions API ile butondan yayılan dairesel geçiş ve animasyonlu güneş/ay ikonu var. Sistem tercihine uyar ve seçim hatırlanır.
 - **Etkileşimli arka plan**: Hero bölümünde fareye tepki veren, birbirine bağlanan parçacıklar (Canvas API) var. Ekran dışındayken animasyon durur.
+- **3D sahne**: Three.js ile gürültüyle dalgalanan bir çekirdek ve etrafında dönen proje ekranları (tıklayınca projenin önizlemesi açılır), kaydırdıkça kameranın içinden süzüldüğü yıldız alanı. Kendi GLSL shader'ları, açık/koyu temaya uyum; WebGL yoksa eski görünüme düşer, "hareketi azalt" açıksa sahne sabit durur.
 - **Efektler**: Proje kartlarında 3D eğim, kartların sırayla belirmesi, sayaç animasyonu ve buton parlaması.
 - **Daktilo efekti** ve ekrana giren bölümler için yumuşak animasyonlar.
 - Kartlarda fareyi takip eden ışık efekti.

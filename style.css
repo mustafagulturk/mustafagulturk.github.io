@@ -642,3 +642,17 @@ body::after {
 }
 .hero > .hero-art { animation: belir 1.2s .4s both; }
 @keyframes belir { from { opacity: 0; } }
+
+/* 3D sahne (sahne.js). Yüklenemezse sınıf eklenmez ve eski görünüm kalır. */
+#sahne { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 1.2s ease; }
+.uc-boyut #sahne { opacity: 1; }
+.uc-boyut .hero-art, .uc-boyut .particles { display: none; }
+.uc-boyut body::after { opacity: .18; }
+.uc-boyut.sahne-isaret, .uc-boyut.sahne-isaret body { cursor: pointer; }
+@media (max-width: 1000px) {
+  /* Mobilde sahne başlığın arkasında kalır; yazılar okunaklı kalsın diye hafif perde */
+  .uc-boyut .hero::before {
+    content: ""; position: absolute; inset: 0 -16px; z-index: -1; pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg) 55%, transparent) 45%, transparent 100%);
+  }
+}

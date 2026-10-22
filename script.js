@@ -276,7 +276,8 @@ function parcaciklar() {
   }
 
   function ciz() {
-    if (!gorunur) return;
+    // 3D sahne açıldıysa bu katman gizlenir, boşuna çizmeyelim
+    if (!gorunur || kok.classList.contains("uc-boyut")) return;
     const w = tuval.offsetWidth, h = tuval.offsetHeight;
     const renk = getComputedStyle(kok).getPropertyValue("--accent").trim();
     ctx.clearRect(0, 0, w, h);
