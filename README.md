@@ -19,7 +19,7 @@ Kişisel portfolyo sitem. Projelerimi, yeteneklerimi ve iletişim bilgilerimi i�
 - **GitHub API entegrasyonu**: Son güncellenen repolar dil, yıldız ve tarih bilgisiyle canlı olarak listelenir.
 - **Açık / koyu tema**: View Transitions API ile butondan yayılan dairesel geçiş ve animasyonlu güneş/ay ikonu var. Sistem tercihine uyar ve seçim hatırlanır.
 - **Etkileşimli arka plan**: Hero bölümünde fareye tepki veren, birbirine bağlanan parçacıklar (Canvas API) var. Ekran dışındayken animasyon durur.
-- **3D sahne**: Three.js ile gürültüyle dalgalanan bir çekirdek ve etrafında dönen proje ekranları (tıklayınca projenin önizlemesi açılır), kaydırdıkça kameranın içinden süzüldüğü yıldız alanı. Kendi GLSL shader'ları, açık/koyu temaya uyum; WebGL yoksa eski görünüme düşer, "hareketi azalt" açıksa sahne sabit durur.
+- **3D çalışma odası**: Site Three.js ile kurulmuş bir çalışma odasında açılır. Masadaki nesnelere tıklayınca kamera yaklaşır: monitörde projeler, telefonda oynanabilir Ocakbaşı oyunu, rafta yetenekler, diplomada hakkımda, zarfta iletişim, defterde CV. Pencereden Gaziantep Kalesi görünür; temaya göre gece ya da gündüz olur. WebGL yoksa normal siteye düşer, "Klasik görünüm" butonuyla da normal siteye geçilebilir (tercih hatırlanır).
 - **Efektler**: Proje kartlarında 3D eğim, kartların sırayla belirmesi, sayaç animasyonu ve buton parlaması.
 - **Daktilo efekti** ve ekrana giren bölümler için yumuşak animasyonlar.
 - Kartlarda fareyi takip eden ışık efekti.
@@ -36,3 +36,16 @@ git clone https://github.com/mustafagulturk/mustafagulturk.github.io.git
 cd mustafagulturk.github.io
 python3 -m http.server 8000   # http://localhost:8000
 ```
+
+## 3D odayı kendin değiştirmek istersen
+
+| Ne | Nerede |
+|---|---|
+| Odanın kendisi (masa, raf, lamba, renkler, kamera açıları) | `oda.js` |
+| Tıklanabilir nesneler ve kameranın nereye yaklaşacağı | `oda.js` → `etkilesimler` listesi |
+| Nesneye yaklaşınca açılan HTML (monitördeki projeler, yan paneller) | `index.html` → `#oda-katman` |
+| Odayla sayfa arasındaki bağlantı, klasik görünüme geçiş | `oda-arayuz.js` |
+| Panel ve butonların görünümü | `oda.css` |
+| İngilizce metinler | `i18n.js` → `oda.*` anahtarları |
+
+**Örnek: monitöre yeni bir proje eklemek.** `index.html` içinde `#oda-monitor` altındaki `om-kart` bloklarından birini kopyalayıp görseli, başlığı ve linkleri değiştirmek yeterli. Metni `data-i18n` ile verirsen İngilizcesini `i18n.js`'e eklemeyi unutma.

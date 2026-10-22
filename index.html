@@ -17,7 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261022c">
+  <link rel="stylesheet" href="style.css?v=20261022d">
+  <link rel="stylesheet" href="oda.css?v=20261022d">
   <script>
     // Tema, sayfa çizilmeden önce uygulanır (yanıp sönmeyi önler)
     try {
@@ -25,9 +26,122 @@
       if (t) document.documentElement.dataset.theme = t;
       else if (matchMedia("(prefers-color-scheme: light)").matches) document.documentElement.dataset.theme = "light";
     } catch (e) {}
+    // 3D oda: klasik görünüm seçilmediyse açılışta oda gösterilir
+    try {
+      if (localStorage.getItem("gorunum") !== "klasik") document.documentElement.classList.add("oda-modu");
+    } catch (e) { document.documentElement.classList.add("oda-modu"); }
   </script>
 </head>
 <body>
+  <div id="oda-katman" class="oda" hidden>
+    <div id="oda-sahne" class="oda-sahne"></div>
+    <div class="oda-ust">
+      <div class="oda-kimlik">
+        <strong>Mustafa Gültürk</strong>
+        <span data-i18n="oda.unvan">Yazılım Geliştirici · Gaziantep</span>
+      </div>
+      <div class="oda-araclar">
+        <button type="button" class="oda-btn" data-oda-dil>EN</button>
+        <button type="button" class="oda-btn" data-oda-tema aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+        <button type="button" class="oda-btn oda-btn-metin" data-oda-klasik data-i18n="oda.klasik">Klasik görünüm</button>
+      </div>
+    </div>
+    <p id="oda-ipucu" class="oda-ipucu"><span data-i18n="oda.ipucu">Masadaki nesnelere tıkla</span></p>
+    <div id="oda-etiket" class="oda-etiket" hidden></div>
+    <button type="button" id="oda-geri" class="oda-btn oda-geri" hidden><span aria-hidden="true">←</span> <span data-i18n="oda.geri">Geri</span></button>
+    <div id="oda-yukleniyor" class="oda-yukleniyor"><i></i><span data-i18n="oda.yukleniyor">Oda hazırlanıyor…</span></div>
+
+    <!-- Monitörün içindeki arayüz -->
+    <div id="oda-monitor" class="oda-ekran oda-monitor" hidden>
+      <div class="om-bar"><span>mustafa@portfolyo: ~/projeler</span><span class="om-saat"></span></div>
+      <div class="om-icerik">
+        <h3 data-i18n="oda.projeler">Projelerim</h3>
+        <div class="om-izgara">
+          <article class="om-kart">
+            <img src="assets/kadro/poster.webp" alt="" loading="lazy">
+            <div><h4>Kadro</h4><p data-i18n="oda.kadro">Claude ile CV puanlayan yapay zekâ destekli işe alım platformu</p>
+            <div class="om-btnler"><button type="button" data-proje="kadro" data-onizle="video" data-i18n="qr.preview">Önizle</button><button type="button" data-proje="kadro" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button><a href="https://github.com/mustafagulturk/ise-alim" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a></div></div>
+          </article>
+          <article class="om-kart">
+            <img src="assets/ocakbasi/poster.webp" alt="" loading="lazy">
+            <div><h4>Ocakbaşı</h4><p data-i18n="oda.ocakbasi">Antep mutfağıyla restoran işletme oyunu, hileye kapalı skor sunucusu</p>
+            <div class="om-btnler"><button type="button" data-oda-git="telefon" data-i18n="oc.play">Oyna</button><button type="button" data-proje="ocakbasi" data-onizle="video" data-i18n="qr.preview">Önizle</button><a href="https://github.com/mustafagulturk/ocakbasi" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a></div></div>
+          </article>
+          <article class="om-kart">
+            <img src="assets/depom/poster.webp" alt="" loading="lazy">
+            <div><h4>Depom</h4><p data-i18n="oda.depom">Çok depolu, canlı bildirimli stok ve satın alma yönetimi</p>
+            <div class="om-btnler"><button type="button" data-proje="depom" data-onizle="video" data-i18n="qr.preview">Önizle</button><button type="button" data-proje="depom" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button><a href="https://github.com/mustafagulturk/stok-yonetimi" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a></div></div>
+          </article>
+          <article class="om-kart">
+            <img src="assets/qr/poster.webp" alt="" loading="lazy">
+            <div><h4>QR Sipariş</h4><p data-i18n="oda.qr">QR menüden sipariş ve canlı mutfak paneli</p>
+            <div class="om-btnler"><button type="button" data-proje="qr" data-onizle="video" data-i18n="qr.preview">Önizle</button><button type="button" data-proje="qr" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button><a href="https://github.com/mustafagulturk/qr-siparis" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a></div></div>
+          </article>
+        </div>
+        <p class="om-alt"><a href="https://github.com/mustafagulturk" target="_blank" rel="noopener" data-i18n="oda.github">Bütün repolarım GitHub'da →</a></p>
+      </div>
+    </div>
+
+    <!-- Telefonun ekranında oyun -->
+    <div id="oda-telefon" class="oda-ekran oda-telefon" hidden>
+      <iframe title="Ocakbaşı" data-src="/ocakbasi/" allow="autoplay; vibrate"></iframe>
+    </div>
+    <p id="oda-telefon-not" class="oda-not" hidden><span data-i18n="oda.telnot">Oyun telefonun içinde çalışıyor, oynayabilirsin.</span> <a href="https://mustafagulturk.github.io/ocakbasi/" target="_blank" rel="noopener" data-i18n="oda.tamekran">Tam ekran aç ↗</a></p>
+
+    <!-- Yan panel: raf, diploma, pencere, zarf, defter -->
+    <aside id="oda-panel" class="oda-panel" hidden>
+      <section data-oda-panel="raf">
+        <p class="op-ust" data-i18n="nav.skills">Yetenekler</p>
+        <h3 data-i18n="oda.raf.b">Raftaki kitaplar</h3>
+        <h4>Backend</h4>
+        <ul class="op-cipler"><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js / NestJS</li><li>Fastify</li><li>REST API</li><li>SignalR / Socket.IO</li><li>PostgreSQL</li><li>Prisma / Drizzle</li><li>Redis / BullMQ</li><li>Claude API</li></ul>
+        <h4>Frontend</h4>
+        <ul class="op-cipler"><li>TypeScript</li><li>React / Next.js</li><li>Tailwind CSS</li><li>Three.js</li><li>Phaser</li><li>HTML / CSS</li></ul>
+        <h4 data-i18n="oda.mobil">Mobil</h4>
+        <ul class="op-cipler"><li>Capacitor</li><li>Android</li></ul>
+        <h4 data-i18n="sk.tools">Araçlar</h4>
+        <ul class="op-cipler"><li>Git &amp; GitHub</li><li>GitHub Actions</li><li>Docker</li><li>Jest</li><li>Vitest</li><li>xUnit</li></ul>
+      </section>
+      <section data-oda-panel="diploma">
+        <p class="op-ust" data-i18n="nav.about">Hakkımda</p>
+        <h3 data-i18n="oda.dip.b">Merhaba, ben Mustafa</h3>
+        <p data-i18n="about.p1">Yeni mezun bir yazılım geliştiriciyim. Okul boyunca ve sonrasında kendi projelerimi geliştirerek yazılımın farklı alanlarında deneyim kazandım.</p>
+        <p data-i18n="about.p2">Bir projeye başladığımda sadece çalışmasını değil, okunabilir, sürdürülebilir ve kullanıcı dostu olmasını da önemsiyorum. Takım çalışmasına, geri bildirime ve sürekli öğrenmeye açığım.</p>
+        <p data-i18n="about.p3">Şu anda junior yazılım geliştirici pozisyonlarında yeni fırsatlar arıyorum.</p>
+        <ul class="op-bilgi">
+          <li><span data-i18n="stat.location">Konum</span><b data-i18n="fact.loc">Gaziantep, Türkiye</b></li>
+          <li><span data-i18n="fact.status">Durum</span><b data-i18n="fact.statusv">İş fırsatlarına açık</b></li>
+          <li><span data-i18n="fact.focus">Odak</span><b data-i18n="fact.focusv">Web ve mobil geliştirme</b></li>
+          <li><span data-i18n="fact.langs">Diller</span><b data-i18n="fact.langsv">Türkçe, İngilizce</b></li>
+        </ul>
+      </section>
+      <section data-oda-panel="pencere">
+        <p class="op-ust" data-i18n="stat.location">Konum</p>
+        <h3>Gaziantep</h3>
+        <p data-i18n="oda.pen.p">Pencereden görünen Gaziantep Kalesi. Gaziantep'te yaşıyorum; uzaktan çalışmaya ve şehir dışındaki fırsatlara da açığım.</p>
+        <p data-i18n="oda.pen.p2">Ocakbaşı oyunundaki simit kebabı, beyran ve Ali Nazik de buradan geliyor.</p>
+      </section>
+      <section data-oda-panel="zarf">
+        <p class="op-ust" data-i18n="nav.contact">İletişim</p>
+        <h3 data-i18n="oda.zarf.b">Bana yaz</h3>
+        <p data-i18n="oda.zarf.p">Bir iş fırsatı, proje ya da sadece merhaba demek için.</p>
+        <a class="op-buyuk" href="mailto:mustafagulturk153@gmail.com">mustafagulturk153@gmail.com</a>
+        <div class="op-btnler">
+          <a class="oda-btn oda-btn-metin" href="mailto:mustafagulturk153@gmail.com" data-i18n="oda.zarf.yaz">E-posta gönder</a>
+          <a class="oda-btn oda-btn-metin" href="https://github.com/mustafagulturk" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </section>
+      <section data-oda-panel="defter">
+        <p class="op-ust">CV</p>
+        <h3 data-i18n="oda.cv.b">Özgeçmişim</h3>
+        <p data-i18n="oda.cv.p">Eğitimim, projelerim ve yeteneklerim tek sayfada. Tarayıcıdan PDF olarak da kaydedebilirsin.</p>
+        <div class="op-btnler">
+          <a class="oda-btn oda-btn-metin op-ana" href="cv.html" data-i18n="hero.cv">CV'mi görüntüle</a>
+        </div>
+      </section>
+    </aside>
+  </div>
+
   <a class="skip-link" href="#hakkimda" data-i18n="skip">İçeriğe geç</a>
   <div id="ilerleme" class="progress"></div>
 
@@ -41,6 +155,7 @@
         <a href="#github">GitHub</a>
         <a href="#iletisim" data-i18n="nav.contact">İletişim</a>
       </nav>
+      <button type="button" id="odaya-don" class="icon-btn oda-don" aria-label="3D odaya dön" title="3D oda" hidden>⌂</button>
       <button id="dil" class="icon-btn lang-btn" aria-label="Dili değiştir">EN</button>
       <button id="tema" class="icon-btn theme-toggle" aria-label="Temayı değiştir">
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
@@ -324,7 +439,7 @@
             <a href="https://github.com/mustafagulturk/mustafagulturk.github.io" target="_blank" rel="noopener" aria-label="Portfolyo GitHub">↗</a>
           </div>
           <h4 data-i18n="p.port">Kişisel Portfolyo</h4>
-          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Kaydırdıkça kameranın içinde gezdiği Three.js ile 3D bir sahne, iki dil desteği, açık/koyu tema ve GitHub API'den canlı veri var.</p>
+          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Three.js ile yapılmış 3D bir çalışma odasında açılıyor: monitöre tıklayınca projeler, telefona tıklayınca Ocakbaşı oyunu, rafa tıklayınca yetenekler. İki dil, açık/koyu tema ve GitHub API'den canlı veri de var.</p>
           <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li><li>Three.js</li><li>WebGL</li><li>GitHub API</li><li>i18n</li></ul>
         </article>
       </div>
@@ -397,9 +512,9 @@
   <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
   <div id="bildirim" class="toast" role="status"></div>
 
-  <script src="i18n.js?v=20261022c"></script>
-  <script src="script.js?v=20261022c"></script>
+  <script src="i18n.js?v=20261022d"></script>
+  <script src="script.js?v=20261022d"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
-  <script type="module" src="sahne.js?v=20261022c"></script>
+  <script type="module" src="oda-arayuz.js?v=20261022d"></script>
 </body>
 </html>
