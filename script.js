@@ -156,6 +156,7 @@ let repoVerisi = null;
 // GitHub'da açıklaması boş olan repolar için yedek açıklamalar
 const ACIKLAMALAR = {
   "ise-alim": { tr: "Kadro: Claude ile CV puanlayan yapay zekâ destekli işe alım platformu. NestJS, Next.js, PostgreSQL.", en: "Kadro: AI-powered applicant tracking that scores CVs with Claude. NestJS, Next.js, PostgreSQL." },
+  ocakbasi: { tr: "Ocakbaşı: Antep mutfağı temalı mobil restoran oyunu. Phaser, Capacitor, Fastify.", en: "Ocakbaşı: a Gaziantep-cuisine mobile restaurant game. Phaser, Capacitor, Fastify." },
   "stok-yonetimi": { tr: "Depom: çok depolu stok ve satın alma yönetimi. ASP.NET Core, PostgreSQL, React.", en: "Depom: multi-warehouse stock and purchasing management. ASP.NET Core, PostgreSQL, React." },
   "qr-siparis": { tr: "Restoranlar için QR menü ve canlı mutfak paneli. Next.js, PostgreSQL.", en: "QR menu and live kitchen board for restaurants. Next.js, PostgreSQL." },
   "mustafagulturk.github.io": { tr: "Şu an baktığın portfolyo sitesi.", en: "The portfolio site you're looking at." },
@@ -350,6 +351,14 @@ const PROJELER = {
   ["analitik", "Dönüşüm hunisi ve işe alım süreleri", "Conversion funnel and time to hire"],
   ["kariyer-ilani", "Şirketin kariyer sayfası", "Company careers page"],
   ["karanlik-mod", "Koyu tema", "Dark theme"],
+  ] },
+  ocakbasi: { ad: "Ocakbaşı", ekranlar: [
+  ["mutfak", "Mutfak: ızgara, taş fırın, ocak ve tezgâh", "Kitchen: grill, stone oven, stove and counter"],
+  ["kayit", "İlk açılışta oyuncu adı ve dükkân adı", "Player and shop name on first launch"],
+  ["menu", "Ana menü ve oyuncunun dükkân tabelası", "Main menu with the player's shop sign"],
+  ["gun-sonu", "Gün sonu özeti ve dükkânı büyütme", "End-of-day summary and shop upgrades"],
+  ["skor-tablosu", "Sunucuda doğrulanan skor tablosu", "Server-verified leaderboard"],
+  ["oyun-sonu", "Oyun sonu ve rekor", "Game over and new record"],
   ] },
   depom: { ad: "Depom", ekranlar: [
   ["panel", "Panel: stok değeri, hareket grafiği, kritik stok", "Dashboard: stock value, movement chart, critical stock"],

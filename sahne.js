@@ -11,6 +11,7 @@ const PROJELER = [
   { ad: "kadro", baslik: "kadro · işe alım" },
   { ad: "depom", baslik: "depom · stok yönetimi" },
   { ad: "qr", baslik: "qr-siparis" },
+  { ad: "ocakbasi", baslik: "ocakbaşı · oyun" },
 ];
 // Kameranın sayfa boyunca alacağı yol (dünya birimi)
 const DERINLIK = 46;

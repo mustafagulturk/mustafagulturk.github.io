@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261022b">
+  <link rel="stylesheet" href="style.css?v=20261022c">
   <script>
     // Tema, sayfa çizilmeden önce uygulanır (yanıp sönmeyi önler)
     try {
@@ -138,6 +138,11 @@
           <span class="tl-date">2026</span>
           <h4 data-i18n="tl.1t">Mezuniyet</h4>
           <p data-i18n="tl.1p">Lisans eğitimimi tamamladım ve yazılım geliştirme alanında kariyerime başladım.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
+          <h4 data-i18n="oc.tlt">Ocakbaşı · Mobil Restoran Oyunu</h4>
+          <p data-i18n="oc.tlp">TypeScript, Phaser ve Capacitor ile Antep mutfağı temalı, Android'de ve tarayıcıda çalışan bir restoran işletme oyunu ve hileye kapalı bir skor sunucusu geliştirdim.</p>
         </div>
         <div class="tl-item">
           <span class="tl-date">2026</span>
@@ -267,6 +272,31 @@
         </div>
       </article>
 
+      <article class="featured featured-ters spot">
+        <button type="button" class="featured-media" data-proje="ocakbasi" data-onizle="video" aria-label="Ocakbaşı oyun videosunu aç">
+          <video poster="assets/ocakbasi/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/ocakbasi/demo.mp4" type="video/mp4"><source src="assets/ocakbasi/demo.webm" type="video/webm"></video>
+          <span class="play" aria-hidden="true">▶</span>
+          <span class="live-badge"><i></i> <span data-i18n="oc.live">Oynanabilir</span></span>
+        </button>
+        <div class="featured-body">
+          <p class="mono" data-i18n="qr.kicker">Öne çıkan proje</p>
+          <h4 data-i18n="oc.title">Ocakbaşı · Antep Usulü Restoran Oyunu</h4>
+          <p data-i18n="oc.desc">Antep mutfağıyla kendi ocakbaşını işlettiğin 2D bir mobil oyun. Oyuncu kendi adını ve dükkânının adını girer; simit kebabını ızgarada, lahmacunu taş fırında pişirir, müşterinin sabrı bitmeden siparişi yetiştirir ve gün sonunda kazancıyla dükkânı büyütür. Android'de ve tarayıcıda oynanır.</p>
+          <ul class="featured-points">
+            <li data-i18n="oc.f1">Skor hilesine karşı oyun skoru değil hamle kaydını gönderir; sunucu oyunu aynı kurallarla baştan oynatıp skoru kendisi hesaplar</li>
+            <li data-i18n="oc.f2">Kurallar ekrandan ayrı, tohumlu rastgelelikle çalışan deterministik bir TypeScript paketi; oyun ve sunucu aynı kodu kullanır</li>
+            <li data-i18n="oc.f3">Görseller ve sesler kodla üretilir; Fastify + PostgreSQL skor tablosu, Vitest testleri, CI'da APK derleme</li>
+          </ul>
+          <ul class="tags"><li>TypeScript</li><li>Phaser 3</li><li>Capacitor</li><li>Android</li><li>Fastify</li><li>PostgreSQL</li><li>Vitest</li><li>Docker</li></ul>
+          <div class="featured-actions">
+            <a class="btn btn-primary" href="https://mustafagulturk.github.io/ocakbasi/" target="_blank" rel="noopener" data-i18n="oc.play">Oyna</a>
+            <button type="button" class="btn" data-proje="ocakbasi" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <button type="button" class="btn" data-proje="ocakbasi" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button>
+            <a class="btn" href="https://github.com/mustafagulturk/ocakbasi" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+          </div>
+        </div>
+      </article>
+
       <div class="projects stagger">
         <article class="card spot tilt">
           <div class="card-top">
@@ -344,6 +374,7 @@
       <video id="onizleme-video" controls muted loop playsinline preload="none"></video>
       <p class="preview-cap" data-cap="kadro" data-i18n="kd.cap.video">Tanıtım sayfasından panele geçiş, kanban üzerinde aday taşıma, gereksinim bazında CV analizi, CV içinde arama, analitik ve kariyer sayfasından başvuru.</p>
       <p class="preview-cap" data-cap="depom" data-i18n="dp.cap.video">Sağ üstte başka bir personelin yaptığı çıkış anında bildirim olarak düşer. Ardından komut paleti, kritik stoktan otomatik sipariş, barkod okutarak sayım ve etiket yazdırma.</p>
+      <p class="preview-cap" data-cap="ocakbasi" data-i18n="oc.cap.video">Dükkân açılınca günün yemekleri tanıtılır. Ardından ızgara, fırın ve ocakta pişirme, pişeni tepsiye alma ve müşterilere servis; gün sonunda kazançla geliştirme alınır.</p>
       <p class="preview-cap" data-cap="qr" data-i18n="qr.cap.video">Solda müşteri telefonu, sağda mutfak ekranı. Sipariş verilir, mutfakta anında belirir, durum değişikliği müşteriye canlı yansır ve garson çağrısı mutfağa düşer.</p>
     </div>
     <div class="preview-pane" data-panel="galeri" hidden>
@@ -366,9 +397,9 @@
   <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
   <div id="bildirim" class="toast" role="status"></div>
 
-  <script src="i18n.js?v=20261022b"></script>
-  <script src="script.js?v=20261022b"></script>
+  <script src="i18n.js?v=20261022c"></script>
+  <script src="script.js?v=20261022c"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
-  <script type="module" src="sahne.js?v=20261022b"></script>
+  <script type="module" src="sahne.js?v=20261022c"></script>
 </body>
 </html>
