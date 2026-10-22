@@ -643,3 +643,43 @@ body::after {
 .hero > .hero-art { animation: belir 1.2s .4s both; }
 @keyframes belir { from { opacity: 0; } }
 
+
+/* Klasik görünümün 3D yörünge sahnesi (yorunge.js). Yüklenemezse sınıf eklenmez ve eski görünüm kalır. */
+#sahne { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 1.2s ease; }
+.uc-boyut #sahne { opacity: 1; }
+.uc-boyut .hero-art, .uc-boyut .particles { display: none; }
+.uc-boyut body::after { opacity: .18; }
+.uc-boyut.sahne-isaret, .uc-boyut.sahne-isaret body { cursor: pointer; }
+/* Masaüstünde hero ekrana sabitlenir; bu yükseklik boyunca kaydırınca projeler sırayla öne gelir */
+.yorunge-pin .hero-pin { height: 280vh; }
+.yorunge-pin .hero-pin > .hero { position: sticky; top: 0; min-height: 100vh; }
+.yorunge-bilgi {
+  position: absolute; right: 0; bottom: 56px; width: min(360px, 34vw); z-index: 1;
+  padding: 16px 18px; border-radius: 16px;
+  background: color-mix(in srgb, var(--bg-2) 80%, transparent); border: 1px solid var(--border);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  transition: opacity .3s;
+}
+.yorunge-bilgi.degisti > * { animation: yb-gir .45s both; }
+.yorunge-bilgi.degisti > :nth-child(2) { animation-delay: .04s; }
+.yorunge-bilgi.degisti > :nth-child(3) { animation-delay: .08s; }
+@keyframes yb-gir { from { opacity: 0; transform: translateY(6px); } }
+.yb-ust { display: block; font-size: .75rem; letter-spacing: .04em; }
+.yb-ad { display: block; font-size: 1.35rem; margin: 4px 0 2px; }
+.yb-acik { color: var(--muted); font-size: .9rem; line-height: 1.45; }
+.yb-alt { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.yb-btn {
+  padding: 8px 14px; border-radius: 10px; border: 0; cursor: pointer;
+  background: var(--grad, var(--accent)); color: #fff; font: 600 .85rem/1 "Inter", system-ui, sans-serif;
+}
+.yb-noktalar { display: flex; gap: 6px; }
+.yb-noktalar i { width: 8px; height: 8px; border-radius: 999px; background: var(--border); transition: width .3s, background .3s; }
+.yb-noktalar i.aktif { width: 22px; background: var(--accent); }
+@media (max-width: 1000px) {
+  /* Mobilde sahne başlığın arkasında kalır; yazılar okunaklı kalsın diye hafif perde */
+  .uc-boyut .hero { padding-top: max(300px, 40vh); }
+  .uc-boyut .hero::before {
+    content: ""; position: absolute; inset: 0 -16px; z-index: -1; pointer-events: none;
+    background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg) 55%, transparent) 45%, transparent 100%);
+  }
+}

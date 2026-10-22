@@ -277,8 +277,8 @@ function parcaciklar() {
   }
 
   function ciz() {
-    // 3D oda açıksa sayfa gizlidir, boşuna çizmeyelim
-    if (!gorunur || kok.classList.contains("oda-modu")) return;
+    // 3D oda açıksa sayfa gizlidir, 3D yörünge açıksa bu katman gizlenir, boşuna çizmeyelim
+    if (!gorunur || kok.classList.contains("oda-modu") || kok.classList.contains("uc-boyut")) return;
     const w = tuval.offsetWidth, h = tuval.offsetHeight;
     const renk = getComputedStyle(kok).getPropertyValue("--accent").trim();
     ctx.clearRect(0, 0, w, h);

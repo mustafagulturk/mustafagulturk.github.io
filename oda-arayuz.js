@@ -14,12 +14,15 @@ const panel = $("#oda-panel");
 const odayaDon = $("#odaya-don");
 
 let oda = null;
+// Klasik görünümdeki 3D yörünge sahnesi yalnızca klasik görünüm açılınca yüklenir
+const yorungeYukle = () => import("./yorunge.js?v=20261022e").catch(() => {});
 
 function klasigeGec() {
   kok.classList.remove("oda-modu");
   katman.hidden = true;
   odayaDon.hidden = false;
   try { localStorage.setItem("gorunum", "klasik"); } catch {}
+  yorungeYukle();
 }
 
 async function odayaGec() {
@@ -86,6 +89,7 @@ async function kur() {
     // WebGL yok: klasik siteye düş, ama tercih olarak kaydetme
     kok.classList.remove("oda-modu");
     katman.hidden = true;
+    yorungeYukle();
     return;
   }
   // Nesne başlıklarını dile göre çevir
@@ -109,6 +113,7 @@ if (kok.classList.contains("oda-modu")) {
   kur();
 } else {
   odayaDon.hidden = false;
+  yorungeYukle();
 }
 
 // Otomatik testler için: document.dispatchEvent(new CustomEvent("oda-test", { detail: "monitor" }))
