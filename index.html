@@ -63,9 +63,9 @@
       <canvas id="parcacik" class="particles" aria-hidden="true"></canvas>
       <div class="glow" aria-hidden="true"></div>
       <div class="hero-art" aria-hidden="true">
-        <div class="win win-1"><div class="win-bar"><i></i><i></i><i></i><span>depom · stok yönetimi</span></div><img src="assets/depom/poster.webp" alt="" decoding="async"></div>
-        <div class="win win-2"><div class="win-bar"><i></i><i></i><i></i><span>qr-siparis</span></div><img src="assets/qr/poster.webp" alt="" decoding="async"></div>
-        <span class="chip chip-1"><b>C#</b> ASP.NET Core</span>
+        <div class="win win-1"><div class="win-bar"><i></i><i></i><i></i><span>kadro · işe alım</span></div><img src="assets/kadro/poster.webp" alt="" decoding="async"></div>
+        <div class="win win-2"><div class="win-bar"><i></i><i></i><i></i><span>depom · stok yönetimi</span></div><img src="assets/depom/poster.webp" alt="" decoding="async"></div>
+        <span class="chip chip-1"><b>✦</b> Claude API</span>
         <span class="chip chip-2"><b>⚛</b> React</span>
         <span class="chip chip-3"><b>🐘</b> PostgreSQL</span>
         <span class="chip chip-4"><i></i> CI · passing</span>
@@ -141,6 +141,11 @@
         </div>
         <div class="tl-item">
           <span class="tl-date">2026</span>
+          <h4 data-i18n="kd.tlt">Kadro · Yapay Zekâ Destekli İşe Alım</h4>
+          <p data-i18n="kd.tlp">NestJS, Next.js, PostgreSQL ve Claude API ile CV'leri kanıtlarıyla puanlayan, canlı çalışan bir işe alım platformu geliştirdim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
           <h4 data-i18n="dp.tlt">Depom · Stok Yönetimi</h4>
           <p data-i18n="dp.tlp">ASP.NET Core, PostgreSQL ve React ile çok depolu, canlı bildirimli bir stok ve satın alma yönetim sistemi geliştirdim.</p>
         </div>
@@ -173,12 +178,12 @@
         <div class="skill-group spot">
           <div class="skill-icon">{ }</div>
           <h4>Backend</h4>
-          <ul><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js</li><li>REST API</li><li>SignalR</li><li>PostgreSQL</li><li>Drizzle ORM</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
+          <ul><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js / NestJS</li><li>REST API</li><li>SignalR / Socket.IO</li><li>PostgreSQL</li><li>Prisma / Drizzle ORM</li><li>Redis / BullMQ</li><li>Claude API</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">⌘</div>
           <h4 data-i18n="sk.tools">Araçlar</h4>
-          <ul><li>Git &amp; GitHub</li><li>GitHub Actions</li><li>Docker</li><li>Vitest</li><li>xUnit</li><li>VS Code</li></ul>
+          <ul><li>Git &amp; GitHub</li><li>GitHub Actions</li><li>Docker</li><li>Jest</li><li>Vitest</li><li>xUnit</li><li>VS Code</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">✦</div>
@@ -190,6 +195,30 @@
 
     <section id="projeler" class="container section">
       <h3 class="section-title"><span class="mono">03.</span> <span data-i18n="p.title">Öne Çıkan Projeler</span></h3>
+      <article class="featured spot">
+        <button type="button" class="featured-media" data-proje="kadro" data-onizle="video" aria-label="Kadro demo videosunu aç">
+          <video poster="assets/kadro/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/kadro/demo.mp4" type="video/mp4"><source src="assets/kadro/demo.webm" type="video/webm"></video>
+          <span class="play" aria-hidden="true">▶</span>
+          <span class="live-badge"><i></i> <span data-i18n="kd.live">Yapay zekâ</span></span>
+        </button>
+        <div class="featured-body">
+          <p class="mono" data-i18n="qr.kicker">Öne çıkan proje</p>
+          <h4 data-i18n="kd.title">Kadro · Yapay Zekâ Destekli İşe Alım Platformu</h4>
+          <p data-i18n="kd.desc">Şirketler ilan açar, kariyer sayfasından başvuru toplar; Claude her CV'yi ilanın gereksinimlerine göre kanıt cümleleriyle değerlendirir, ekip adayları kanban üzerinde birlikte yönetir. Adaya özel mülakat kiti hazırlanır, aday mülakat saatini kendisi seçer, eski adaylar yeni ilanlara önerilir.</p>
+          <ul class="featured-points">
+            <li data-i18n="kd.f1">Puan modelin uydurduğu bir sayı değil, sunucuda gereksinim ağırlıklarından hesaplanır; Claude yoksa yerel puanlayıcı devreye girer</li>
+            <li data-i18n="kd.f2">KVKK için CV yapay zekâya gitmeden maskelenir; aynı mülakat saatine çift rezervasyon Serializable işlemle engellenir</li>
+            <li data-i18n="kd.f3">Redis kuyruğu ve Socket.IO ile canlı ekip ekranı, 40 Jest testi, Docker ve CI</li>
+          </ul>
+          <ul class="tags"><li>NestJS</li><li>Next.js 15</li><li>TypeScript</li><li>PostgreSQL</li><li>Prisma</li><li>Redis / BullMQ</li><li>Socket.IO</li><li>Claude API</li><li>Jest</li><li>Docker</li></ul>
+          <div class="featured-actions">
+            <button type="button" class="btn btn-primary" data-proje="kadro" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <button type="button" class="btn" data-proje="kadro" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button>
+            <a class="btn" href="https://github.com/mustafagulturk/ise-alim" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+          </div>
+        </div>
+      </article>
+
       <article class="featured featured-ters spot">
         <button type="button" class="featured-media" data-proje="depom" data-onizle="video" aria-label="Depom demo videosunu aç">
           <video poster="assets/depom/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/depom/demo.mp4" type="video/mp4"><source src="assets/depom/demo.webm" type="video/webm"></video>
@@ -313,6 +342,7 @@
     </div>
     <div class="preview-pane" data-panel="video">
       <video id="onizleme-video" controls muted loop playsinline preload="none"></video>
+      <p class="preview-cap" data-cap="kadro" data-i18n="kd.cap.video">Tanıtım sayfasından panele geçiş, kanban üzerinde aday taşıma, gereksinim bazında CV analizi, CV içinde arama, analitik ve kariyer sayfasından başvuru.</p>
       <p class="preview-cap" data-cap="depom" data-i18n="dp.cap.video">Sağ üstte başka bir personelin yaptığı çıkış anında bildirim olarak düşer. Ardından komut paleti, kritik stoktan otomatik sipariş, barkod okutarak sayım ve etiket yazdırma.</p>
       <p class="preview-cap" data-cap="qr" data-i18n="qr.cap.video">Solda müşteri telefonu, sağda mutfak ekranı. Sipariş verilir, mutfakta anında belirir, durum değişikliği müşteriye canlı yansır ve garson çağrısı mutfağa düşer.</p>
     </div>

@@ -155,6 +155,7 @@ let repoVerisi = null;
 
 // GitHub'da açıklaması boş olan repolar için yedek açıklamalar
 const ACIKLAMALAR = {
+  "ise-alim": { tr: "Kadro: Claude ile CV puanlayan yapay zekâ destekli işe alım platformu. NestJS, Next.js, PostgreSQL.", en: "Kadro: AI-powered applicant tracking that scores CVs with Claude. NestJS, Next.js, PostgreSQL." },
   "stok-yonetimi": { tr: "Depom: çok depolu stok ve satın alma yönetimi. ASP.NET Core, PostgreSQL, React.", en: "Depom: multi-warehouse stock and purchasing management. ASP.NET Core, PostgreSQL, React." },
   "qr-siparis": { tr: "Restoranlar için QR menü ve canlı mutfak paneli. Next.js, PostgreSQL.", en: "QR menu and live kitchen board for restaurants. Next.js, PostgreSQL." },
   "mustafagulturk.github.io": { tr: "Şu an baktığın portfolyo sitesi.", en: "The portfolio site you're looking at." },
@@ -334,6 +335,20 @@ const PROJELER = {
   ["yonetim", "Yönetim paneli: ciro, haftalık grafik, çok satanlar", "Admin dashboard: revenue, weekly chart, best sellers"],
   ["masalar", "Masalar ve QR kodları", "Tables and QR codes"],
   ["menu-yonetimi", "Menü yönetimi", "Menu management"],
+  ] },
+  kadro: { ad: "Kadro", ekranlar: [
+  ["kanban", "Aday hattı: kanban, puan ve beceri filtresi", "Pipeline: kanban with score and skill filters"],
+  ["aday-analizi", "Gereksinim bazında CV analizi ve kanıt cümleleri", "Requirement-by-requirement CV analysis with evidence"],
+  ["mulakat-kiti", "Adaya özel mülakat kiti", "Interview kit tailored to the candidate"],
+  ["kitli-degerlendirme", "Soru bazında mülakat değerlendirmesi", "Per-question interview scorecard"],
+  ["saat-onerileri", "Mülakatçıların ortak boş saatleri", "Interviewers' shared free slots"],
+  ["aday-saat-secimi", "Adayın mülakat saatini kendisi seçmesi", "Candidate picking their own interview slot"],
+  ["yetenek-havuzu", "Yetenek havuzu: eski adaylardan yeni ilana öneri", "Talent pool: past applicants suggested for a new job"],
+  ["karsilastirma", "Adayları yan yana karşılaştırma", "Side-by-side candidate comparison"],
+  ["cv-arama", "CV içinde Türkçe tam metin arama", "Full-text CV search with Turkish stemming"],
+  ["analitik", "Dönüşüm hunisi ve işe alım süreleri", "Conversion funnel and time to hire"],
+  ["kariyer-ilani", "Şirketin kariyer sayfası", "Company careers page"],
+  ["karanlik-mod", "Koyu tema", "Dark theme"],
   ] },
   depom: { ad: "Depom", ekranlar: [
   ["panel", "Panel: stok değeri, hareket grafiği, kritik stok", "Dashboard: stock value, movement chart, critical stock"],
