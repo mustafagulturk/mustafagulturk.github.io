@@ -6,6 +6,7 @@
  *   Diploma   → hakkımda
  *   Zarf      → iletişim
  *   Defter    → CV
+ *   Fidan     → Çınar (sıfırdan eğitilmiş Türkçe dil modeli, deneysel proje)
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -243,20 +244,68 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     return s;
   });
 
-  // Saksı
-  const saksi = new THREE.Group();
-  saksi.add(mesh(new THREE.CylinderGeometry(0.06, 0.045, 0.1, 20), mat(0xb5583a), 0, 0.05, 0));
-  const yaprakMat = mat(0x3f8f4f, { roughness: 0.6, side: THREE.DoubleSide });
-  for (let i = 0; i < 9; i++) {
-    const y = mesh(new THREE.SphereGeometry(0.05, 10, 8), yaprakMat, 0, 0.14 + (i % 3) * 0.03, 0);
-    y.scale.set(0.35, 1, 0.12);
-    y.rotation.set(0.5 * Math.sin(i * 2), (i / 9) * Math.PI * 2, 0.6);
-    y.position.x = Math.cos(i * 0.7) * 0.025;
-    y.position.z = Math.sin(i * 0.7) * 0.025;
-    saksi.add(y);
+  // Saksıda çınar fidanı (Çınar dil modeli projesi): küçük ama büyüyen bir ağaç
+  const fidan = new THREE.Group();
+  fidan.add(mesh(new THREE.CylinderGeometry(0.06, 0.045, 0.1, 20), mat(0xb5583a), 0, 0.05, 0));
+  fidan.add(mesh(new THREE.CylinderGeometry(0.056, 0.056, 0.006, 20), mat(0x3b2a1e, { roughness: 1 }), 0, 0.098, 0));
+  const govdeMat = mat(0x7a5a3c, { roughness: 0.8 });
+  const govde = mesh(new THREE.CylinderGeometry(0.004, 0.007, 0.2, 8), govdeMat, 0, 0.2, 0);
+  fidan.add(govde);
+  // Çınar yaprağı: beş loblu, el ayasına benzer şekil
+  const yaprakSekil = new THREE.Shape();
+  for (let i = 0; i <= 60; i++) {
+    const a = (i / 60) * Math.PI * 2;
+    const r = 0.024 * (0.4 + 0.6 * Math.pow(Math.abs(Math.cos(a * 2.5)), 2.5)) * (a > Math.PI * 1.35 && a < Math.PI * 1.65 ? 0.5 : 1);
+    const x = Math.cos(a) * r, y = Math.sin(a) * r + 0.012;
+    if (i === 0) yaprakSekil.moveTo(x, y); else yaprakSekil.lineTo(x, y);
   }
-  saksi.position.set(0.78, MASA_Y, -0.25);
-  sahne.add(saksi);
+  const yaprakGeo = new THREE.ShapeGeometry(yaprakSekil);
+  const yaprakMat = mat(0x4f9a43, { roughness: 0.6, side: THREE.DoubleSide });
+  const yapraklar = [];
+  const dallar = [[0.17, 0.6, 0.06], [0.21, 2.5, 0.05], [0.25, 4.3, 0.045], [0.29, 1.4, 0.035]];
+  for (const [yuk, aci, boy] of dallar) {
+    const dal = new THREE.Group();
+    dal.position.y = yuk;
+    dal.rotation.y = aci;
+    const kol = mesh(new THREE.CylinderGeometry(0.002, 0.003, boy, 6), govdeMat, boy / 2 * 0.7, 0, 0);
+    kol.rotation.z = -Math.PI / 2 + 0.6;
+    dal.add(kol);
+    fidan.add(dal);
+    for (let k = 0; k < 3; k++) {
+      const y = new THREE.Mesh(yaprakGeo, yaprakMat);
+      y.position.set(boy * (0.55 + k * 0.22), boy * 0.5 + k * 0.006, (k - 1) * 0.012);
+      y.rotation.set(-0.9 + k * 0.3, k * 0.8, -0.4);
+      y.scale.setScalar(0.8 + k * 0.15);
+      y.userData.faz = yapraklar.length * 1.7;
+      y.userData.ilk = y.rotation.clone();
+      dal.add(y);
+      yapraklar.push(y);
+    }
+  }
+  const tepe = new THREE.Mesh(yaprakGeo, yaprakMat);
+  tepe.position.y = 0.3;
+  tepe.rotation.set(-0.3, 0.4, 0);
+  tepe.userData = { faz: 0.5, ilk: tepe.rotation.clone() };
+  fidan.add(tepe);
+  yapraklar.push(tepe);
+  // Toprağa batırılmış küçük etiket
+  const etiketDoku = tuvalDokusu(200, 90, (g, w, h) => {
+    g.fillStyle = "#e9d8b4";
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = "#3b2416";
+    g.font = "700 40px system-ui, sans-serif";
+    g.textAlign = "center";
+    g.fillText("Çınar", w / 2, 46);
+    g.font = "500 22px system-ui, sans-serif";
+    g.fillText("v1 · deneysel", w / 2, 76);
+  });
+  const kazik = mesh(new THREE.BoxGeometry(0.004, 0.09, 0.002), mat(0xc9a77a), 0.03, 0.12, 0.035);
+  fidan.add(kazik);
+  const levha = mesh(new THREE.PlaneGeometry(0.06, 0.027), mat(0xffffff, { map: etiketDoku, roughness: 0.9 }), 0.03, 0.17, 0.037);
+  fidan.add(levha);
+  fidan.position.set(0.78, MASA_Y, -0.25);
+  fidan.rotation.y = -0.5;
+  sahne.add(fidan);
 
   // Telefon (standda, ekranı Ocakbaşı)
   const telefon = new THREE.Group();
@@ -582,6 +631,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     { ad: "pencere", grup: pencere, baslik: "Gaziantep", odak: () => ({ kamera: v(-0.75, 1.5, 0.6), hedef: v(-1.05, 1.45, -0.6) }), panel: true },
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
     { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.3, 1.2, 0.72), hedef: v(0.32, 0.76, 0.3) }), panel: true },
+    { ad: "fidan", grup: fidan, baslik: "Çınar · dil modeli", odak: () => ({ kamera: v(0.62, 1.12, 0.3), hedef: v(0.78, 0.93, -0.25) }), panel: true },
   );
   for (const e of etkilesimler) e.grup.traverse((o) => (o.userData.etkilesim = e));
 
@@ -796,6 +846,12 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     for (const n of noktalar) {
       n.scale.setScalar(nabiz);
       n.visible = !odaktaki;
+    }
+    // fidanın yaprakları rüzgârda hafifçe sallanır; üzerine gelince daha çok
+    const ruzgar = uzerinde?.ad === "fidan" || odaktaki?.ad === "fidan" ? 0.25 : 0.06;
+    if (!azHareket) for (const y of yapraklar) {
+      y.rotation.x = y.userData.ilk.x + Math.sin(t * 2.2 + y.userData.faz) * ruzgar;
+      y.rotation.z = y.userData.ilk.z + Math.cos(t * 1.7 + y.userData.faz) * ruzgar * 0.6;
     }
     // lamba hafif titreşim
     lambaIsik.intensity += ((kok.dataset.theme !== "light" ? 9 : 3) + Math.sin(t * 13) * 0.05 - lambaIsik.intensity) * 0.1;

@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261022e">
-  <link rel="stylesheet" href="oda.css?v=20261022e">
+  <link rel="stylesheet" href="style.css?v=20261023a">
+  <link rel="stylesheet" href="oda.css?v=20261023a">
   <script>
     // Tema, sayfa çizilmeden önce uygulanır (yanıp sönmeyi önler)
     try {
@@ -94,7 +94,7 @@
         <p class="op-ust" data-i18n="nav.skills">Yetenekler</p>
         <h3 data-i18n="oda.raf.b">Raftaki kitaplar</h3>
         <h4>Backend</h4>
-        <ul class="op-cipler"><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js / NestJS</li><li>Fastify</li><li>REST API</li><li>SignalR / Socket.IO</li><li>PostgreSQL</li><li>Prisma / Drizzle</li><li>Redis / BullMQ</li><li>Claude API</li></ul>
+        <ul class="op-cipler"><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js / NestJS</li><li>Fastify</li><li>REST API</li><li>SignalR / Socket.IO</li><li>PostgreSQL</li><li>Prisma / Drizzle</li><li>Redis / BullMQ</li><li>Claude API</li><li>Python / PyTorch</li></ul>
         <h4>Frontend</h4>
         <ul class="op-cipler"><li>TypeScript</li><li>React / Next.js</li><li>Tailwind CSS</li><li>Three.js</li><li>Phaser</li><li>HTML / CSS</li></ul>
         <h4 data-i18n="oda.mobil">Mobil</h4>
@@ -129,6 +129,17 @@
         <div class="op-btnler">
           <a class="oda-btn oda-btn-metin" href="mailto:mustafagulturk153@gmail.com" data-i18n="oda.zarf.yaz">E-posta gönder</a>
           <a class="oda-btn oda-btn-metin" href="https://github.com/mustafagulturk" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </section>
+      <section data-oda-panel="fidan">
+        <p class="op-ust" data-i18n="oda.fid.ust">Deneysel proje · gelişiyor</p>
+        <h3 data-i18n="oda.fid.b">Çınar · Türkçe dil modeli</h3>
+        <p data-i18n="oda.fid.p1">Sıfırdan yazdığım küçük bir Türkçe dil modeli. Tokenizer'dan transformer'a, eğitim döngüsünden tarayıcıdaki sohbet ekranına kadar her parçası kendi kodum; hazır bir yapay zekâ servisine bağlanmıyor.</p>
+        <p data-i18n="oda.fid.p2">Bu fidan gibi küçük ama büyüyor: Türkçe cümle kurup sohbet edebiliyor, bilgi ve hesapta hâlâ zayıf. Daha fazla veriyle eğitmeye devam ediyorum.</p>
+        <ul class="op-cipler"><li>PyTorch</li><li>BPE tokenizer</li><li>Transformer · RoPE · SwiGLU</li><li data-i18n="oda.fid.param">34M parametre</li><li>Google Colab GPU</li><li data-i18n="oda.fid.js">Tarayıcıda int8 çıkarım</li></ul>
+        <div class="op-btnler">
+          <a class="oda-btn oda-btn-metin op-ana" href="https://mustafagulturk.github.io/turkce-gptr/" target="_blank" rel="noopener" data-i18n="oda.fid.dene">Sohbeti dene ↗</a>
+          <a class="oda-btn oda-btn-metin" href="https://github.com/mustafagulturk/turkce-gptr" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a>
         </div>
       </section>
       <section data-oda-panel="defter">
@@ -298,7 +309,7 @@
         <div class="skill-group spot">
           <div class="skill-icon">{ }</div>
           <h4>Backend</h4>
-          <ul><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js / NestJS</li><li>REST API</li><li>SignalR / Socket.IO</li><li>PostgreSQL</li><li>Prisma / Drizzle ORM</li><li>Redis / BullMQ</li><li>Claude API</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
+          <ul><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js / NestJS</li><li>REST API</li><li>SignalR / Socket.IO</li><li>PostgreSQL</li><li>Prisma / Drizzle ORM</li><li>Redis / BullMQ</li><li>Claude API</li><li>Python / PyTorch</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">⌘</div>
@@ -416,6 +427,17 @@
         <article class="card spot tilt">
           <div class="card-top">
             <span class="folder">▣</span>
+            <a href="https://github.com/mustafagulturk/turkce-gptr" target="_blank" rel="noopener" aria-label="Çınar GitHub">↗</a>
+          </div>
+          <h4 data-i18n="p.cinar">Çınar · Sıfırdan Türkçe Dil Modeli</h4>
+          <p data-i18n="p.cinard">Kendi tokenizer'ı ve transformer'ı olan, PyTorch ile sıfırdan yazılmış küçük bir dil modeli. Colab GPU'sunda Türkçe Wikipedia ile eğitildi, tarayıcıda sunucusuz çalışıyor. Deneysel; daha fazla veriyle geliştirmeye devam ediyorum.</p>
+          <p class="card-link"><a href="https://mustafagulturk.github.io/turkce-gptr/" target="_blank" rel="noopener" data-i18n="p.cinardene">Sohbeti dene ↗</a></p>
+          <ul class="tags"><li data-i18n="p.tag.deney">Deneysel</li><li>PyTorch</li><li>Transformer</li><li>BPE</li><li>JavaScript</li></ul>
+        </article>
+
+        <article class="card spot tilt">
+          <div class="card-top">
+            <span class="folder">▣</span>
             <a href="https://github.com/mustafagulturk/berber-uygulama" target="_blank" rel="noopener" aria-label="Berber uygulaması GitHub">↗</a>
           </div>
           <h4 data-i18n="p.berber">Berber Randevu Uygulaması</h4>
@@ -439,7 +461,7 @@
             <a href="https://github.com/mustafagulturk/mustafagulturk.github.io" target="_blank" rel="noopener" aria-label="Portfolyo GitHub">↗</a>
           </div>
           <h4 data-i18n="p.port">Kişisel Portfolyo</h4>
-          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Three.js ile yapılmış 3D bir çalışma odasında açılıyor: monitöre tıklayınca projeler, telefona tıklayınca Ocakbaşı oyunu, rafa tıklayınca yetenekler. İki dil, açık/koyu tema ve GitHub API'den canlı veri de var.</p>
+          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Three.js ile yapılmış 3D bir çalışma odasında açılıyor: monitöre tıklayınca projeler, telefona tıklayınca Ocakbaşı oyunu, saksıdaki fidana tıklayınca Çınar dil modeli, rafa tıklayınca yetenekler. İki dil, açık/koyu tema ve GitHub API'den canlı veri de var.</p>
           <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li><li>Three.js</li><li>WebGL</li><li>GitHub API</li><li>i18n</li></ul>
         </article>
       </div>
@@ -512,9 +534,9 @@
   <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
   <div id="bildirim" class="toast" role="status"></div>
 
-  <script src="i18n.js?v=20261022e"></script>
-  <script src="script.js?v=20261022e"></script>
+  <script src="i18n.js?v=20261023a"></script>
+  <script src="script.js?v=20261023a"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
-  <script type="module" src="oda-arayuz.js?v=20261022e"></script>
+  <script type="module" src="oda-arayuz.js?v=20261023a"></script>
 </body>
 </html>

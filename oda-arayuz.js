@@ -2,7 +2,7 @@
  * 3D odanın sayfayla bağlantısı: odayı açar/kapatır, nesneye yaklaşılınca ilgili HTML katmanını gösterir.
  * WebGL yoksa ya da ziyaretçi "Klasik görünüm"ü seçtiyse normal site gösterilir.
  */
-import { odaBaslat } from "./oda.js";
+import { odaBaslat } from "./oda.js?v=20261023a";
 
 const kok = document.documentElement;
 const $ = (s) => document.querySelector(s);
@@ -93,7 +93,7 @@ async function kur() {
     return;
   }
   // Nesne başlıklarını dile göre çevir
-  const BASLIK_EN = { monitor: "Projects", telefon: "Play Ocakbaşı", raf: "Skills", diploma: "About me", pencere: "Gaziantep", zarf: "Contact", defter: "CV" };
+  const BASLIK_EN = { monitor: "Projects", telefon: "Play Ocakbaşı", raf: "Skills", diploma: "About me", pencere: "Gaziantep", zarf: "Contact", defter: "CV", fidan: "Çınar · language model" };
   for (const e of oda.etkilesimler) e.baslikCeviri = () => (kok.lang === "en" ? BASLIK_EN[e.ad] : e.baslik);
   yukleniyor.classList.add("bitti");
 }
