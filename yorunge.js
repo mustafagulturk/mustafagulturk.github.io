@@ -18,6 +18,8 @@ const PROJELER = [
     tr: "QR menüden sipariş ve canlı mutfak paneli", en: "QR menu ordering with a live kitchen panel" },
   { ad: "ocakbasi", baslik: "ocakbaşı · oyun", isim: "Ocakbaşı",
     tr: "Antep mutfağıyla restoran işletme oyunu, hileye kapalı skor sunucusu", en: "Gaziantep-cuisine restaurant game with a cheat-proof score server" },
+  { ad: "okey", baslik: "okey salonu · mobil", isim: "Okey Salonu",
+    tr: "Android için 4 kişilik online Okey, hileye kapalı sunucu otoritesi", en: "4-player online Okey for Android with a cheat-proof authoritative server" },
 ];
 const CEYREK = (Math.PI * 2) / PROJELER.length;
 // Kendi kendine dönüş hızı (radyan/saniye) ve ekranların yörünge yarıçapı
@@ -167,8 +169,10 @@ function pencereDokusu(src, baslik) {
     x.fillStyle = "#0f172a";
     x.fillRect(0, 0, G, Y);
     if (img) {
-      const oran = G / img.width;
-      x.drawImage(img, 0, BAR, G, Math.max(Y - BAR, img.height * oran));
+      // Görsel pencereyi kaplar; farklı oranlı görseller (ör. yatay telefon ekranı) ortadan kırpılır
+      const alanY = Y - BAR, oran = Math.max(G / img.width, alanY / img.height);
+      const kw = G / oran, kh = alanY / oran;
+      x.drawImage(img, (img.width - kw) / 2, 0, kw, kh, 0, BAR, G, alanY);
     }
     x.fillStyle = "#1e293b";
     x.fillRect(0, 0, G, BAR);

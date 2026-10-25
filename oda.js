@@ -1,7 +1,7 @@
 /**
  * 3D çalışma odası. Site bu odayla açılır: masadaki nesnelere tıklanınca kamera o nesneye yaklaşır.
  *   Monitör   → projeler (ekranın içinde gerçek HTML arayüz)
- *   Telefon   → Ocakbaşı oyunu (telefonun ekranında oynanır)
+ *   Telefon   → oyun seçme ekranı: Ocakbaşı ya da Okey Salonu telefonun ekranında oynanır
  *   Kitaplık  → yetenekler
  *   Diploma   → hakkımda
  *   Zarf      → iletişim
@@ -307,7 +307,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   fidan.rotation.y = -0.5;
   sahne.add(fidan);
 
-  // Telefon (standda, ekranı Ocakbaşı)
+  // Telefon (standda, ekranında oyun seçme ekranı)
   const telefon = new THREE.Group();
   const TEL_W = 0.07, TEL_H = 0.145;
   telefon.add(mesh(kutu(TEL_W + 0.008, TEL_H + 0.008, 0.009, 0.01), mat(0x0d0f13, { roughness: 0.3, metalness: 0.4 })));
@@ -482,8 +482,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }
 
   // ---- Dokular: monitör masaüstü, telefon, pencere ----
-  const [kadroImg, depomImg, qrImg, ocakImg] = await Promise.all(
-    ["kadro", "depom", "qr", "ocakbasi"].map((a) => resimYukle(`assets/${a}/poster.webp`))
+  const [kadroImg, depomImg, qrImg, ocakImg, okeyImg, ocakSimge, okeySimge] = await Promise.all(
+    [...["kadro", "depom", "qr", "ocakbasi", "okey"].map((a) => `assets/${a}/poster.webp`), "assets/ocakbasi/simge.svg", "assets/okey/simge.svg"].map(resimYukle)
   );
 
   function masaustuDokusu(gece) {
@@ -524,11 +524,43 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     });
   }
 
+  // Telefonun ekranı: HTML'deki oyun seçme ekranının (#oda-telefon .ot-ana) küçük bir kopyası
   const telefonDokusu = tuvalDokusu(360, 740, (g, w, h) => {
-    g.fillStyle = "#2a170c";
+    const arka = g.createLinearGradient(0, 0, 0, h);
+    arka.addColorStop(0, "#2c1d4a");
+    arka.addColorStop(0.45, "#1b1f3a");
+    arka.addColorStop(1, "#120d1c");
+    g.fillStyle = arka;
     g.fillRect(0, 0, w, h);
-    // poster.webp'teki telefon ekranı bölgesi (1280×800 içinde x 770, y 20, 432×768)
-    if (ocakImg) g.drawImage(ocakImg, 770, 20, 432, 768, 0, 0, w, h);
+    g.fillStyle = "rgba(255,255,255,.85)";
+    g.font = "600 15px system-ui, sans-serif";
+    g.fillText("09:41", 22, 30);
+    g.fillStyle = "#38bdf8";
+    g.font = "500 13px monospace";
+    g.fillText("OYUNLAR", 22, 74);
+    g.fillStyle = "#fff";
+    g.font = "800 30px system-ui, sans-serif";
+    g.fillText("Ne oynayalım?", 22, 110);
+    const kart = (y, img, sx, sy, sw, sh, simge, ad) => {
+      const x = 22, kw = w - 44, kh = 130;
+      g.save();
+      g.beginPath();
+      g.roundRect(x, y, kw, kh + 74, 18);
+      g.clip();
+      g.fillStyle = "#0d0f13";
+      g.fillRect(x, y, kw, kh + 74);
+      if (img) g.drawImage(img, sx, sy, sw, sh, x, y, kw, kh);
+      g.restore();
+      if (simge) g.drawImage(simge, x + 14, y + kh + 14, 46, 46);
+      g.fillStyle = "#fff";
+      g.font = "700 20px system-ui, sans-serif";
+      g.fillText(ad, x + 74, y + kh + 44);
+    };
+    // Kapaklar 316x130 oranında kırpılır
+    kart(140, ocakImg, 0, 140, 1280, 526, ocakSimge, "Ocakbaşı");
+    kart(370, okeyImg, 0, 33, 1280, 526, okeySimge, "Okey Salonu");
+    g.fillStyle = "rgba(255,255,255,.55)";
+    g.fillRect(w / 2 - 60, h - 18, 120, 5);
   });
   telEkranMat.map = telefonDokusu;
 
@@ -625,7 +657,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
 
   etkilesimler.push(
     { ad: "monitor", grup: monitor, baslik: "Projeler", odak: () => ekranaBak(monitor, ekran, EKRAN_W, EKRAN_H, kamera.aspect < 1 ? 1.06 : 1.28), yuzey: ekran, w: EKRAN_W, h: EKRAN_H },
-    { ad: "telefon", grup: stand, baslik: "Ocakbaşı'nı oyna", odak: () => ekranaBak(telefon, telEkran, TEL_W, TEL_H, kamera.aspect < 1 ? 1.45 : 1.25), yuzey: telEkran, w: TEL_W, h: TEL_H },
+    { ad: "telefon", grup: stand, baslik: "Telefonda oyna", odak: () => ekranaBak(telefon, telEkran, TEL_W, TEL_H, kamera.aspect < 1 ? 1.45 : 1.25), yuzey: telEkran, w: TEL_W, h: TEL_H },
     { ad: "raf", grup: raf, baslik: "Yetenekler", odak: () => ({ kamera: v(0.55, 1.5, 0.55), hedef: v(0.85, 1.5, -0.45) }), panel: true },
     { ad: "diploma", grup: diploma, baslik: "Hakkımda", odak: () => ({ kamera: v(-0.05, 1.6, 0.35), hedef: v(-0.2, 1.6, -0.58) }), panel: true },
     { ad: "pencere", grup: pencere, baslik: "Gaziantep", odak: () => ({ kamera: v(-0.75, 1.5, 0.6), hedef: v(-1.05, 1.45, -0.6) }), panel: true },

@@ -114,8 +114,58 @@
 .om-alt { margin-top: 2.6cqh; font-size: max(12px, 1.5cqw); }
 .om-alt a { text-decoration: underline; text-underline-offset: 3px; }
 
-.oda-telefon { border-radius: 10px; background: #2a170c; }
+/* Telefon: oyun seçme ekranı ve telefonun içinde oynanan oyun */
+.oda-telefon { container-type: size; border-radius: 10px; background: #120d1c; }
+.ot-ana {
+  position: absolute; inset: 0; display: flex; flex-direction: column; gap: 2.6cqh; padding: 2cqh 6cqw 3cqh;
+  background: radial-gradient(120% 60% at 50% 0%, #4a1d5e, transparent 70%), linear-gradient(180deg, #1b1f3a, #120d1c);
+  color: #fff; overflow: hidden;
+}
+.ot-durum { display: flex; justify-content: space-between; align-items: center; font: 600 max(10px, 3.6cqw)/1 "Inter", system-ui, sans-serif; opacity: .85; }
+.ot-simgeler { display: flex; align-items: flex-end; gap: 2px; }
+.ot-simgeler i { width: 3px; background: #fff; border-radius: 1px; }
+.ot-simgeler i:nth-child(1) { height: 4px; } .ot-simgeler i:nth-child(2) { height: 6px; } .ot-simgeler i:nth-child(3) { height: 8px; }
+.ot-simgeler b { width: 16px; height: 8px; margin-left: 5px; border: 1.5px solid #fff; border-radius: 2px; box-shadow: inset -5px 0 0 #fff; }
+.ot-ust { font: 500 max(10px, 3.4cqw)/1 "JetBrains Mono", monospace; color: #38bdf8; text-transform: uppercase; letter-spacing: .1em; margin-top: 1.5cqh; }
+.ot-ana h3 { font-size: max(16px, 8cqw); letter-spacing: -.02em; line-height: 1.1; margin-top: -1.4cqh; }
+.ot-oyun {
+  position: relative; display: block; width: 100%; padding: 0; border: 1px solid rgb(255 255 255 / .16); border-radius: 5cqw;
+  overflow: hidden; cursor: pointer; text-align: left; color: #fff; background: #0d0f13; font: inherit;
+  box-shadow: 0 12px 30px rgb(0 0 0 / .4); transition: transform .25s cubic-bezier(.2,.9,.3,1.3), border-color .2s;
+  animation: ot-gir .5s cubic-bezier(.2,.9,.3,1) backwards;
+}
+.ot-okey { animation-delay: .08s; }
+.ot-oyun:hover, .ot-oyun:focus-visible { transform: translateY(-3px) scale(1.02); border-color: rgb(255 255 255 / .45); }
+.ot-oyun:active { transform: scale(.97); }
+@keyframes ot-gir { from { opacity: 0; transform: translateY(14px); } }
+.ot-kapak { display: block; width: 100%; aspect-ratio: 16 / 8; object-fit: cover; }
+.ot-ocakbasi .ot-kapak { object-position: 50% 35%; }
+.ot-bilgi { display: flex; align-items: center; gap: 3.4cqw; padding: 3cqw 3.6cqw; background: linear-gradient(180deg, rgb(13 15 19 / .6), #0d0f13); }
+.ot-simge { width: 13cqw; height: 13cqw; border-radius: 3.2cqw; flex: none; box-shadow: 0 4px 12px rgb(0 0 0 / .4); }
+.ot-bilgi > span { display: grid; gap: .4cqh; min-width: 0; }
+.ot-bilgi b { font-size: max(13px, 5cqw); line-height: 1.1; }
+.ot-bilgi small { font-size: max(10px, 3.5cqw); opacity: .75; line-height: 1.25; }
+.ot-yon { margin-left: auto; flex: none; font: 600 max(9px, 3cqw)/1 "Inter", system-ui, sans-serif; font-style: normal; padding: 1.4cqw 2.4cqw; border-radius: 99px; background: rgb(56 189 248 / .18); color: #7dd3fc; }
+.ot-alt { margin-top: auto; text-align: center; font-size: max(10px, 3.4cqw); opacity: .6; }
+.ot-ana::after { content: ""; position: absolute; left: 50%; bottom: 1.2cqh; width: 34cqw; height: 4px; border-radius: 4px; background: rgb(255 255 255 / .55); transform: translateX(-50%); }
+.ot-oyun-kap { position: absolute; inset: 0; display: none; overflow: hidden; background: #2a170c; }
 .oda-telefon iframe { width: 100%; height: 100%; border: 0; display: block; background: #2a170c; }
+.oda-telefon.oyunda .ot-ana { display: none; }
+.oda-telefon.oyunda .ot-oyun-kap { display: block; }
+/* Yatay oyun: telefon kasası yan döner, oyun sabit 844x390 çizilip kasaya ölçeklenir */
+.oda-telefon.yatay { padding: 10px; border-radius: 26px; background: #0d0f13; box-shadow: 0 0 0 1px rgb(255 255 255 / .12), 0 30px 80px rgb(0 0 0 / .55), 0 0 0 100vmax rgb(8 6 14 / .5); }
+.oda-telefon.yatay .ot-oyun-kap { inset: 10px; border-radius: 16px; background: #2a0c14; }
+.oda-telefon.yatay iframe { position: absolute; left: 0; top: 0; width: 844px; height: 390px; transform-origin: 0 0; background: #2a0c14; }
+.oda-telefon.donuyor { animation: ot-don .75s cubic-bezier(.65, 0, .25, 1) both; }
+@keyframes ot-don {
+  from { transform: translate(var(--dx, 0), var(--dy, 0)) rotate(90deg) scale(var(--s0, .5)); border-radius: 10px; }
+}
+.ot-ev {
+  font: 600 .85rem/1 "Inter", system-ui, sans-serif; padding: 7px 12px; margin-right: 8px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--oda-kenar); background: rgb(255 255 255 / .12); color: inherit;
+}
+.ot-ev[hidden], .oda-not [hidden] { display: none; }
+.oda-not .ot-tam-vurgu { display: inline-block; margin: 6px 0 0; padding: 6px 12px; border-radius: 999px; background: #38bdf8; color: #0b1120; }
 .oda-not {
   position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 6;
   padding: 10px 16px; border-radius: 12px; font-size: .88rem;

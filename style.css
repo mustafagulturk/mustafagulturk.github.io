@@ -604,6 +604,9 @@ body::after {
   background: #f87171; box-shadow: 15px 0 #fbbf24, 30px 0 #34d399; z-index: 1;
 }
 .featured-media video { aspect-ratio: 1280 / 805; height: auto; }
+/* Yatay mobil oyun (Okey Salonu): video telefonun yatay ekran oranında */
+.featured-genis .featured-media video { aspect-ratio: 1280 / 592; }
+.featured-not { font-size: .8rem; color: var(--muted); }
 .featured-media .live-badge { top: 42px; }
 .featured-body h4 { font-size: 1.55rem; letter-spacing: -.01em; }
 .featured-body > .mono { display: inline-flex; align-self: flex-start; padding: 3px 10px; border-radius: 999px; font-size: .75rem; background: color-mix(in srgb, var(--accent) 12%, transparent); }

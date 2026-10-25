@@ -17,8 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261023a">
-  <link rel="stylesheet" href="oda.css?v=20261023a">
+  <link rel="stylesheet" href="style.css?v=20261025a">
+  <link rel="stylesheet" href="oda.css?v=20261025a">
   <script>
     // Tema, sayfa çizilmeden önce uygulanır (yanıp sönmeyi önler)
     try {
@@ -65,7 +65,12 @@
           <article class="om-kart">
             <img src="assets/ocakbasi/poster.webp" alt="" loading="lazy">
             <div><h4>Ocakbaşı</h4><p data-i18n="oda.ocakbasi">Antep mutfağıyla restoran işletme oyunu, hileye kapalı skor sunucusu</p>
-            <div class="om-btnler"><button type="button" data-oda-git="telefon" data-i18n="oc.play">Oyna</button><button type="button" data-proje="ocakbasi" data-onizle="video" data-i18n="qr.preview">Önizle</button><a href="https://github.com/mustafagulturk/ocakbasi" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a></div></div>
+            <div class="om-btnler"><button type="button" data-oda-git="telefon" data-oyun="ocakbasi" data-i18n="oc.play">Oyna</button><button type="button" data-proje="ocakbasi" data-onizle="video" data-i18n="qr.preview">Önizle</button><a href="https://github.com/mustafagulturk/ocakbasi" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a></div></div>
+          </article>
+          <article class="om-kart">
+            <img src="assets/okey/poster.webp" alt="" loading="lazy">
+            <div><h4>Okey Salonu</h4><p data-i18n="oda.okey">Android için 4 kişilik online Okey, hileye kapalı sunucu otoritesi</p>
+            <div class="om-btnler"><button type="button" data-oda-git="telefon" data-oyun="okey" data-i18n="oc.play">Oyna</button><button type="button" data-proje="okey" data-onizle="video" data-i18n="qr.preview">Önizle</button><button type="button" data-proje="okey" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button><a href="https://github.com/mustafagulturk/mobil-okey" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a></div></div>
           </article>
           <article class="om-kart">
             <img src="assets/depom/poster.webp" alt="" loading="lazy">
@@ -82,11 +87,30 @@
       </div>
     </div>
 
-    <!-- Telefonun ekranında oyun -->
+    <!-- Telefonun ekranı: oyun seçme ekranı, seçilen oyun telefonun içinde oynanır -->
     <div id="oda-telefon" class="oda-ekran oda-telefon" hidden>
-      <iframe title="Ocakbaşı" data-src="/ocakbasi/" allow="autoplay; vibrate"></iframe>
+      <div class="ot-ana">
+        <div class="ot-durum"><span class="ot-saat"></span><span class="ot-simgeler" aria-hidden="true"><i></i><i></i><i></i><b></b></span></div>
+        <p class="ot-ust" data-i18n="oda.tel.ust">Oyunlar</p>
+        <h3 data-i18n="oda.tel.baslik">Ne oynayalım?</h3>
+        <button type="button" class="ot-oyun ot-ocakbasi" data-oyun-sec="ocakbasi">
+          <img class="ot-kapak" src="assets/ocakbasi/poster.webp" alt="" loading="lazy">
+          <span class="ot-bilgi"><img class="ot-simge" src="assets/ocakbasi/simge.svg" alt=""><span><b>Ocakbaşı</b><small data-i18n="oda.tel.oc">Antep usulü restoran oyunu</small></span><em class="ot-yon" data-i18n="oda.tel.dikey">Dikey</em></span>
+        </button>
+        <button type="button" class="ot-oyun ot-okey" data-oyun-sec="okey">
+          <img class="ot-kapak" src="assets/okey/poster.webp" alt="" loading="lazy">
+          <span class="ot-bilgi"><img class="ot-simge" src="assets/okey/simge.svg" alt=""><span><b>Okey Salonu</b><small data-i18n="oda.tel.okey">Botlara karşı 4 kişilik Okey</small></span><em class="ot-yon" data-i18n="oda.tel.yatay">Yatay</em></span>
+        </button>
+        <p class="ot-alt" data-i18n="oda.tel.alt">Dokun, telefonun içinde oyna</p>
+      </div>
+      <div class="ot-oyun-kap"><iframe title="Oyun" allow="autoplay; vibrate"></iframe></div>
     </div>
-    <p id="oda-telefon-not" class="oda-not" hidden><span data-i18n="oda.telnot">Oyun telefonun içinde çalışıyor, oynayabilirsin.</span> <a href="https://mustafagulturk.github.io/ocakbasi/" target="_blank" rel="noopener" data-i18n="oda.tamekran">Tam ekran aç ↗</a></p>
+    <div id="oda-telefon-not" class="oda-not" hidden>
+      <button type="button" class="ot-ev" data-tel-ana hidden><span aria-hidden="true">⌂</span> <span data-i18n="oda.tel.ana">Oyunlar</span></button>
+      <span data-tel-sec data-i18n="oda.tel.sec">Bir oyun seç, telefonun içinde oynanır.</span>
+      <span data-tel-oyna hidden data-i18n="oda.telnot">Oyun telefonun içinde çalışıyor, oynayabilirsin.</span>
+      <a data-tel-tam href="#" target="_blank" rel="noopener" hidden data-i18n="oda.tamekran">Tam ekran aç ↗</a>
+    </div>
 
     <!-- Yan panel: raf, diploma, pencere, zarf, defter -->
     <aside id="oda-panel" class="oda-panel" hidden>
@@ -267,6 +291,11 @@
         </div>
         <div class="tl-item">
           <span class="tl-date">2026</span>
+          <h4 data-i18n="ok.tlt">Okey Salonu · Online Mobil Okey</h4>
+          <p data-i18n="ok.tlp">React, Capacitor, Node.js ve WebSocket ile hileye kapalı sunucu otoritesi olan, Google Play'e hazır gerçek zamanlı 4 kişilik bir Okey oyunu geliştirdim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
           <h4 data-i18n="oc.tlt">Ocakbaşı · Mobil Restoran Oyunu</h4>
           <p data-i18n="oc.tlp">TypeScript, Phaser ve Capacitor ile Antep mutfağı temalı, Android'de ve tarayıcıda çalışan bir restoran işletme oyunu ve hileye kapalı bir skor sunucusu geliştirdim.</p>
         </div>
@@ -423,6 +452,34 @@
         </div>
       </article>
 
+      <article class="featured featured-genis spot">
+        <button type="button" class="featured-media" data-proje="okey" data-onizle="video" aria-label="Okey Salonu oynanış videosunu aç">
+          <video poster="assets/okey/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/okey/demo.mp4" type="video/mp4"><source src="assets/okey/demo.webm" type="video/webm"></video>
+          <span class="play" aria-hidden="true">▶</span>
+          <span class="live-badge"><i></i> <span data-i18n="ok.live">Gerçek zamanlı</span></span>
+        </button>
+        <div class="featured-body">
+          <p class="mono" data-i18n="qr.kicker">Öne çıkan proje</p>
+          <h4 data-i18n="ok.title">Okey Salonu · Gerçek Zamanlı Online Okey</h4>
+          <p data-i18n="ok.desc">Android için 4 kişilik online Okey. Hızlı eşleştirme ya da 5 haneli kodla özel oda, çip aralıklı salonlar, masada sohbet, seviye ve görevler, sıralama ve isim etiketi süsleri var; boş koltuklara bot oturur. Bordo çuha, antika altın ve ceviz istakalı "Osmanlı Konağı" teması, kalın bakalit taşlar ve 6 renk paleti.</p>
+          <ul class="featured-points">
+            <li data-i18n="ok.f1">Sunucu otoritesi: deste sunucuda karıştırılır, herkese yalnızca kendi taşları gider; her hamle ve "elim bitti" iddiası sunucuda doğrulanır</li>
+            <li data-i18n="ok.f2">Aynı kural motoru sunucuda, telefondaki çevrimdışı antrenmanda ve testlerde çalışır; el bitirme geri izlemeyle kesin çözülür, bot ezberlemeli DP ile ~20 kat hızlı puanlar</li>
+            <li data-i18n="ok.f3">Play Billing ile çip paketleri: satın alma jetonu sunucuda Google API ile doğrulanır ve ikinci kez kullanılamaz; AdMob ödüllü reklam imzalı SSV ile doğrulanır</li>
+            <li data-i18n="ok.f4">40 sanal oyunculu yük testinde hamle başına ~12 ms; imzalı AAB'yi GitHub Actions üretir</li>
+          </ul>
+          <ul class="tags"><li>TypeScript</li><li>React</li><li>Vite</li><li>Capacitor</li><li>Android</li><li>Node.js</li><li>WebSocket</li><li>SQLite</li><li>Play Billing</li><li>AdMob</li><li>Vitest</li></ul>
+          <div class="featured-actions">
+            <a class="btn btn-primary" href="https://mustafagulturk.github.io/mobil-okey/" target="_blank" rel="noopener" data-i18n="oc.play">Oyna</a>
+            <button type="button" class="btn" data-proje="okey" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <button type="button" class="btn" data-proje="okey" data-onizle="galeri" data-i18n="dp.screens">Ekranlar</button>
+            <a class="btn" href="https://github.com/mustafagulturk/mobil-okey" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+            <a class="btn" href="https://github.com/mustafagulturk/mobil-okey/releases/tag/onizleme-main" target="_blank" rel="noopener" data-i18n="ok.apk">APK indir</a>
+          </div>
+          <p class="featured-not" data-i18n="ok.not">Tarayıcıdaki "Oyna" botlara karşı antrenman modudur. APK bir test sürümüdür; uygulama henüz Google Play'de değil.</p>
+        </div>
+      </article>
+
       <div class="projects stagger">
         <article class="card spot tilt">
           <div class="card-top">
@@ -461,7 +518,7 @@
             <a href="https://github.com/mustafagulturk/mustafagulturk.github.io" target="_blank" rel="noopener" aria-label="Portfolyo GitHub">↗</a>
           </div>
           <h4 data-i18n="p.port">Kişisel Portfolyo</h4>
-          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Three.js ile yapılmış 3D bir çalışma odasında açılıyor: monitöre tıklayınca projeler, telefona tıklayınca Ocakbaşı oyunu, saksıdaki fidana tıklayınca Çınar dil modeli, rafa tıklayınca yetenekler. İki dil, açık/koyu tema ve GitHub API'den canlı veri de var.</p>
+          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Three.js ile yapılmış 3D bir çalışma odasında açılıyor: monitöre tıklayınca projeler, telefona tıklayınca Ocakbaşı ve Okey Salonu oyunları, saksıdaki fidana tıklayınca Çınar dil modeli, rafa tıklayınca yetenekler. İki dil, açık/koyu tema ve GitHub API'den canlı veri de var.</p>
           <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li><li>Three.js</li><li>WebGL</li><li>GitHub API</li><li>i18n</li></ul>
         </article>
       </div>
@@ -512,6 +569,7 @@
       <p class="preview-cap" data-cap="kadro" data-i18n="kd.cap.video">Tanıtım sayfasından panele geçiş, kanban üzerinde aday taşıma, gereksinim bazında CV analizi, CV içinde arama, analitik ve kariyer sayfasından başvuru.</p>
       <p class="preview-cap" data-cap="depom" data-i18n="dp.cap.video">Sağ üstte başka bir personelin yaptığı çıkış anında bildirim olarak düşer. Ardından komut paleti, kritik stoktan otomatik sipariş, barkod okutarak sayım ve etiket yazdırma.</p>
       <p class="preview-cap" data-cap="ocakbasi" data-i18n="oc.cap.video">Dükkân açılınca günün yemekleri tanıtılır. Ardından ızgara, fırın ve ocakta pişirme, pişeni tepsiye alma ve müşterilere servis; gün sonunda kazançla geliştirme alınır.</p>
+      <p class="preview-cap" data-cap="okey" data-i18n="ok.cap.video">Lobiden antrenman masasına geçiş. Desteden sürükleyerek taş çekme, istakada taşları düzenleme ve taş atma; sonra son taşı göstergeye bırakarak eli bitirme, sunucunun doğruladığı sonuç ve kutlama.</p>
       <p class="preview-cap" data-cap="qr" data-i18n="qr.cap.video">Solda müşteri telefonu, sağda mutfak ekranı. Sipariş verilir, mutfakta anında belirir, durum değişikliği müşteriye canlı yansır ve garson çağrısı mutfağa düşer.</p>
     </div>
     <div class="preview-pane" data-panel="galeri" hidden>
@@ -534,9 +592,9 @@
   <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
   <div id="bildirim" class="toast" role="status"></div>
 
-  <script src="i18n.js?v=20261023a"></script>
-  <script src="script.js?v=20261023a"></script>
+  <script src="i18n.js?v=20261025a"></script>
+  <script src="script.js?v=20261025a"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
-  <script type="module" src="oda-arayuz.js?v=20261023a"></script>
+  <script type="module" src="oda-arayuz.js?v=20261025a"></script>
 </body>
 </html>

@@ -157,6 +157,7 @@ let repoVerisi = null;
 const ACIKLAMALAR = {
   "ise-alim": { tr: "Kadro: Claude ile CV puanlayan yapay zekâ destekli işe alım platformu. NestJS, Next.js, PostgreSQL.", en: "Kadro: AI-powered applicant tracking that scores CVs with Claude. NestJS, Next.js, PostgreSQL." },
   ocakbasi: { tr: "Ocakbaşı: Antep mutfağı temalı mobil restoran oyunu. Phaser, Capacitor, Fastify.", en: "Ocakbaşı: a Gaziantep-cuisine mobile restaurant game. Phaser, Capacitor, Fastify." },
+  "mobil-okey": { tr: "Okey Salonu: Android için gerçek zamanlı 4 kişilik online Okey. React, Capacitor, Node.js, WebSocket.", en: "Okey Salonu: real-time 4-player online Okey for Android. React, Capacitor, Node.js, WebSocket." },
   "stok-yonetimi": { tr: "Depom: çok depolu stok ve satın alma yönetimi. ASP.NET Core, PostgreSQL, React.", en: "Depom: multi-warehouse stock and purchasing management. ASP.NET Core, PostgreSQL, React." },
   "qr-siparis": { tr: "Restoranlar için QR menü ve canlı mutfak paneli. Next.js, PostgreSQL.", en: "QR menu and live kitchen board for restaurants. Next.js, PostgreSQL." },
   "mustafagulturk.github.io": { tr: "Şu an baktığın portfolyo sitesi.", en: "The portfolio site you're looking at." },
@@ -359,6 +360,16 @@ const PROJELER = {
   ["gun-sonu", "Gün sonu özeti ve dükkânı büyütme", "End-of-day summary and shop upgrades"],
   ["skor-tablosu", "Sunucuda doğrulanan skor tablosu", "Server-verified leaderboard"],
   ["oyun-sonu", "Oyun sonu ve rekor", "Game over and new record"],
+  ] },
+  okey: { ad: "Okey Salonu", ekranlar: [
+  ["masa", "Masa: bordo çuha, ceviz istaka ve bakalit taşlar", "Table: burgundy baize, walnut rack and Bakelite tiles"],
+  ["lobi", "Lobi: salonlar, çip aralıkları, günlük hediye ve görevler", "Lobby: lounges, chip ranges, daily gift and quests"],
+  ["surukleyerek-cekme", "Desteden sürükleyerek taş çekme", "Dragging a tile from the deck"],
+  ["bitirme", "Son taşı göstergeye bırakarak eli bitirme", "Finishing the hand by dropping the last tile on the indicator"],
+  ["sonuc", "Sunucunun doğruladığı el sonu ve kutlama", "Server-validated hand result and celebration"],
+  ["hatali-bitir", "Bitmemiş el iddiası reddedilir, taş geri döner", "An invalid finish claim is rejected and the tile returns"],
+  ["magaza", "Mağaza: Play Billing ile çip paketleri", "Shop: chip packs with Play Billing"],
+  ["profil", "Profil ve isim etiketi süsleri", "Profile and name-tag cosmetics"],
   ] },
   depom: { ad: "Depom", ekranlar: [
   ["panel", "Panel: stok değeri, hareket grafiği, kritik stok", "Dashboard: stock value, movement chart, critical stock"],
