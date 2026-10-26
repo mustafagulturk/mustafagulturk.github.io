@@ -498,8 +498,9 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     }
     radarDoku.needsUpdate = true;
   }
-  radar.position.set(-1.45, MASA_Y, -0.17);
-  radar.rotation.y = 0.45;
+  // masanın köşesine çapraz oturur, odaya bakar
+  radar.position.set(-1.64, MASA_Y, -0.24);
+  radar.rotation.y = Math.PI / 4;
   sahne.add(radar);
 
   // Telemetri kartı (embedded-telemetry): Nucleo-F446RE, breadboard üzerinde MPU6050 ve BMP280
@@ -673,11 +674,12 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     gecit.add(mesh(kutu(0.02, 0.016, 0.004, 0.001), mat(0x0d0f12), x, 0.024, -0.081));
     if (i >= kablolar.length) continue;
     gecit.add(mesh(kutu(0.016, 0.012, 0.016, 0.002), mat(0xdfe6ee, { roughness: 0.3 }), x, 0.024, -0.09));
-    const egri = new THREE.CatmullRomCurve3([v3(x, 0.024, -0.098), v3(x * 0.7, 0.012, -0.14), v3(0.02 + i * 0.006, 0.004, -0.19), v3(0.03 + i * 0.008, 0.004, -0.32)]);
+    const egri = new THREE.CatmullRomCurve3([v3(x, 0.024, -0.098), v3(x * 0.85, 0.016, -0.125), v3(x * 0.5 + 0.01, 0.006, -0.145), v3(x * 0.3 + 0.01, -0.06, -0.165)]);
     gecit.add(mesh(new THREE.TubeGeometry(egri, 20, 0.0028, 6), mat(kablolar[i], { roughness: 0.6 })));
   }
-  gecit.position.set(-1.13, MASA_Y, 0.2);
-  gecit.rotation.y = 0.45;
+  // arka duvar kenarında, tablet ile lamba arasında; kablolar doğrudan duvara iner
+  gecit.position.set(-1.16, MASA_Y, -0.3);
+  gecit.rotation.y = 0.12;
   sahne.add(gecit);
 
   // Telefon (standda, ekranında oyun seçme ekranı)
