@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261025a">
+  <link rel="stylesheet" href="style.css?v=20261026a">
   <link rel="stylesheet" href="oda.css?v=20261025a">
   <script>
     // Tema, sayfa çizilmeden önce uygulanır (yanıp sönmeyi önler)
@@ -112,7 +112,7 @@
       <a data-tel-tam href="#" target="_blank" rel="noopener" hidden data-i18n="oda.tamekran">Tam ekran aç ↗</a>
     </div>
 
-    <!-- Yan panel: raf, diploma, pencere, zarf, defter -->
+    <!-- Yan panel: raf, diploma, pencere, zarf, fidan, laboratuvar köşesi, defter -->
     <aside id="oda-panel" class="oda-panel" hidden>
       <section data-oda-panel="raf">
         <p class="op-ust" data-i18n="nav.skills">Yetenekler</p>
@@ -166,6 +166,50 @@
           <a class="oda-btn oda-btn-metin" href="https://github.com/mustafagulturk/turkce-gptr" target="_blank" rel="noopener" data-i18n="oda.kod">Kod</a>
         </div>
       </section>
+      <section data-oda-panel="radar">
+        <p class="op-ust" data-i18n="oda.rad.ust">Sistem projesi · C++17</p>
+        <h3>Radar Target Tracker</h3>
+        <p data-i18n="oda.rad.p1">Dönen bir radarın UDP ile gönderdiği gürültülü ölçümleri çok iş parçacıklı bir hatta işleyen, Kalman filtresiyle çoklu hedef izleyen ve sonucu Qt ile klasik bir radar PPI ekranında gösteren simülatör.</p>
+        <p data-i18n="oda.rad.p2">Mahalanobis kapılama, en yakın komşu eşleştirme ve M-of-N iz doğrulama ile sahte alarmlar arasından gerçek hedefleri ayırıyor.</p>
+        <ul class="op-bilgi">
+          <li><span data-i18n="oda.rad.b1">Tarama</span><b data-i18n="oda.rad.v1">30 RPM, 11 hedef</b></li>
+          <li><span data-i18n="oda.rad.b2">Sahte alarm</span><b data-i18n="oda.rad.v2">Tur başına ~20</b></li>
+          <li><span>CI</span><b>GCC/Clang · ASan · UBSan · TSan</b></li>
+        </ul>
+        <ul class="op-cipler"><li>C++17</li><li data-i18n="oda.rad.kalman">Kalman filtresi</li><li>Qt 6</li><li>UDP</li><li>CMake</li><li>GoogleTest</li></ul>
+        <div class="op-btnler">
+          <a class="oda-btn oda-btn-metin op-ana" href="https://github.com/mustafagulturk/radar-target-tracker" target="_blank" rel="noopener" data-i18n="oda.kodgit">Kodu incele ↗</a>
+        </div>
+      </section>
+      <section data-oda-panel="telemetri">
+        <p class="op-ust" data-i18n="oda.tm.ust">Gömülü proje · C11</p>
+        <h3 data-i18n="oda.tm.b">Gömülü telemetri kartı</h3>
+        <p data-i18n="oda.tm.p1">STM32F446RE ve FreeRTOS üzerinde çalışan firmware: kendi yazdığım I2C sürücüleriyle IMU ve basınç sensörünü 100 Hz okuyor, irtifayı filtreliyor, CRC-16'lı paketlerle Python yer istasyonuna gönderiyor.</p>
+        <p data-i18n="oda.tm.p2">Watchdog, sensör kopması algılama ve fail-safe mod var; heap kullanılmıyor. Şimdilik Renode emülatöründe uçtan uca test edildi, gerçek kartta henüz denenmedi.</p>
+        <ul class="op-bilgi">
+          <li><span data-i18n="oda.tm.b1">Paket kaybı</span><b data-i18n="oda.tm.v1">4835 pakette 0</b></li>
+          <li><span data-i18n="oda.tm.b2">CPU yükü</span><b>%6,3</b></li>
+          <li><span data-i18n="oda.tm.b3">Sensör döngüsü (en kötü)</span><b>279 µs</b></li>
+        </ul>
+        <ul class="op-cipler"><li>C11</li><li>STM32</li><li>FreeRTOS</li><li>Renode</li><li>Unity</li><li>Python</li></ul>
+        <div class="op-btnler">
+          <a class="oda-btn oda-btn-metin op-ana" href="https://github.com/mustafagulturk/embedded-telemetry" target="_blank" rel="noopener" data-i18n="oda.kodgit">Kodu incele ↗</a>
+        </div>
+      </section>
+      <section data-oda-panel="gecit">
+        <p class="op-ust" data-i18n="oda.gc.ust">Ağ projesi · Go</p>
+        <h3 data-i18n="oda.gc.b">Taktik Mesaj Ağ Geçidi</h3>
+        <p data-i18n="oda.gc.p1">Sabit bit düzenli ikili taktik mesajları kodlayıp TCP üzerinden sahadaki birliklere dağıtan sunucu. Yalnızca Go standart kütüphanesi.</p>
+        <p data-i18n="oda.gc.p2">Bozuk paketlerde akışı yeniden senkronluyor, onaylı mesajı tam bir kez teslim ediyor; kopan bağlantı ve gecikme bir kaos proxy'si üzerinden test ediliyor. Anahtardaki kırmızı ışıklar o bozuk paketler.</p>
+        <ul class="op-bilgi">
+          <li><span data-i18n="oda.gc.b1">Konum raporu</span><b data-i18n="oda.gc.v1">26 bayt</b></li>
+          <li><span data-i18n="oda.gc.b2">Kodek</span><b data-i18n="oda.gc.v2">Go fuzz testli</b></li>
+        </ul>
+        <ul class="op-cipler"><li>Go</li><li>TCP</li><li>Fuzz testing</li><li>CRC-16</li><li>Docker</li></ul>
+        <div class="op-btnler">
+          <a class="oda-btn oda-btn-metin op-ana" href="https://github.com/mustafagulturk/taktik-mesaj-gecidi" target="_blank" rel="noopener" data-i18n="oda.kodgit">Kodu incele ↗</a>
+        </div>
+      </section>
       <section data-oda-panel="defter">
         <p class="op-ust">CV</p>
         <h3 data-i18n="oda.cv.b">Özgeçmişim</h3>
@@ -186,6 +230,7 @@
       <nav id="menu">
         <a href="#hakkimda" data-i18n="nav.about">Hakkımda</a>
         <a href="#yetenekler" data-i18n="nav.skills">Yetenekler</a>
+        <a href="#sistem" data-i18n="nav.systems">Sistem</a>
         <a href="#projeler" data-i18n="nav.projects">Projeler</a>
         <a href="#github">GitHub</a>
         <a href="#iletisim" data-i18n="nav.contact">İletişim</a>
@@ -286,6 +331,21 @@
       <div class="timeline stagger">
         <div class="tl-item">
           <span class="tl-date">2026</span>
+          <h4 data-i18n="rd.tlt">Radar Target Tracker · Kalman ile Hedef Takibi</h4>
+          <p data-i18n="rd.tlp">C++17, Qt ve Kalman filtresiyle UDP üzerinden gelen radar ölçümlerinden çoklu hedef izleyen, sanitizer'lı CI ile test edilen bir simülatör geliştirdim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
+          <h4 data-i18n="tm.tlt">Gömülü Telemetri · STM32 + FreeRTOS</h4>
+          <p data-i18n="tm.tlp">C ve FreeRTOS ile STM32 için kendi sürücüleri, watchdog'u ve fail-safe modu olan bir telemetri firmware'i yazdım ve Renode emülatöründe uçtan uca test ettim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
+          <h4 data-i18n="gc.tlt">Taktik Mesaj Ağ Geçidi · Go</h4>
+          <p data-i18n="gc.tlp">Go ile bit düzeyinde ikili protokol kullanan, bozuk pakete ve kopan bağlantıya dayanıklı, fuzz testli bir TCP ağ geçidi geliştirdim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
           <h4 data-i18n="tl.1t">Mezuniyet</h4>
           <p data-i18n="tl.1p">Lisans eğitimimi tamamladım ve yazılım geliştirme alanında kariyerime başladım.</p>
         </div>
@@ -341,6 +401,11 @@
           <ul><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js / NestJS</li><li>REST API</li><li>SignalR / Socket.IO</li><li>PostgreSQL</li><li>Prisma / Drizzle ORM</li><li>Redis / BullMQ</li><li>Claude API</li><li>Python / PyTorch</li><li data-i18n="sk.db">Veritabanı tasarımı</li></ul>
         </div>
         <div class="skill-group spot">
+          <div class="skill-icon">⚙</div>
+          <h4 data-i18n="sk.embedded">Gömülü ve Sistem</h4>
+          <ul><li>C / C++17</li><li>Go</li><li>STM32 / FreeRTOS</li><li>Qt 6</li><li>TCP / UDP</li><li>Renode</li><li>GoogleTest / Unity</li></ul>
+        </div>
+        <div class="skill-group spot">
           <div class="skill-icon">⌘</div>
           <h4 data-i18n="sk.tools">Araçlar</h4>
           <ul><li>Git &amp; GitHub</li><li>GitHub Actions</li><li>Docker</li><li>Jest</li><li>Vitest</li><li>xUnit</li><li>VS Code</li></ul>
@@ -353,8 +418,81 @@
       </div>
     </section>
 
+    <section id="sistem" class="container section">
+      <h3 class="section-title"><span class="mono">03.</span> <span data-i18n="sys.title">Sistem ve Gömülü Projeler</span></h3>
+      <article class="featured spot">
+        <button type="button" class="featured-media" data-proje="radar" data-onizle="video" aria-label="Radar Target Tracker demo videosunu aç">
+          <video poster="assets/radar/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/radar/demo.mp4" type="video/mp4"><source src="assets/radar/demo.webm" type="video/webm"></video>
+          <span class="play" aria-hidden="true">▶</span>
+          <span class="live-badge"><i></i> <span data-i18n="rd.live">Canlı iz takibi</span></span>
+        </button>
+        <div class="featured-body">
+          <p class="mono" data-i18n="rd.kicker">Sistem projesi · C++17</p>
+          <h4 data-i18n="rd.title">Radar Target Tracker · Kalman ile Çoklu Hedef Takibi</h4>
+          <p data-i18n="rd.desc">Dönen bir gözetleme radarının UDP üzerinden gönderdiği gürültülü ölçümleri çok iş parçacıklı bir hatta işleyen, Kalman filtresiyle birden fazla hedefi aynı anda izleyen ve sonucu Qt ile klasik bir radar PPI ekranında gösteren simülatör.</p>
+          <ul class="featured-points">
+            <li data-i18n="rd.f1">Problem: 30 RPM tarama, 11 hedef ve tur başına ~20 sahte alarm arasında gerçek izleri kaybetmeden takip etmek</li>
+            <li data-i18n="rd.f2">Yaklaşım: 4 durumlu Kalman filtresi, Mahalanobis kapılama, en yakın komşu eşleştirme ve M-of-N iz doğrulama; ağ alıcısı ve izleyici ayrı thread'lerde</li>
+            <li data-i18n="rd.f3">Kalite: GoogleTest birim ve entegrasyon testleri; GCC/Clang, ASan, UBSan ve TSan ile CI</li>
+          </ul>
+          <ul class="tags"><li>C++17</li><li>Kalman</li><li>Qt 6</li><li>UDP</li><li>CMake</li><li>GoogleTest</li><li>GitHub Actions</li></ul>
+          <div class="featured-actions">
+            <button type="button" class="btn btn-primary" data-proje="radar" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <a class="btn" href="https://github.com/mustafagulturk/radar-target-tracker" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="featured featured-ters spot">
+        <button type="button" class="featured-media" data-proje="telemetri" data-onizle="video" aria-label="Gömülü telemetri demo videosunu aç">
+          <video poster="assets/telemetri/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/telemetri/demo.mp4" type="video/mp4"><source src="assets/telemetri/demo.webm" type="video/webm"></video>
+          <span class="play" aria-hidden="true">▶</span>
+          <span class="live-badge"><i></i> <span data-i18n="tm.live">Renode emülatörü</span></span>
+        </button>
+        <div class="featured-body">
+          <p class="mono" data-i18n="tm.kicker">Gömülü proje · C11</p>
+          <h4 data-i18n="tm.title">Gömülü Telemetri · STM32 + FreeRTOS</h4>
+          <p data-i18n="tm.desc">STM32F446RE (Nucleo) için firmware ve Python yer istasyonu. Kendi yazdığım I2C sürücüleriyle IMU ve basınç sensörünü 100 Hz okur, irtifayı filtreler ve CRC-16'lı ikili paketlerle UART üzerinden gönderir. Watchdog, sensör kopması algılama ve fail-safe mod vardır.</p>
+          <ul class="featured-points">
+            <li data-i18n="tm.f1">Sonuç: 4835 pakette 0 kayıp, %6,3 CPU yükü, sensör döngüsü en kötü durumda 279 µs (10 ms bütçenin %2,8'i)</li>
+            <li data-i18n="tm.f2">Yaklaşım: HAL'siz kayıt seviyesi sürücüler, statik bellekli FreeRTOS (heap yok), görevleri denetleyen watchdog</li>
+            <li data-i18n="tm.f3">Test: sahte I2C yoluyla Unity birim testleri ve Renode'da uçtan uca testler; şimdilik yalnızca emülatörde denendi</li>
+          </ul>
+          <ul class="tags"><li>C11</li><li>STM32</li><li>FreeRTOS</li><li>I2C / UART</li><li>Renode</li><li>Unity</li><li>Python</li></ul>
+          <div class="featured-actions">
+            <button type="button" class="btn btn-primary" data-proje="telemetri" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <a class="btn" href="https://github.com/mustafagulturk/embedded-telemetry" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="featured spot">
+        <div class="featured-kod" role="img" aria-label="Kodlanmış bir konum raporu çerçevesi">
+<pre><b>$ tmcli encode posrep</b>
+c35a 22 80 000a 0014 0001 0d  475e1c635a8bae7440ea82a870  b2b4
+SYNC │  │  src  dst  seq  len  yük (13 bayt)               CRC
+     │  └ 1000 0000: pri=IMMEDIATE cls=0 ack=0 rsv=0
+     └ 0010 0010: ver=1 type=2 (POSREP)</pre>
+        </div>
+        <div class="featured-body">
+          <p class="mono" data-i18n="gc.kicker">Ağ projesi · Go</p>
+          <h4 data-i18n="gc.title">Taktik Mesaj Ağ Geçidi · Bit Düzeyinde Protokol</h4>
+          <p data-i18n="gc.desc">Sabit bit düzenli ikili taktik mesajları (konum raporu, temas raporu, emir, serbest metin) kodlayıp TCP üzerinden sahadaki birliklere dağıtan sunucu. Yalnızca Go standart kütüphanesiyle yazıldı.</p>
+          <ul class="featured-points">
+            <li data-i18n="gc.f1">Problem: bozuk paket, kopan bağlantı ve gecikmeye rağmen mesajları kaybetmeden ve çoğaltmadan iletmek</li>
+            <li data-i18n="gc.f2">Yaklaşım: her alan tam bit sayısıyla paketlenir, bir konum raporu 26 bayt; akış bozulunca yeniden senkronlanır, onaylı mesaj tam bir kez teslim edilir</li>
+            <li data-i18n="gc.f3">Test: gecikme, bit bozma ve bağlantı koparan bir kaos proxy'si üzerinden uçtan uca testler; kodek Go fuzz testli</li>
+          </ul>
+          <ul class="tags"><li>Go</li><li>TCP</li><li data-i18n="gc.fuzz">Fuzz testi</li><li>CRC-16</li><li>Docker</li></ul>
+          <div class="featured-actions">
+            <a class="btn btn-primary" href="https://github.com/mustafagulturk/taktik-mesaj-gecidi" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+          </div>
+        </div>
+      </article>
+    </section>
+
     <section id="projeler" class="container section">
-      <h3 class="section-title"><span class="mono">03.</span> <span data-i18n="p.title">Öne Çıkan Projeler</span></h3>
+      <h3 class="section-title"><span class="mono">04.</span> <span data-i18n="p.title">Öne Çıkan Projeler</span></h3>
       <article class="featured spot">
         <button type="button" class="featured-media" data-proje="kadro" data-onizle="video" aria-label="Kadro demo videosunu aç">
           <video poster="assets/kadro/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/kadro/demo.mp4" type="video/mp4"><source src="assets/kadro/demo.webm" type="video/webm"></video>
@@ -518,14 +656,14 @@
             <a href="https://github.com/mustafagulturk/mustafagulturk.github.io" target="_blank" rel="noopener" aria-label="Portfolyo GitHub">↗</a>
           </div>
           <h4 data-i18n="p.port">Kişisel Portfolyo</h4>
-          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Three.js ile yapılmış 3D bir çalışma odasında açılıyor: monitöre tıklayınca projeler, telefona tıklayınca Ocakbaşı ve Okey Salonu oyunları, saksıdaki fidana tıklayınca Çınar dil modeli, rafa tıklayınca yetenekler. İki dil, açık/koyu tema ve GitHub API'den canlı veri de var.</p>
+          <p data-i18n="p.portd">Şu an baktığın site. Framework kullanmadan yazıldı. Three.js ile yapılmış 3D bir çalışma odasında açılıyor: monitöre tıklayınca projeler, telefona tıklayınca Ocakbaşı ve Okey Salonu oyunları, saksıdaki fidana tıklayınca Çınar dil modeli, rafa tıklayınca yetenekler. L masanın sol kanadındaki laboratuvar köşesinde radar konsolu, Nucleo kartı ve ağ anahtarı sistem projelerini açıyor. İki dil, açık/koyu tema ve GitHub API'den canlı veri de var.</p>
           <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li><li>Three.js</li><li>WebGL</li><li>GitHub API</li><li>i18n</li></ul>
         </article>
       </div>
     </section>
 
     <section id="github" class="container section">
-      <h3 class="section-title"><span class="mono">04.</span> <span data-i18n="gh.title">GitHub'daki Son Çalışmalarım</span></h3>
+      <h3 class="section-title"><span class="mono">05.</span> <span data-i18n="gh.title">GitHub'daki Son Çalışmalarım</span></h3>
       <p class="section-sub" data-i18n="gh.sub">Bu bölüm GitHub API'den canlı olarak çekilir.</p>
 
       <div class="lang-stats">
@@ -544,7 +682,7 @@
 
     <section id="iletisim" class="container section contact">
       <div class="contact-glow" aria-hidden="true"><i></i><i></i><i></i></div>
-      <h3 class="section-title"><span class="mono">05.</span> <span data-i18n="nav.contact">İletişim</span></h3>
+      <h3 class="section-title"><span class="mono">06.</span> <span data-i18n="nav.contact">İletişim</span></h3>
       <h4 class="contact-big" data-i18n="c.big">Birlikte çalışalım</h4>
       <p data-i18n="c.p">Bir iş fırsatı, proje ya da sadece merhaba demek için bana yazabilirsin. En kısa sürede dönüş yaparım.</p>
       <div class="cta">
@@ -566,6 +704,8 @@
     </div>
     <div class="preview-pane" data-panel="video">
       <video id="onizleme-video" controls muted loop playsinline preload="none"></video>
+      <p class="preview-cap" data-cap="radar" data-i18n="rd.cap.video">10 saniyelik kayıt: 30 RPM dönen tarama, 11 hedef ve tur başına ~20 sahte alarm. Sağda iz tablosu, altta canlı hat istatistikleri.</p>
+      <p class="preview-cap" data-cap="telemetri" data-i18n="tm.cap.video">Renode'da 120 m'lik uçuş profili: IMU kopunca mod DEGRADED'a, basınç sensörü kopunca FAILSAFE'e geçer; sensörler geri gelince NORMAL'e döner.</p>
       <p class="preview-cap" data-cap="kadro" data-i18n="kd.cap.video">Tanıtım sayfasından panele geçiş, kanban üzerinde aday taşıma, gereksinim bazında CV analizi, CV içinde arama, analitik ve kariyer sayfasından başvuru.</p>
       <p class="preview-cap" data-cap="depom" data-i18n="dp.cap.video">Sağ üstte başka bir personelin yaptığı çıkış anında bildirim olarak düşer. Ardından komut paleti, kritik stoktan otomatik sipariş, barkod okutarak sayım ve etiket yazdırma.</p>
       <p class="preview-cap" data-cap="ocakbasi" data-i18n="oc.cap.video">Dükkân açılınca günün yemekleri tanıtılır. Ardından ızgara, fırın ve ocakta pişirme, pişeni tepsiye alma ve müşterilere servis; gün sonunda kazançla geliştirme alınır.</p>
@@ -592,9 +732,9 @@
   <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
   <div id="bildirim" class="toast" role="status"></div>
 
-  <script src="i18n.js?v=20261025a"></script>
-  <script src="script.js?v=20261025a"></script>
+  <script src="i18n.js?v=20261026a"></script>
+  <script src="script.js?v=20261026a"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
-  <script type="module" src="oda-arayuz.js?v=20261025a"></script>
+  <script type="module" src="oda-arayuz.js?v=20261026q"></script>
 </body>
 </html>

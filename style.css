@@ -688,3 +688,18 @@ body::after {
     background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg) 55%, transparent) 45%, transparent 100%);
   }
 }
+
+/* Ağ geçidi kartı: video yerine kodlanmış bir çerçeve */
+.featured-kod {
+  position: relative; overflow: hidden; border-radius: 14px; padding-top: 30px; background: #0b1220;
+  box-shadow: 0 30px 60px -28px rgb(2 6 23 / .8);
+}
+.featured-kod::before {
+  content: ""; position: absolute; top: 11px; left: 14px; width: 9px; height: 9px; border-radius: 50%;
+  background: #f87171; box-shadow: 15px 0 #fbbf24, 30px 0 #34d399;
+}
+.featured-kod pre {
+  margin: 0; padding: 18px 20px 22px; overflow-x: auto; color: #a7f3d0;
+  font: 500 .82rem/1.65 "JetBrains Mono", ui-monospace, monospace; white-space: pre;
+}
+.featured-kod pre b { color: #7dd3fc; font-weight: 600; }
