@@ -122,7 +122,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   sahne.add(zemin);
   const arkaDuvar = mesh(new THREE.PlaneGeometry(8, 4), duvarMat, 0, 2, -0.6);
   sahne.add(arkaDuvar);
-  const solDuvar = mesh(new THREE.PlaneGeometry(6, 4), duvarMat, -1.9, 2, 2.4);
+  const solDuvar = mesh(new THREE.PlaneGeometry(6, 4), duvarMat, -2.3, 2, 2.4);
   solDuvar.rotation.y = Math.PI / 2;
   sahne.add(solDuvar);
   // süpürgelik
@@ -136,16 +136,16 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   // ---- Masa ----
   const ahsap = mat(0x9a6a43, { roughness: 0.55 });
   const MASA_Y = 0.75;
-  // Tek parça L masa: arka duvar boyunca uzanır, sol duvarın önünde öne döner (laboratuvar köşesi)
+  // Tek parça L masa: iki kolu da aynı derinlikte; sol kol öne döner (laboratuvar köşesi), duvarlara yapışmaz
   const masaSekli = new THREE.Shape();
-  for (const [i, [x, z]] of [[0.9, -0.425], [0.9, 0.425], [-1.3, 0.425], [-1.3, 1.3], [-1.85, 1.3], [-1.85, -0.425]].entries()) {
+  for (const [i, [x, z]] of [[0.9, -0.425], [0.9, 0.425], [-1.0, 0.425], [-1.0, 1.3], [-1.85, 1.3], [-1.85, -0.425]].entries()) {
     if (i === 0) masaSekli.moveTo(x, -z); else masaSekli.lineTo(x, -z);
   }
   const masaGeo = new THREE.ExtrudeGeometry(masaSekli, { depth: 0.038, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 3 });
   masaGeo.rotateX(-Math.PI / 2);
   sahne.add(mesh(masaGeo, ahsap, 0, MASA_Y - 0.044, 0));
   const ayakMat = mat(0x1f2229, { metalness: 0.6, roughness: 0.4 });
-  for (const [x, z] of [[0.85, -0.37], [0.85, 0.37], [-1.8, -0.37], [-1.8, 1.25], [-1.35, 1.25], [-1.35, 0.47]]) {
+  for (const [x, z] of [[0.85, -0.37], [0.85, 0.37], [-1.8, -0.37], [-1.8, 1.25], [-1.05, 1.25]]) {
     sahne.add(mesh(kutu(0.045, MASA_Y - 0.05, 0.045, 0.008), ayakMat, x, (MASA_Y - 0.05) / 2, z));
   }
   // sağda çekmece dolabı
@@ -332,7 +332,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     g.font = "600 13px system-ui, sans-serif";
     g.fillText("ESD SAFE", 10, h - 10);
   });
-  const esdMat = mesh(kutu(0.46, 0.004, 0.56, 0.004), mat(0xffffff, { map: esdDoku, roughness: 1 }), -1.58, MASA_Y + 0.002, 0.68);
+  const esdMat = mesh(kutu(0.46, 0.004, 0.56, 0.004), mat(0xffffff, { map: esdDoku, roughness: 1 }), -1.45, MASA_Y + 0.002, 0.7);
   sahne.add(esdMat);
 
   // Radar konsolu (Radar Target Tracker): askeri tip kasa, dönen taramalı PPI ekranı
@@ -596,7 +596,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     ]);
     telemetri.add(mesh(new THREE.TubeGeometry(egri, 16, 0.0012, 6), mat(renk, { roughness: 0.5 })));
   });
-  telemetri.position.set(-1.58, MASA_Y + 0.004, 0.62);
+  telemetri.position.set(-1.45, MASA_Y + 0.004, 0.64);
   telemetri.rotation.y = 0.75;
   telemetri.scale.setScalar(1.5);
   sahne.add(telemetri);
