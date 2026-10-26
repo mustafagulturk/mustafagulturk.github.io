@@ -1362,8 +1362,11 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     return vurus?.object.userData.etkilesim ?? null;
   }
 
+  // bakış için fare konumu pencerenin tamamından okunur: tuvalin üstündeki yazılar/düğmeler bakışı kesmez
+  addEventListener("pointermove", (ev) => {
+    if (ev.pointerType !== "touch") fareKonum.set((ev.clientX / innerWidth) * 2 - 1, (ev.clientY / innerHeight) * 2 - 1);
+  }, { passive: true });
   renderer.domElement.addEventListener("pointermove", (ev) => {
-    fareKonum.set((ev.clientX / innerWidth) * 2 - 1, (ev.clientY / innerHeight) * 2 - 1);
     if (odaktaki || ev.pointerType === "touch") return;
     const e = sec(ev.clientX, ev.clientY);
     if (e !== uzerinde) {
@@ -1435,7 +1438,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     }
 
     // genel görünüşte fareyle hafif bakınma
-    fareYumusak.lerp(odaktaki || azHareket ? new THREE.Vector2() : fareKonum, 0.05);
+    // baş hareketini kullanıcı fareyle kendisi yaptığı için "animasyonları azalt" ayarında da açık kalır
+    fareYumusak.lerp(odaktaki ? new THREE.Vector2() : fareKonum, 0.05);
     // genel görünüşte baş hareketi, insan başı gibi: ortada sakin, kenara gittikçe açılan dönüş.
     // Sola ~63° (yan duvar ve bayrak görünür), sağa ~23°. Gözler boyun ekseninin önünde olduğundan
     // dönerken bakış noktası boyun etrafında hafifçe yay çizer; baş dönüş yönüne biraz da yatar.
