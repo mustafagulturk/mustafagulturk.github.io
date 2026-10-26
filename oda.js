@@ -11,7 +11,7 @@
  *     Radar tableti → Radar Target Tracker
  *     Telemetri kutusu (Nucleo kartı + sensörler) → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
- * Pencerenin solunda spotla aydınlatılan Türk bayrağı.
+ * Pencerenin solunda, pencereyle aynı boyda Türk bayrağı.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -772,15 +772,15 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   pencere.position.set(-1.05, 1.5, -0.585);
   sahne.add(pencere);
 
-  // Türk bayrağı: pencerenin solunda pirinç çubuğa asılı saten kumaş; kıvrımlı, hafifçe dalgalanır
-  const BW = 1.05, BH = 0.7;
+  // Türk bayrağı: pencerenin solunda, pencereyle aynı yükseklikte; pirinç çubuğa asılı saten kumaş, kıvrımlı, hafifçe dalgalanır
+  const BH = PH, BW = BH * 1.5; // pencere camıyla aynı yükseklik, resmî 3:2 oran
   const bayrakDoku = tuvalDokusu(1200, 800, (g) => {
     // resmî oranlar (Türk Bayrağı Kanunu), 1200×800 ölçekte
-    g.fillStyle = "#e30a17";
+    g.fillStyle = "#b0000f"; // kan kırmızısı
     g.fillRect(0, 0, 1200, 800);
     g.fillStyle = "#fff";
     g.beginPath(); g.arc(425, 400, 200, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#e30a17";
+    g.fillStyle = "#b0000f"; // kan kırmızısı
     g.beginPath(); g.arc(475, 400, 160, 0, Math.PI * 2); g.fill();
     g.fillStyle = "#fff";
     g.beginPath();
@@ -811,7 +811,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const bayrakIlk = bayrakGeo.attributes.position.array.slice();
   const bayrak = new THREE.Mesh(bayrakGeo, new THREE.MeshPhysicalMaterial({
     map: bayrakDoku, bumpMap: dokumaDoku, bumpScale: 0.4, roughness: 0.5,
-    sheen: 1, sheenRoughness: 0.35, sheenColor: new THREE.Color(0xff4d4d), side: THREE.DoubleSide,
+    sheen: 1, sheenRoughness: 0.35, sheenColor: new THREE.Color(0xd42030), side: THREE.DoubleSide,
   }));
   bayrak.castShadow = bayrak.receiveShadow = true;
   const bayrakGrup = new THREE.Group();
@@ -829,7 +829,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }
   // kumaşı çubuğa bağlayan halkalar
   for (let i = 0; i < 9; i++) bayrakGrup.add(mesh(new THREE.TorusGeometry(0.009, 0.0018, 6, 16), pirinc, -BW / 2 + 0.03 + i * ((BW - 0.06) / 8), 0.004, 0.035));
-  bayrakGrup.position.set(-2.22, 2.02, -0.6);
+  bayrakGrup.position.set(-1.65 - BW / 2, 1.5 + BH / 2, -0.6); // üst kenarı camın üst kenarıyla hizalı
   sahne.add(bayrakGrup);
   function bayrakDalga(t) {
     const p = bayrakGeo.attributes.position;
@@ -846,71 +846,6 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     bayrakGeo.computeVertexNormals();
   }
   bayrakDalga(0);
-
-  // Spot: duvara yaka ile bağlı modern siyah spot; görünür ışık hüzmesi ve duvarda ışık halkası
-  const spot = new THREE.Group();
-  const spotMat = mat(0x111317, { roughness: 0.35, metalness: 0.6 });
-  spot.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.012, 24), spotMat, 0, 0, 0.006).rotateX(Math.PI / 2)); // duvar rozeti
-  const spotKol = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.2, 10), spotMat, 0, 0, 0.1);
-  spotKol.rotation.x = Math.PI / 2;
-  spot.add(spotKol);
-  const spotBas = new THREE.Group();
-  spotBas.add(mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.1, 28), spotMat));
-  spotBas.add(mesh(new THREE.TorusGeometry(0.032, 0.004, 8, 28), pirinc, 0, -0.05, 0).rotateX(Math.PI / 2)); // pirinç halka
-  for (let i = 0; i < 6; i++) spotBas.add(mesh(new THREE.BoxGeometry(0.066, 0.003, 0.004), spotMat, 0, 0.03 - i * 0.008, 0)); // soğutma kanatları
-  const mercek = new THREE.Mesh(new THREE.CircleGeometry(0.026, 28), new THREE.MeshBasicMaterial({ color: 0xfff4dc, toneMapped: false }));
-  mercek.rotation.x = Math.PI / 2;
-  mercek.position.y = -0.0505;
-  spotBas.add(mercek);
-  spotBas.position.set(0, -0.012, 0.2);
-  spot.add(spotBas);
-  spot.position.set(-2.5, 2.48, -0.6);
-  sahne.add(spot);
-  const spotHedef = v3(-2.22, 1.62, -0.6);
-  const mercekKonum = new THREE.Vector3();
-  spot.updateMatrixWorld(true);
-  spotBas.lookAt(spotHedef);
-  spotBas.rotateX(-Math.PI / 2); // silindirin alt yüzü (mercek) hedefe bakar
-  spot.updateMatrixWorld(true);
-  mercek.getWorldPosition(mercekKonum);
-  const bayrakSpot = new THREE.SpotLight(0xffe4b8, 8, 2.6, 0.36, 0.55, 1.1);
-  bayrakSpot.position.copy(mercekKonum);
-  bayrakSpot.target.position.copy(spotHedef);
-  bayrakSpot.castShadow = true;
-  bayrakSpot.shadow.mapSize.set(512, 512);
-  bayrakSpot.shadow.bias = -0.0005;
-  sahne.add(bayrakSpot, bayrakSpot.target);
-  // hüzme: mercekten hedefe uzanan, uca doğru solan saydam koni
-  const huzmeUzun = mercekKonum.distanceTo(spotHedef);
-  const huzmeGeo = new THREE.ConeGeometry(Math.tan(0.36) * huzmeUzun, huzmeUzun, 40, 1, true);
-  huzmeGeo.translate(0, -huzmeUzun / 2, 0);
-  huzmeGeo.rotateX(-Math.PI / 2);
-  const huzmeDoku = tuvalDokusu(4, 128, (g, w, h) => {
-    const gr = g.createLinearGradient(0, 0, 0, h);
-    gr.addColorStop(0, "rgba(255, 236, 200, 0.9)");
-    gr.addColorStop(0.75, "rgba(255, 236, 200, 0.45)");
-    gr.addColorStop(1, "rgba(255, 236, 200, 0)");
-    g.fillStyle = gr;
-    g.fillRect(0, 0, w, h);
-  });
-  const huzmeMat = new THREE.MeshBasicMaterial({ map: huzmeDoku, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
-  const huzme = new THREE.Mesh(huzmeGeo, huzmeMat);
-  huzme.position.copy(mercekKonum);
-  huzme.lookAt(spotHedef);
-  sahne.add(huzme);
-  // merceğin parlaması
-  const parlamaDoku = tuvalDokusu(64, 64, (g) => {
-    const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    r.addColorStop(0, "rgba(255,244,220,1)");
-    r.addColorStop(0.3, "rgba(255,230,180,.45)");
-    r.addColorStop(1, "rgba(255,230,180,0)");
-    g.fillStyle = r;
-    g.fillRect(0, 0, 64, 64);
-  });
-  const parlama = new THREE.Sprite(new THREE.SpriteMaterial({ map: parlamaDoku, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
-  parlama.position.copy(mercekKonum);
-  parlama.scale.setScalar(0.09);
-  sahne.add(parlama);
 
   // Kitaplık rafı
   const raf = new THREE.Group();
@@ -1155,8 +1090,6 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     pencereIsik.intensity = gece ? 0.6 : 2.2;
     pencereIsik.color.set(gece ? 0x9db4ff : 0xfff1d6);
     lambaIsik.intensity = gece ? 9 : 3;
-    bayrakSpot.intensity = gece ? 10 : 8;
-    huzmeMat.opacity = gece ? 0.28 : 0.18;
     sahne.environmentIntensity = gece ? 0.35 : 0.8;
   }
   temaUygula();
