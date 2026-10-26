@@ -2,7 +2,7 @@
  * 3D odanın sayfayla bağlantısı: odayı açar/kapatır, nesneye yaklaşılınca ilgili HTML katmanını gösterir.
  * WebGL yoksa ya da ziyaretçi "Klasik görünüm"ü seçtiyse normal site gösterilir.
  */
-import { odaBaslat } from "./oda.js?v=20261026j";
+import { odaBaslat } from "./oda.js?v=20261026k";
 
 const kok = document.documentElement;
 const $ = (s) => document.querySelector(s);
