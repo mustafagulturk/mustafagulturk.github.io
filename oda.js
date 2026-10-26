@@ -11,6 +11,7 @@
  *     Radar tableti → Radar Target Tracker
  *     Telemetri kutusu (Nucleo kartı + sensörler) → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
+ * Pencerenin solunda spotla aydınlatılan Türk bayrağı.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -771,6 +772,75 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   pencere.position.set(-1.05, 1.5, -0.585);
   sahne.add(pencere);
 
+  // Türk bayrağı: pencerenin solunda pirinç çubuğa asılı, hafifçe dalgalanır; üstteki duvar spotu aydınlatır
+  const BW = 0.84, BH = 0.56;
+  const bayrakDoku = tuvalDokusu(1200, 800, (g) => {
+    // resmî oranlar (Türk Bayrağı Kanunu), 1200×800 ölçekte
+    g.fillStyle = "#e30a17";
+    g.fillRect(0, 0, 1200, 800);
+    g.fillStyle = "#fff";
+    g.beginPath(); g.arc(425, 400, 200, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#e30a17";
+    g.beginPath(); g.arc(475, 400, 160, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#fff";
+    g.beginPath();
+    [[583.334, 400], [764.235, 458.779], [652.431, 304.894], [652.431, 495.106], [764.235, 341.221]].forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+    g.closePath();
+    g.fill();
+  });
+  bayrakDoku.anisotropy = 8;
+  const bayrakGeo = new THREE.PlaneGeometry(BW, BH, 32, 20);
+  const bayrakIlk = bayrakGeo.attributes.position.array.slice();
+  const bayrak = new THREE.Mesh(bayrakGeo, new THREE.MeshStandardMaterial({ map: bayrakDoku, roughness: 0.75, side: THREE.DoubleSide }));
+  bayrak.receiveShadow = true;
+  const bayrakGrup = new THREE.Group();
+  bayrak.position.set(0, -BH / 2, 0.03);
+  bayrakGrup.add(bayrak);
+  const pirinc = mat(0xc9a227, { metalness: 0.85, roughness: 0.3 });
+  const cubuk = mesh(new THREE.CylinderGeometry(0.006, 0.006, BW + 0.08, 12), pirinc, 0, 0.004, 0.03);
+  cubuk.rotation.z = Math.PI / 2;
+  bayrakGrup.add(cubuk);
+  for (const sx of [-1, 1]) {
+    bayrakGrup.add(mesh(new THREE.SphereGeometry(0.011, 14, 10), pirinc, sx * (BW / 2 + 0.045), 0.004, 0.03));
+    bayrakGrup.add(mesh(kutu(0.012, 0.012, 0.032, 0.003), pirinc, sx * (BW / 2 - 0.02), 0.004, 0.015)); // duvar tutucu
+  }
+  bayrakGrup.position.set(-2.15, 1.98, -0.6);
+  sahne.add(bayrakGrup);
+  function bayrakDalga(t) {
+    const p = bayrakGeo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = bayrakIlk[i * 3], y = bayrakIlk[i * 3 + 1];
+      const asagi = (BH / 2 - y) / BH; // üst kenar çubukta sabit, aşağı indikçe serbest
+      const dalga = Math.sin(x * 9 + t * 1.6) * 0.6 + Math.sin(x * 4.5 - y * 6 + t * 1.1) * 0.4;
+      p.array[i * 3 + 2] = dalga * 0.012 * (0.25 + asagi);
+    }
+    p.needsUpdate = true;
+    bayrakGeo.computeVertexNormals();
+  }
+  bayrakDalga(0);
+  // duvar spotu: siyah gövdeli küçük spot, kolla duvara bağlı, bayrağa bakar
+  const spot = new THREE.Group();
+  const spotMat = mat(0x16181d, { roughness: 0.4, metalness: 0.5 });
+  spot.add(mesh(kutu(0.05, 0.05, 0.012, 0.004), spotMat, 0, 0, 0.006)); // duvar plakası
+  const spotKol = mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.12, 8), spotMat, 0, 0, 0.06);
+  spotKol.rotation.x = Math.PI / 2;
+  spot.add(spotKol);
+  const spotBas = new THREE.Group();
+  spotBas.add(mesh(new THREE.CylinderGeometry(0.028, 0.022, 0.08, 20), spotMat));
+  const spotCam = new THREE.Mesh(new THREE.CircleGeometry(0.02, 20), new THREE.MeshBasicMaterial({ color: 0xfff1cf, toneMapped: false }));
+  spotCam.rotation.x = Math.PI / 2;
+  spotCam.position.y = -0.0405;
+  spotBas.add(spotCam);
+  spotBas.position.set(0, -0.01, 0.12);
+  spotBas.rotation.x = 0.75; // aşağı ve duvara doğru
+  spot.add(spotBas);
+  spot.position.set(-2.15, 2.16, -0.6);
+  sahne.add(spot);
+  const bayrakSpot = new THREE.SpotLight(0xffe2b0, 4, 1.6, 0.5, 0.65, 1.4);
+  bayrakSpot.position.set(-2.15, 2.13, -0.47);
+  bayrakSpot.target.position.set(-2.15, 1.72, -0.6);
+  sahne.add(bayrakSpot, bayrakSpot.target);
+
   // Kitaplık rafı
   const raf = new THREE.Group();
   raf.add(mesh(kutu(0.9, 0.03, 0.22, 0.006), ahsap, 0, 0, 0));
@@ -1014,6 +1084,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     pencereIsik.intensity = gece ? 0.6 : 2.2;
     pencereIsik.color.set(gece ? 0x9db4ff : 0xfff1d6);
     lambaIsik.intensity = gece ? 9 : 3;
+    bayrakSpot.intensity = gece ? 6 : 3.5;
     sahne.environmentIntensity = gece ? 0.35 : 0.8;
   }
   temaUygula();
@@ -1284,6 +1355,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     // laboratuvar köşesi: radar taraması, kartın 1 Hz LED'i, anahtarın port LED'leri
     radarCiz(azHareket ? 0 : dt);
     oledCiz(t, dt);
+    if (!azHareket) bayrakDalga(t);
     radarLed.visible = t % 1 < 0.85;
     const ledAcik = t % 1 < 0.5;
     kartLedMat.color.setHex(ledAcik ? 0x2bff6a : 0x0b2a14);
