@@ -8,7 +8,7 @@
  *   Defter    → CV
  *   Fidan     → Çınar (sıfırdan eğitilmiş Türkçe dil modeli, deneysel proje)
  *   L masanın sol kanadı (laboratuvar köşesi):
- *     Radar konsolu → Radar Target Tracker
+ *     Radar tableti → Radar Target Tracker
  *     Nucleo kartı  → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
@@ -346,119 +346,99 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const esdMat = mesh(kutu(0.46, 0.004, 0.56, 0.004), mat(0xffffff, { map: esdDoku, roughness: 1 }), -1.45, MASA_Y + 0.002, 0.7);
   sahne.add(esdMat);
 
-  // Radar konsolu (Radar Target Tracker): askeri tip kasa, dönen taramalı PPI ekranı
+  // Radar tableti (Radar Target Tracker): ince, standa oturan tablet; ekranda canlı PPI ve iz tablosu
   const radar = new THREE.Group();
-  const radarGovde = new THREE.Group();
-  const konsolMat = mat(0x56654f, { roughness: 0.6, metalness: 0.25 });
-  const koyuMat = mat(0x1b1f1c, { roughness: 0.45, metalness: 0.4 });
-  radarGovde.add(mesh(kutu(0.34, 0.27, 0.25, 0.018), konsolMat, 0, 0.145, 0));
-  radarGovde.add(mesh(kutu(0.315, 0.25, 0.01, 0.006), mat(0x3f4a3a, { roughness: 0.7 }), 0, 0.145, 0.126)); // ön panel
-  const RADAR_R = 0.098;
+  const aluMat = mat(0xc9ccd3, { metalness: 0.85, roughness: 0.28 });
+  const TAB_W = 0.34, TAB_H = 0.22;
+  // stand: ince alüminyum taban ve geriye yatık destek
+  radar.add(mesh(kutu(0.16, 0.008, 0.12, 0.004), aluMat, 0, 0.004, -0.02));
+  const destekKol = mesh(kutu(0.05, 0.15, 0.008, 0.003), aluMat, 0, 0.075, -0.055);
+  destekKol.rotation.x = -0.3;
+  radar.add(destekKol);
+  const tablet = new THREE.Group();
+  tablet.add(mesh(kutu(TAB_W + 0.014, TAB_H + 0.014, 0.008, 0.008), mat(0x0c0d10, { roughness: 0.25, metalness: 0.4 })));
+  const RW = 640, RH = 400;
   const radarTuval = document.createElement("canvas");
-  radarTuval.width = radarTuval.height = 256;
+  radarTuval.width = RW;
+  radarTuval.height = RH;
   const rg = radarTuval.getContext("2d");
-  rg.fillStyle = "#020a04";
-  rg.fillRect(0, 0, 256, 256);
-  // kerteriz skalası: her karede tekrar çizilmesin diye ayrı tuvalde
-  const skala = document.createElement("canvas");
-  skala.width = skala.height = 256;
-  const sg = skala.getContext("2d");
-  sg.strokeStyle = "rgba(90, 255, 140, .55)";
-  sg.fillStyle = "rgba(120, 255, 160, .7)";
-  sg.font = "600 11px monospace";
-  sg.textAlign = "center";
-  for (let d = 0; d < 360; d += 10) {
-    const a = (d - 90) * Math.PI / 180, uzun = d % 30 === 0;
-    sg.lineWidth = uzun ? 2 : 1;
-    sg.beginPath();
-    sg.moveTo(128 + Math.cos(a) * 125, 128 + Math.sin(a) * 125);
-    sg.lineTo(128 + Math.cos(a) * (uzun ? 116 : 120), 128 + Math.sin(a) * (uzun ? 116 : 120));
-    sg.stroke();
-    if (d % 90 === 0) sg.fillText(String(d).padStart(3, "0"), 128 + Math.cos(a) * 104, 132 + Math.sin(a) * 104);
-  }
+  rg.fillStyle = "#03100a";
+  rg.fillRect(0, 0, RW, RH);
   const radarDoku = new THREE.CanvasTexture(radarTuval);
   radarDoku.colorSpace = THREE.SRGBColorSpace;
-  const radarEkran = new THREE.Mesh(new THREE.CircleGeometry(RADAR_R, 48), new THREE.MeshBasicMaterial({ map: radarDoku, toneMapped: false }));
-  radarEkran.position.set(-0.03, 0.16, 0.132);
-  radarGovde.add(radarEkran);
-  // ekranın etrafında güneşlik (kısa açık silindir) ve çerçeve
-  const gunesluk = mesh(new THREE.CylinderGeometry(RADAR_R + 0.012, RADAR_R + 0.012, 0.035, 48, 1, true), new THREE.MeshStandardMaterial({ color: 0x1b1f1c, roughness: 0.5, side: THREE.DoubleSide }), -0.03, 0.16, 0.148);
-  gunesluk.rotation.x = Math.PI / 2;
-  radarGovde.add(gunesluk);
-  radarGovde.add(mesh(new THREE.TorusGeometry(RADAR_R + 0.012, 0.006, 10, 48), koyuMat, -0.03, 0.16, 0.166));
-  // sağda düğme sütunu: iki ayar düğmesi, üç anahtar, etiket
-  for (const y of [0.225, 0.165]) {
-    const d = mesh(new THREE.CylinderGeometry(0.014, 0.016, 0.016, 20), koyuMat, 0.115, y, 0.138);
-    d.rotation.x = Math.PI / 2;
-    radarGovde.add(d);
-    radarGovde.add(mesh(new THREE.BoxGeometry(0.003, 0.011, 0.002), mat(0xe8e2d6), 0.115, y + 0.004, 0.147));
+  radarDoku.anisotropy = 4;
+  const radarEkran = new THREE.Mesh(new THREE.PlaneGeometry(TAB_W, TAB_H), new THREE.MeshBasicMaterial({ map: radarDoku, toneMapped: false }));
+  radarEkran.position.z = 0.0042;
+  tablet.add(radarEkran);
+  const radarLed = new THREE.Mesh(new THREE.SphereGeometry(0.0018, 8, 6), new THREE.MeshBasicMaterial({ color: 0x3dff8a, toneMapped: false }));
+  radarLed.position.set(0, TAB_H / 2 + 0.004, 0.0042);
+  tablet.add(radarLed);
+  tablet.rotation.x = -0.3; // ekran hafif yukarı bakar
+  tablet.position.set(0, 0.125, -0.02);
+  radar.add(tablet);
+  // ekranın masaya düşen yeşil parıltısı
+  const radarIsik = new THREE.PointLight(0x3dff8a, 0.06, 0.35, 2);
+  radarIsik.position.set(0, 0.12, 0.12);
+  radar.add(radarIsik);
+
+  // PPI: sol tarafta daire, sağda iz tablosu, üstte durum çubuğu
+  const PX = 205, PY = 214, PR = 170;
+  const skala = document.createElement("canvas");
+  skala.width = RW;
+  skala.height = RH;
+  const sg = skala.getContext("2d");
+  sg.strokeStyle = "rgba(61, 255, 138, .5)";
+  sg.fillStyle = "rgba(140, 255, 185, .75)";
+  sg.font = "600 12px monospace";
+  sg.textAlign = "center";
+  for (let d = 0; d < 360; d += 5) {
+    const a = (d - 90) * Math.PI / 180, uzun = d % 30 === 0;
+    sg.lineWidth = uzun ? 1.6 : 0.8;
+    sg.beginPath();
+    sg.moveTo(PX + Math.cos(a) * PR, PY + Math.sin(a) * PR);
+    sg.lineTo(PX + Math.cos(a) * (PR - (uzun ? 10 : 5)), PY + Math.sin(a) * (PR - (uzun ? 10 : 5)));
+    sg.stroke();
+    if (d % 90 === 0) sg.fillText(String(d).padStart(3, "0"), PX + Math.cos(a) * (PR - 22), PY + 4 + Math.sin(a) * (PR - 22));
   }
-  for (let i = 0; i < 3; i++) {
-    const s = mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 0.016, 8), mat(0xc9ccd3, { metalness: 0.9, roughness: 0.3 }), 0.095 + i * 0.02, 0.105, 0.14);
-    s.rotation.x = Math.PI / 2 - 0.5;
-    radarGovde.add(s);
-  }
-  const etiketPlaka = tuvalDokusu(160, 64, (g, w, h) => {
-    g.fillStyle = "#d9d3bf";
-    g.fillRect(0, 0, w, h);
-    g.fillStyle = "#1b1f1c";
-    g.font = "700 20px monospace";
-    g.fillText("PPI-30", 10, 28);
-    g.font = "500 13px monospace";
-    g.fillText("30 RPM · 40 km", 10, 50);
-  });
-  radarGovde.add(mesh(new THREE.PlaneGeometry(0.06, 0.024), mat(0xffffff, { map: etiketPlaka, roughness: 0.8 }), 0.115, 0.06, 0.132));
-  const radarLed = new THREE.Mesh(new THREE.SphereGeometry(0.0045, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffb020, toneMapped: false }));
-  radarLed.position.set(0.115, 0.258, 0.133);
-  radarGovde.add(radarLed);
-  // yan havalandırma yarıkları ve taşıma kolları
-  for (const sx of [-1, 1]) {
-    for (let i = 0; i < 5; i++) radarGovde.add(mesh(kutu(0.004, 0.006, 0.15, 0.002), koyuMat, sx * 0.171, 0.09 + i * 0.022, -0.01));
-    const kol = mesh(new THREE.TorusGeometry(0.045, 0.006, 8, 20, Math.PI), koyuMat, sx * 0.178, 0.2, 0);
-    kol.rotation.set(0, Math.PI / 2, -Math.PI / 2 * sx);
-    radarGovde.add(kol);
-  }
-  for (const [x, z] of [[-0.14, -0.1], [0.14, -0.1], [-0.14, 0.1], [0.14, 0.1]]) radarGovde.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.012, 12), mat(0x111111, { roughness: 1 }), x, 0.006, z));
-  radarGovde.rotation.x = -0.1; // ekran hafif yukarı bakar
-  radarGovde.position.z = 0.02;
-  radar.add(radarGovde);
-  // arkadan duvara giden kablo
-  radar.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([v3(0.09, 0.07, -0.105), v3(0.09, 0.03, -0.14), v3(0.07, 0.004, -0.18), v3(0.02, 0.004, -0.24)]), 20, 0.004, 6), koyuMat));
-  // Hedefler: yavaşça ilerleyen birkaç iz (ekran yarıçapına göre)
   const hedefler = Array.from({ length: 7 }, (_, i) => ({
+    no: 101 + i * 7,
     x: Math.cos(i * 2.1) * (0.25 + (i % 3) * 0.22), y: Math.sin(i * 2.1) * (0.25 + (i % 3) * 0.22),
     vx: Math.cos(i * 1.3) * 0.012, vy: Math.sin(i * 1.3) * 0.012,
   }));
   let taramaAci = 0;
+  let tabloZamani = 0;
   function radarCiz(dt) {
-    const w = 256, m = w / 2, r = m - 3;
-    // fosfor: önceki kare yavaşça söner
-    rg.fillStyle = "rgba(2, 10, 4, 0.06)";
-    rg.fillRect(0, 0, w, w);
-    rg.strokeStyle = "rgba(60, 255, 120, .22)";
+    // fosfor: yalnızca daire içi yavaşça söner
+    rg.save();
+    rg.beginPath();
+    rg.arc(PX, PY, PR, 0, Math.PI * 2);
+    rg.clip();
+    rg.fillStyle = "rgba(3, 16, 10, 0.07)";
+    rg.fillRect(PX - PR, PY - PR, PR * 2, PR * 2);
+    rg.strokeStyle = "rgba(61, 255, 138, .16)";
     rg.lineWidth = 1;
-    for (const k of [0.33, 0.66]) {
+    for (const k of [0.25, 0.5, 0.75]) {
       rg.beginPath();
-      rg.arc(m, m, r * k, 0, Math.PI * 2);
+      rg.arc(PX, PY, PR * k, 0, Math.PI * 2);
       rg.stroke();
     }
     rg.beginPath();
-    rg.moveTo(m - r, m); rg.lineTo(m + r, m); rg.moveTo(m, m - r); rg.lineTo(m, m + r);
+    rg.moveTo(PX - PR, PY); rg.lineTo(PX + PR, PY); rg.moveTo(PX, PY - PR); rg.lineTo(PX, PY + PR);
     rg.stroke();
     const onceki = taramaAci;
     taramaAci = (taramaAci + dt * Math.PI) % (Math.PI * 2); // 30 RPM
     // son kareden bu yana taranan dilim (kare hızı düşükse de boşluk kalmaz)
-    rg.fillStyle = "rgba(90, 255, 140, .3)";
+    rg.fillStyle = "rgba(61, 255, 138, .22)";
     rg.beginPath();
-    rg.moveTo(m, m);
-    rg.arc(m, m, r, onceki, onceki <= taramaAci ? taramaAci : taramaAci + Math.PI * 2);
+    rg.moveTo(PX, PY);
+    rg.arc(PX, PY, PR, onceki, onceki <= taramaAci ? taramaAci : taramaAci + Math.PI * 2);
     rg.closePath();
     rg.fill();
-    rg.strokeStyle = "rgba(140, 255, 175, .95)";
+    rg.strokeStyle = "rgba(170, 255, 205, .95)";
     rg.lineWidth = 2;
     rg.beginPath();
-    rg.moveTo(m, m);
-    rg.lineTo(m + Math.cos(taramaAci) * r, m + Math.sin(taramaAci) * r);
+    rg.moveTo(PX, PY);
+    rg.lineTo(PX + Math.cos(taramaAci) * PR, PY + Math.sin(taramaAci) * PR);
     rg.stroke();
     for (const h of hedefler) {
       h.x += h.vx * dt;
@@ -468,13 +448,54 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       if (a < 0) a += Math.PI * 2;
       const gecti = onceki <= taramaAci ? a > onceki && a <= taramaAci : a > onceki || a <= taramaAci;
       if (gecti) {
-        rg.fillStyle = "rgba(170, 255, 190, 1)";
+        const x = PX + h.x * PR, y = PY + h.y * PR;
+        rg.strokeStyle = "rgba(190, 255, 215, 1)";
+        rg.lineWidth = 1.5;
+        rg.strokeRect(x - 5, y - 5, 10, 10);
         rg.beginPath();
-        rg.arc(m + h.x * r, m + h.y * r, 4, 0, Math.PI * 2);
-        rg.fill();
+        rg.moveTo(x, y);
+        rg.lineTo(x + h.vx * 900, y + h.vy * 900); // hız vektörü
+        rg.stroke();
+        rg.fillStyle = "rgba(190, 255, 215, .9)";
+        rg.font = "600 11px monospace";
+        rg.textAlign = "left";
+        rg.fillText("T" + h.no, x + 8, y - 6);
       }
     }
+    rg.restore();
     rg.drawImage(skala, 0, 0);
+    // durum çubuğu ve iz tablosu: saniyede birkaç kez tazelenir
+    tabloZamani -= dt;
+    if (tabloZamani <= 0) {
+      tabloZamani = 0.25;
+      rg.fillStyle = "#06150e";
+      rg.fillRect(0, 0, RW, 26);
+      rg.fillRect(400, 26, RW - 400, RH - 26);
+      rg.fillStyle = "rgba(61, 255, 138, .9)";
+      rg.font = "700 13px monospace";
+      rg.textAlign = "left";
+      rg.fillText("RADAR · PPI", 14, 18);
+      rg.fillStyle = "rgba(140, 255, 185, .6)";
+      rg.font = "500 12px monospace";
+      rg.fillText("30 RPM   RNG 40 km   KALMAN", 130, 18);
+      rg.textAlign = "right";
+      rg.fillText("TRK " + hedefler.length + "/40", RW - 14, 18);
+      rg.textAlign = "left";
+      rg.fillStyle = "rgba(61, 255, 138, .85)";
+      rg.font = "700 12px monospace";
+      rg.fillText("İZ    MENZİL  KERTERİZ", 416, 54);
+      rg.strokeStyle = "rgba(61, 255, 138, .25)";
+      rg.beginPath(); rg.moveTo(416, 62); rg.lineTo(RW - 16, 62); rg.stroke();
+      rg.font = "500 12px monospace";
+      hedefler.forEach((h, i) => {
+        const menzil = (Math.hypot(h.x, h.y) * 40).toFixed(1).padStart(4, " ");
+        let ker = (Math.atan2(h.y, h.x) * 180 / Math.PI + 90 + 360) % 360;
+        rg.fillStyle = i === 0 ? "rgba(190, 255, 215, 1)" : "rgba(140, 255, 185, .7)";
+        rg.fillText(`T${h.no}  ${menzil}   ${String(Math.round(ker)).padStart(3, "0")}°`, 416, 84 + i * 22);
+      });
+      rg.fillStyle = "rgba(140, 255, 185, .45)";
+      rg.fillText("GNN · M/N 3/5 · χ² 9.21", 416, RH - 20);
+    }
     radarDoku.needsUpdate = true;
   }
   radar.position.set(-1.45, MASA_Y, -0.17);
@@ -1023,7 +1044,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     { ad: "pencere", grup: pencere, baslik: "Gaziantep", odak: () => ({ kamera: v(-0.75, 1.5, 0.6), hedef: v(-1.05, 1.45, -0.6) }), panel: true },
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
     { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.3, 1.2, 0.72), hedef: v(0.32, 0.76, 0.3) }), panel: true },
-    { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 1.0, 0.15, 0.05), panel: true },
+    { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 0.7, 0.13, 0.12), panel: true },
     { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.62, 0.03, 0.45), panel: true },
     { ad: "gecit", grup: gecit, baslik: "Taktik mesaj ağ geçidi", odak: () => onden(gecit, 0.7, 0.03, 0.35), panel: true },
     { ad: "fidan", grup: fidan, baslik: "Çınar · dil modeli", odak: () => ({ kamera: v(0.62, 1.12, 0.3), hedef: v(0.78, 0.93, -0.25) }), panel: true },
