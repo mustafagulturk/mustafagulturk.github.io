@@ -779,9 +779,11 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const BH = PH, BW = PENCERE_SOL - SOL_DUVAR_X - 2 * BAYRAK_BOSLUK;
   const TW = Math.round((800 * BW) / BH);
   const bayrakDoku = tuvalDokusu(TW, 800, (g) => {
-    // ay-yıldız resmî ölçülerde (Türk Bayrağı Kanunu, 800 px yükseklik), gönderden uzaklıkları korunur
+    // ay-yıldız resmî ölçülerde (Türk Bayrağı Kanunu, 800 px yükseklik), iki rozetin tam ortasında
     g.fillStyle = "#b0000f"; // kan kırmızısı
     g.fillRect(0, 0, TW, 800);
+    g.save();
+    g.translate(TW / 2 - (225 + 764.235) / 2, 0); // hilalin sol ucu ile yıldızın sağ ucu arası ortalanır
     g.fillStyle = "#fff";
     g.beginPath(); g.arc(425, 400, 200, 0, Math.PI * 2); g.fill();
     g.fillStyle = "#b0000f";
@@ -791,6 +793,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     [[583.334, 400], [764.235, 458.779], [652.431, 304.894], [652.431, 495.106], [764.235, 341.221]].forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
     g.closePath();
     g.fill();
+    g.restore();
     // dokuma: ince atkı/çözgü çizgileri, ışığı kumaş gibi kırar
     g.globalAlpha = 0.07;
     g.fillStyle = "#000";
@@ -813,10 +816,12 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   dokumaDoku.repeat.set(Math.round(12 * BW / (BH * 1.5)), 8);
   const bayrakGeo = new THREE.PlaneGeometry(BW, BH, 120, 64);
   const bayrakIlk = bayrakGeo.attributes.position.array.slice();
-  const bayrak = new THREE.Mesh(bayrakGeo, new THREE.MeshPhysicalMaterial({
-    map: bayrakDoku, bumpMap: dokumaDoku, bumpScale: 0.4, roughness: 0.5,
-    sheen: 1, sheenRoughness: 0.35, sheenColor: new THREE.Color(0xd42030), side: THREE.DoubleSide,
-  }));
+  const bayrakMat = new THREE.MeshPhysicalMaterial({
+    // kadife: mat yüzey, parlaklık yalnızca ışığa göre değişen yumuşak tüy ışıltısı (sheen) ile gelir
+    map: bayrakDoku, bumpMap: dokumaDoku, bumpScale: 0.25, roughness: 0.95, envMapIntensity: 0.25,
+    sheen: 0.6, sheenRoughness: 0.85, sheenColor: new THREE.Color(0x7a0a12), side: THREE.DoubleSide,
+  });
+  const bayrak = new THREE.Mesh(bayrakGeo, bayrakMat);
   bayrak.castShadow = bayrak.receiveShadow = true;
   const bayrakGrup = new THREE.Group();
   bayrak.position.set(0, -BH / 2, 0.012);
@@ -1134,6 +1139,9 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     pencereIsik.color.set(gece ? 0x9db4ff : 0xfff1d6);
     lambaIsik.intensity = gece ? 9 : 3;
     sahne.environmentIntensity = gece ? 0.35 : 0.8;
+    // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
+    bayrakMat.sheen = gece ? 0.2 : 0.45;
+    bayrakMat.sheenColor.set(gece ? 0x4a0610 : 0xa0202a);
   }
   temaUygula();
   new MutationObserver(temaUygula).observe(kok, { attributes: true, attributeFilter: ["data-theme"] });
