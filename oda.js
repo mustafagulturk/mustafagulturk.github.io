@@ -1436,12 +1436,21 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
 
     // genel görünüşte fareyle hafif bakınma
     fareYumusak.lerp(odaktaki || azHareket ? new THREE.Vector2() : fareKonum, 0.05);
-    // genel görünüşte baş hareketi: kamera yerinde durur, bakış fareye döner (sola daha çok, L masanın kanadına)
-    kamera.position.copy(kameraDurum.konum);
+    // genel görünüşte baş hareketi, insan başı gibi: ortada sakin, kenara gittikçe açılan dönüş.
+    // Sola ~70° (yan duvar ve bayrak görünür), sağa daha az. Gözler boyun ekseninin önünde olduğundan
+    // dönerken bakış noktası boyun etrafında hafifçe yay çizer; baş dönüş yönüne biraz da yatar.
+    const fx = fareYumusak.x, fy = fareYumusak.y;
+    const yaw = -Math.sign(fx) * Math.pow(Math.abs(fx), 1.35) * (fx < 0 ? 1.2 : 0.32);
+    const pitch = -fy * (fy < 0 ? 0.22 : 0.14); // yukarı (tavana) biraz daha fazla
     bakis.subVectors(kameraDurum.hedef, kameraDurum.konum);
-    bakis.applyAxisAngle(Y_EKSEN, -fareYumusak.x * (fareYumusak.x < 0 ? 0.7 : 0.22));
     bakisSag.set(-bakis.z, 0, bakis.x).normalize();
-    bakis.applyAxisAngle(bakisSag, -fareYumusak.y * 0.1);
+    // boyun ekseni gözlerin 9 cm arkasında; göz noktası bu eksen etrafında döner
+    bakisHedef.copy(bakis).setY(0).normalize().multiplyScalar(0.09);
+    kamera.position.copy(kameraDurum.konum).sub(bakisHedef).add(bakisHedef.applyAxisAngle(Y_EKSEN, yaw));
+    bakis.applyAxisAngle(Y_EKSEN, yaw);
+    bakisSag.applyAxisAngle(Y_EKSEN, yaw);
+    bakis.applyAxisAngle(bakisSag, pitch);
+    kamera.up.set(0, 1, 0).applyAxisAngle(bakis.clone().normalize(), yaw * 0.035);
     kamera.lookAt(bakisHedef.addVectors(kamera.position, bakis));
     kamera.updateMatrixWorld();
     if (bitecek) {
