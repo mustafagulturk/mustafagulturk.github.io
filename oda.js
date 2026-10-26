@@ -908,38 +908,37 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }
   bayrakDalga(0);
 
-  // Tavan spotu: bayrağın tam ortasının üstünde, ışığı bayrağın merkezine düşer; gece hafif sarı yanar
+  // Gömme tavan spotu: duvarın dibinde, bayrağın tam ortası hizasında; ışık duvarı yalayarak bayrağa iner.
+  // Gece hafif sarı yanar, gündüz söner.
   const spotHedef = new THREE.Object3D();
-  spotHedef.position.set(bayrakGrup.position.x, 1.32, -0.57); // orta noktanın biraz altı: üstteki yakın kısım fazla parlamasın
+  spotHedef.position.set(bayrakGrup.position.x, 1.05, -0.6);
   sahne.add(spotHedef);
-  const spotKonum = v3(bayrakGrup.position.x, TAVAN_Y, 0.45); // duvardan açıkta, ışık bayrağa eğik değil önden düşer
+  const spotKonum = v3(bayrakGrup.position.x, TAVAN_Y, -0.3);
   const spot = new THREE.Group();
   spot.position.copy(spotKonum);
-  const spotGovdeMat = mat(0x22252d, { metalness: 0.6, roughness: 0.35 });
-  const spotTaban = mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.012, 32), spotGovdeMat, 0, -0.006, 0);
-  const spotMafsal = mesh(new THREE.SphereGeometry(0.014, 16, 12), spotGovdeMat, 0, -0.03, 0);
-  spot.add(spotTaban, mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.03, 10), spotGovdeMat, 0, -0.022, 0), spotMafsal);
-  // kafa: hedefe dönük silindir, ucunda ışık veren mercek ve ince pirinç halka
-  const spotKafa = new THREE.Group();
-  spotKafa.position.set(0, -0.03, 0);
-  const kafaGovde = mesh(new THREE.CylinderGeometry(0.032, 0.026, 0.1, 28, 1, true), spotGovdeMat, 0, -0.05, 0);
-  kafaGovde.material = spotGovdeMat.clone();
-  kafaGovde.material.side = THREE.DoubleSide;
-  const kafaArka = mesh(new THREE.CircleGeometry(0.026, 28), spotGovdeMat, 0, 0, 0);
-  kafaArka.rotation.x = -Math.PI / 2;
+  // tavanla aynı hizada beyaz kapak halkası, içinde koyu oyuk ve geride ışık veren mercek
+  const spotKapak = mesh(new THREE.RingGeometry(0.042, 0.06, 40), mat(0xf2efe8, { roughness: 0.5 }), 0, -0.002, 0);
+  spotKapak.rotation.x = Math.PI / 2;
+  const oyukMat = mat(0x16171c, { roughness: 0.7, side: THREE.DoubleSide });
+  const oyuk = mesh(new THREE.CylinderGeometry(0.042, 0.036, 0.04, 32, 1, true), oyukMat, 0, 0.018, 0);
   const spotMercekMat = new THREE.MeshStandardMaterial({ color: 0xfff2d0, emissive: 0xffd27a, emissiveIntensity: 0 });
-  const spotMercek = mesh(new THREE.CircleGeometry(0.029, 28), spotMercekMat, 0, -0.095, 0);
+  const spotMercek = mesh(new THREE.CircleGeometry(0.036, 32), spotMercekMat, 0, 0.036, 0);
   spotMercek.rotation.x = Math.PI / 2;
-  const spotHalka = mesh(new THREE.TorusGeometry(0.032, 0.003, 8, 32), mat(0xc9a227, { metalness: 0.9, roughness: 0.3 }), 0, -0.1, 0);
-  spotHalka.rotation.x = Math.PI / 2;
-  spotKafa.add(kafaGovde, kafaArka, spotMercek, spotHalka);
-  // kafanın -Y ekseni hedefe baksın
-  const spotYon = spotHedef.position.clone().sub(v3(spotKonum.x, spotKonum.y - 0.03, spotKonum.z)).normalize();
-  spotKafa.quaternion.setFromUnitVectors(v3(0, -1, 0), spotYon);
-  spot.add(spotKafa);
+  spot.add(spotKapak, oyuk, spotMercek);
+  // tavanda spotun oyuğu kadar delik açılır (tavan düzlemi x→x, y→z eşlenir)
+  {
+    const tw = 4 - SOL_DUVAR_X, cx = (4 + SOL_DUVAR_X) / 2;
+    const sekil = new THREE.Shape();
+    sekil.moveTo(-tw / 2, -3); sekil.lineTo(tw / 2, -3); sekil.lineTo(tw / 2, 3); sekil.lineTo(-tw / 2, 3); sekil.closePath();
+    const delik = new THREE.Path();
+    delik.absarc(spotKonum.x - cx, spotKonum.z - 2.4, 0.042, 0, Math.PI * 2, true);
+    sekil.holes.push(delik);
+    tavan.geometry.dispose();
+    tavan.geometry = new THREE.ShapeGeometry(sekil, 48);
+  }
   sahne.add(spot);
-  const bayrakSpot = new THREE.SpotLight(0xffd58a, 0, 4, 0.56, 0.7, 1.6);
-  bayrakSpot.position.copy(spotKonum).addScaledVector(spotYon, 0.13).add(v3(0, -0.03, 0));
+  const bayrakSpot = new THREE.SpotLight(0xffd58a, 0, 4, 0.62, 0.75, 1.6);
+  bayrakSpot.position.set(spotKonum.x, TAVAN_Y - 0.01, spotKonum.z);
   bayrakSpot.target = spotHedef;
   bayrakSpot.castShadow = true;
   bayrakSpot.shadow.mapSize.set(1024, 1024);
@@ -1195,8 +1194,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     // tavan rengi duvarla aynı aileden, bir ton açık; bayrak spotu yalnızca gece yanar
     tavanMat.color.set(gece ? 0x454b5d : 0xe6e1d7);
     tavanMat.emissive.copy(tavanMat.color).multiplyScalar(gece ? 0.2 : 0.38);
-    bayrakSpot.intensity = gece ? 8 : 0;
-    spotMercekMat.emissiveIntensity = gece ? 2.2 : 0;
+    bayrakSpot.intensity = gece ? 11 : 0;
+    spotMercekMat.emissiveIntensity = gece ? 3 : 0;
     // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
     bayrakMat.sheen = gece ? 0.2 : 0.45;
     bayrakMat.sheenColor.set(gece ? 0x4a0610 : 0xa0202a);
