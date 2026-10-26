@@ -7,6 +7,10 @@
  *   Zarf      → iletişim
  *   Defter    → CV
  *   Fidan     → Çınar (sıfırdan eğitilmiş Türkçe dil modeli, deneysel proje)
+ *   L masanın sol kanadı (laboratuvar köşesi):
+ *     Radar konsolu → Radar Target Tracker
+ *     Nucleo kartı  → gömülü telemetri
+ *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -29,6 +33,7 @@ function webglVar() {
 }
 
 const kutu = (w, h, d, r = 0.01) => new RoundedBoxGeometry(w, h, d, 3, Math.min(r, w / 2, h / 2, d / 2));
+const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const mat = (renk, o = {}) => new THREE.MeshStandardMaterial({ color: renk, roughness: 0.7, metalness: 0, ...o });
 
 function mesh(geo, malzeme, x = 0, y = 0, z = 0) {
@@ -306,6 +311,205 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   fidan.position.set(0.78, MASA_Y, -0.25);
   fidan.rotation.y = -0.5;
   sahne.add(fidan);
+
+  // ---- L masanın sol kanadı: laboratuvar köşesi (radar, telemetri kartı, ağ geçidi) ----
+  const KANAT_X = -1.85; // sol duvara yakın uç
+  sahne.add(mesh(kutu(-0.9 - KANAT_X, 0.05, 0.85, 0.012), ahsap, (KANAT_X - 0.9) / 2, MASA_Y - 0.025, 0));
+  const DONUS_X = -1.3, DONUS_Z = 1.3; // dönüş kolu: sol duvar boyunca öne uzanır
+  sahne.add(mesh(kutu(DONUS_X - KANAT_X, 0.05, DONUS_Z - 0.425 + 0.012, 0.012), ahsap, (KANAT_X + DONUS_X) / 2, MASA_Y - 0.025, (0.425 + DONUS_Z) / 2 - 0.006));
+  for (const [x, z] of [[KANAT_X + 0.05, -0.37], [KANAT_X + 0.05, DONUS_Z - 0.05], [DONUS_X - 0.05, DONUS_Z - 0.05]]) {
+    sahne.add(mesh(kutu(0.045, MASA_Y - 0.05, 0.045, 0.008), ayakMat, x, (MASA_Y - 0.05) / 2, z));
+  }
+  // antistatik mat
+  const esdMat = mesh(kutu(0.5, 0.004, 0.62, 0.004), mat(0x3d5a73, { roughness: 1 }), -1.55, MASA_Y + 0.002, 0.5);
+  esdMat.rotation.y = 0.2;
+  sahne.add(esdMat);
+
+  // Radar konsolu (Radar Target Tracker): dönen taramalı yuvarlak PPI ekranı
+  const radar = new THREE.Group();
+  const konsolMat = mat(0x4b5a4c, { roughness: 0.55, metalness: 0.25 });
+  radar.add(mesh(kutu(0.32, 0.28, 0.24, 0.015), konsolMat, 0, 0.14, 0));
+  radar.add(mesh(kutu(0.3, 0.035, 0.05, 0.008), konsolMat, 0, 0.0175, 0.13));
+  const RADAR_R = 0.105;
+  const radarTuval = document.createElement("canvas");
+  radarTuval.width = radarTuval.height = 256;
+  const rg = radarTuval.getContext("2d");
+  rg.fillStyle = "#020a04";
+  rg.fillRect(0, 0, 256, 256);
+  const radarDoku = new THREE.CanvasTexture(radarTuval);
+  radarDoku.colorSpace = THREE.SRGBColorSpace;
+  const radarEkran = new THREE.Mesh(new THREE.CircleGeometry(RADAR_R, 48), new THREE.MeshBasicMaterial({ map: radarDoku, toneMapped: false }));
+  radarEkran.position.set(0, 0.155, 0.1215);
+  radar.add(radarEkran);
+  const cerceve = mesh(new THREE.TorusGeometry(RADAR_R + 0.006, 0.009, 10, 48), mat(0x1a1f1b, { roughness: 0.4, metalness: 0.5 }), 0, 0.155, 0.121);
+  radar.add(cerceve);
+  for (const x of [-0.115, 0.115]) {
+    const dugme = mesh(new THREE.CylinderGeometry(0.012, 0.013, 0.014, 16), mat(0x1a1f1b, { roughness: 0.4 }), x, 0.045, 0.125);
+    dugme.rotation.x = Math.PI / 2;
+    radar.add(dugme);
+  }
+  const radarLed = new THREE.Mesh(new THREE.SphereGeometry(0.005, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffb020, toneMapped: false }));
+  radarLed.position.set(0.115, 0.24, 0.121);
+  radar.add(radarLed);
+  // Hedefler: yavaşça ilerleyen birkaç iz (kutupsal → kartezyen, ekran yarıçapına göre)
+  const hedefler = Array.from({ length: 7 }, (_, i) => ({
+    x: Math.cos(i * 2.1) * (0.25 + (i % 3) * 0.22), y: Math.sin(i * 2.1) * (0.25 + (i % 3) * 0.22),
+    vx: Math.cos(i * 1.3) * 0.012, vy: Math.sin(i * 1.3) * 0.012, parlak: 0,
+  }));
+  let taramaAci = 0;
+  function radarCiz(dt) {
+    const w = 256, m = w / 2, r = m - 3;
+    // fosfor: önceki kare yavaşça söner
+    rg.fillStyle = "rgba(2, 10, 4, 0.06)";
+    rg.fillRect(0, 0, w, w);
+    rg.strokeStyle = "rgba(60, 255, 120, .25)";
+    rg.lineWidth = 1;
+    for (const k of [0.33, 0.66, 1]) {
+      rg.beginPath();
+      rg.arc(m, m, r * k, 0, Math.PI * 2);
+      rg.stroke();
+    }
+    rg.beginPath();
+    rg.moveTo(m - r, m); rg.lineTo(m + r, m); rg.moveTo(m, m - r); rg.lineTo(m, m + r);
+    rg.stroke();
+    const onceki = taramaAci;
+    taramaAci = (taramaAci + dt * Math.PI) % (Math.PI * 2); // 30 RPM
+    // son kareden bu yana taranan dilim (kare hızı düşükse de boşluk kalmaz)
+    rg.fillStyle = "rgba(90, 255, 140, .35)";
+    rg.beginPath();
+    rg.moveTo(m, m);
+    rg.arc(m, m, r, onceki, onceki <= taramaAci ? taramaAci : taramaAci + Math.PI * 2);
+    rg.closePath();
+    rg.fill();
+    rg.strokeStyle = "rgba(140, 255, 175, .95)";
+    rg.lineWidth = 2;
+    rg.beginPath();
+    rg.moveTo(m, m);
+    rg.lineTo(m + Math.cos(taramaAci) * r, m + Math.sin(taramaAci) * r);
+    rg.stroke();
+    for (const h of hedefler) {
+      h.x += h.vx * dt;
+      h.y += h.vy * dt;
+      if (Math.hypot(h.x, h.y) > 0.92) { h.vx = -h.vx; h.vy = -h.vy; }
+      let a = Math.atan2(h.y, h.x);
+      if (a < 0) a += Math.PI * 2;
+      const gecti = onceki <= taramaAci ? a > onceki && a <= taramaAci : a > onceki || a <= taramaAci;
+      if (gecti) {
+        rg.fillStyle = "rgba(170, 255, 190, 1)";
+        rg.beginPath();
+        rg.arc(m + h.x * r, m + h.y * r, 4.5, 0, Math.PI * 2);
+        rg.fill();
+      }
+    }
+    radarDoku.needsUpdate = true;
+  }
+  radar.position.set(-1.42, MASA_Y, -0.16);
+  radar.rotation.y = 0.42;
+  sahne.add(radar);
+
+  // Telemetri kartı (embedded-telemetry): Nucleo-F446RE, breadboard üzerinde MPU6050 ve BMP280
+  const telemetri = new THREE.Group();
+  const nucleoDoku = tuvalDokusu(256, 300, (g, w, h) => {
+    g.fillStyle = "#f4f4f2";
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = "#e3e3e0";
+    g.fillRect(0, 0, w, 80); // ST-LINK bölümü
+    g.strokeStyle = "#c9c9c4";
+    g.lineWidth = 2;
+    g.setLineDash([6, 5]);
+    g.beginPath(); g.moveTo(0, 80); g.lineTo(w, 80); g.stroke();
+    g.fillStyle = "#1f3b73";
+    g.font = "700 22px system-ui, sans-serif";
+    g.textAlign = "center";
+    g.fillText("NUCLEO-F446RE", w / 2, 272);
+    g.font = "600 16px system-ui, sans-serif";
+    g.fillText("STM32", w / 2, 250);
+  });
+  const nucleo = new THREE.Group();
+  const NW = 0.105, ND = 0.123;
+  nucleo.add(mesh(new THREE.BoxGeometry(NW, 0.003, ND), mat(0xf4f4f2, { roughness: 0.6 }), 0, 0.0015, 0));
+  const nucleoUst = new THREE.Mesh(new THREE.PlaneGeometry(NW, ND), mat(0xffffff, { map: nucleoDoku, roughness: 0.6 }));
+  nucleoUst.rotation.x = -Math.PI / 2;
+  nucleoUst.position.y = 0.0031;
+  nucleo.add(nucleoUst);
+  const siyah = mat(0x15161a, { roughness: 0.5 });
+  nucleo.add(mesh(kutu(0.022, 0.003, 0.022, 0.001), siyah, 0, 0.0045, 0.012)); // MCU
+  nucleo.add(mesh(kutu(0.012, 0.0025, 0.012, 0.001), siyah, 0.02, 0.0045, -0.04)); // ST-LINK MCU
+  for (const x of [-NW / 2 + 0.008, NW / 2 - 0.008]) nucleo.add(mesh(kutu(0.006, 0.009, 0.075, 0.001), siyah, x, 0.0075, 0.02)); // morpho
+  for (const x of [-0.03, 0.03]) nucleo.add(mesh(kutu(0.005, 0.008, 0.05, 0.001), siyah, x, 0.007, 0.025)); // arduino
+  nucleo.add(mesh(kutu(0.014, 0.008, 0.012, 0.002), mat(0xb8bcc4, { metalness: 0.9, roughness: 0.3 }), -0.02, 0.007, -ND / 2 + 0.004)); // USB
+  const mavi = mesh(new THREE.CylinderGeometry(0.0045, 0.0045, 0.004, 12), mat(0x2f6fe0), -0.012, 0.005, 0.045);
+  nucleo.add(mavi);
+  const kartLedMat = new THREE.MeshBasicMaterial({ color: 0x2bff6a, toneMapped: false });
+  const kartLed = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.002, 0.003), kartLedMat);
+  kartLed.position.set(0.012, 0.0045, 0.045);
+  nucleo.add(kartLed);
+  const kartIsik = new THREE.PointLight(0x2bff6a, 0, 0.12, 2);
+  kartIsik.position.set(0.012, 0.015, 0.045);
+  nucleo.add(kartIsik);
+  nucleo.position.set(-0.07, 0, 0.02);
+  telemetri.add(nucleo);
+  // breadboard ve sensör modülleri
+  const bb = mesh(kutu(0.13, 0.01, 0.055, 0.002), mat(0xefeee8, { roughness: 0.8 }), 0.08, 0.005, 0.02);
+  bb.rotation.y = Math.PI / 2;
+  telemetri.add(bb);
+  const morPcb = mat(0x5a2c8a, { roughness: 0.5 });
+  const mpu = mesh(kutu(0.02, 0.002, 0.016, 0.001), morPcb, 0.08, 0.016, -0.015);
+  const bmp = mesh(kutu(0.014, 0.002, 0.012, 0.001), morPcb, 0.08, 0.016, 0.045);
+  telemetri.add(mpu, bmp);
+  telemetri.add(mesh(kutu(0.004, 0.003, 0.004, 0.0005), siyah, 0.08, 0.0185, -0.015));
+  telemetri.add(mesh(kutu(0.003, 0.002, 0.003, 0.0005), mat(0xb8bcc4, { metalness: 0.9 }), 0.08, 0.018, 0.045));
+  // jumper kablolar: Nucleo başlığından breadboard'a
+  [[0xd63031, 0.0], [0x222222, 0.008], [0xf1c40f, 0.016], [0x27ae60, 0.024]].forEach(([renk, k]) => {
+    const egri = new THREE.CatmullRomCurve3([
+      v3(-0.07 + 0.03, 0.012, 0.0 + k), v3(0.0, 0.035, -0.01 + k), v3(0.055, 0.02, k + 0.0), v3(0.068, 0.011, k + 0.005),
+    ]);
+    telemetri.add(mesh(new THREE.TubeGeometry(egri, 16, 0.0012, 6), mat(renk, { roughness: 0.5 })));
+  });
+  telemetri.position.set(-1.56, MASA_Y + 0.004, 0.45);
+  telemetri.rotation.y = 0.7;
+  telemetri.scale.setScalar(1.35);
+  sahne.add(telemetri);
+
+  // Ağ anahtarı (Taktik Mesaj Ağ Geçidi): port LED'leri paket geçtikçe yanar, arada bozuk paket kırmızı
+  const gecit = new THREE.Group();
+  gecit.add(mesh(kutu(0.27, 0.042, 0.15, 0.006), mat(0x2b2f37, { roughness: 0.35, metalness: 0.5 }), 0, 0.021, 0));
+  const anahtarDoku = tuvalDokusu(256, 64, (g, w, h) => {
+    g.fillStyle = "#2b2f37";
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = "#cfd6e4";
+    g.font = "700 26px 'JetBrains Mono', monospace";
+    g.fillText("TMG", 14, 40);
+    g.font = "500 16px system-ui, sans-serif";
+    g.fillStyle = "#8f9bb3";
+    g.fillText("tactical gateway · TCP", 80, 38);
+  });
+  const anahtarUst = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.04), mat(0xffffff, { map: anahtarDoku, roughness: 0.4 }));
+  anahtarUst.rotation.x = -Math.PI / 2;
+  anahtarUst.position.set(-0.04, 0.0425, 0.03);
+  gecit.add(anahtarUst);
+  const portLedler = [];
+  const kablolar = [0xf39c12, 0x3498db, 0xecf0f1, 0x3498db, 0xf39c12];
+  for (let i = 0; i < 8; i++) {
+    const x = -0.105 + i * 0.03;
+    gecit.add(mesh(kutu(0.02, 0.016, 0.006, 0.001), mat(0x0d0f12), x, 0.018, 0.074));
+    const led = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.003, 0.002), new THREE.MeshBasicMaterial({ color: 0x113311, toneMapped: false }));
+    led.position.set(x + 0.006, 0.033, 0.0755);
+    gecit.add(led);
+    const bagli = i < kablolar.length;
+    portLedler.push({ led, bagli, sonraki: Math.random(), kirmizi: 0 });
+    if (bagli) {
+      // kablo porttan çıkıp öne kıvrılır, sonra masanın arkasına gider
+      gecit.add(mesh(kutu(0.016, 0.012, 0.016, 0.002), mat(0xdfe6ee, { roughness: 0.3 }), x, 0.018, 0.083));
+      const egri = new THREE.CatmullRomCurve3([
+        v3(x, 0.018, 0.09), v3(x, 0.008, 0.115), v3(x - 0.03, 0.004, 0.125), v3(-0.17, 0.004, 0.1 - i * 0.006), v3(-0.23, 0.004, -0.04 - i * 0.012),
+      ]);
+      gecit.add(mesh(new THREE.TubeGeometry(egri, 24, 0.0028, 6), mat(kablolar[i], { roughness: 0.6 })));
+    }
+  }
+  gecit.position.set(-1.16, MASA_Y, 0.24);
+  gecit.rotation.y = 0.5;
+  sahne.add(gecit);
 
   // Telefon (standda, ekranında oyun seçme ekranı)
   const telefon = new THREE.Group();
@@ -655,6 +859,13 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     return { kamera: merkez.clone().addScaledVector(normal, uzak), hedef: merkez };
   }
 
+  /** Nesnenin ön yüzüne (yerel +z) bakan, hafif yukarıdan bir odak. */
+  function onden(grup, uzak, yuk, egim) {
+    const hedef = grup.localToWorld(v(0, yuk, 0));
+    const ileri = new THREE.Vector3(Math.sin(grup.rotation.y), 0, Math.cos(grup.rotation.y));
+    return { kamera: hedef.clone().addScaledVector(ileri, uzak).add(v(0, uzak * egim + 0.12, 0)), hedef };
+  }
+
   etkilesimler.push(
     { ad: "monitor", grup: monitor, baslik: "Projeler", odak: () => ekranaBak(monitor, ekran, EKRAN_W, EKRAN_H, kamera.aspect < 1 ? 1.06 : 1.28), yuzey: ekran, w: EKRAN_W, h: EKRAN_H },
     { ad: "telefon", grup: stand, baslik: "Telefonda oyna", odak: () => ekranaBak(telefon, telEkran, TEL_W, TEL_H, kamera.aspect < 1 ? 1.45 : 1.25), yuzey: telEkran, w: TEL_W, h: TEL_H },
@@ -663,6 +874,9 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     { ad: "pencere", grup: pencere, baslik: "Gaziantep", odak: () => ({ kamera: v(-0.75, 1.5, 0.6), hedef: v(-1.05, 1.45, -0.6) }), panel: true },
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
     { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.3, 1.2, 0.72), hedef: v(0.32, 0.76, 0.3) }), panel: true },
+    { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 1.0, 0.15, 0.05), panel: true },
+    { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.62, 0.03, 0.45), panel: true },
+    { ad: "gecit", grup: gecit, baslik: "Taktik mesaj ağ geçidi", odak: () => onden(gecit, 0.7, 0.03, 0.35), panel: true },
     { ad: "fidan", grup: fidan, baslik: "Çınar · dil modeli", odak: () => ({ kamera: v(0.62, 1.12, 0.3), hedef: v(0.78, 0.93, -0.25) }), panel: true },
   );
   for (const e of etkilesimler) e.grup.traverse((o) => (o.userData.etkilesim = e));
@@ -835,12 +1049,17 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
 
   // ---- Döngü ----
   const saat = new THREE.Clock();
+  const Y_EKSEN = new THREE.Vector3(0, 1, 0);
+  const bakis = new THREE.Vector3(), bakisSag = new THREE.Vector3(), bakisHedef = new THREE.Vector3();
+  let oncekiT = 0;
   let calisiyor = true;
   let bitecek = null;
   function kare() {
     if (!calisiyor) return;
     requestAnimationFrame(kare);
     const t = saat.getElapsedTime();
+    const dt = Math.min(0.1, t - oncekiT);
+    oncekiT = t;
 
     if (animasyon) {
       const k = Math.min(1, (performance.now() - animasyon.t0) / (animasyon.sure * 1000));
@@ -855,10 +1074,13 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
 
     // genel görünüşte fareyle hafif bakınma
     fareYumusak.lerp(odaktaki || azHareket ? new THREE.Vector2() : fareKonum, 0.05);
+    // genel görünüşte baş hareketi: kamera yerinde durur, bakış fareye döner (sola daha çok, L masanın kanadına)
     kamera.position.copy(kameraDurum.konum);
-    kamera.position.x += fareYumusak.x * 0.12;
-    kamera.position.y -= fareYumusak.y * 0.06;
-    kamera.lookAt(kameraDurum.hedef);
+    bakis.subVectors(kameraDurum.hedef, kameraDurum.konum);
+    bakis.applyAxisAngle(Y_EKSEN, -fareYumusak.x * (fareYumusak.x < 0 ? 0.7 : 0.22));
+    bakisSag.set(-bakis.z, 0, bakis.x).normalize();
+    bakis.applyAxisAngle(bakisSag, -fareYumusak.y * 0.1);
+    kamera.lookAt(bakisHedef.addVectors(kamera.position, bakis));
     kamera.updateMatrixWorld();
     if (bitecek) {
       const f = bitecek;
@@ -885,6 +1107,22 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       y.rotation.x = y.userData.ilk.x + Math.sin(t * 2.2 + y.userData.faz) * ruzgar;
       y.rotation.z = y.userData.ilk.z + Math.cos(t * 1.7 + y.userData.faz) * ruzgar * 0.6;
     }
+    // laboratuvar köşesi: radar taraması, kartın 1 Hz LED'i, anahtarın port LED'leri
+    radarCiz(azHareket ? 0 : dt);
+    radarLed.visible = t % 1 < 0.85;
+    const ledAcik = t % 1 < 0.5;
+    kartLedMat.color.setHex(ledAcik ? 0x2bff6a : 0x0b2a14);
+    kartIsik.intensity = ledAcik ? 0.04 : 0;
+    for (const p of portLedler) {
+      if (!p.bagli) continue;
+      if (t > p.sonraki) {
+        // arada bir bozuk paket: kırmızı yanar, akış yeniden senkronlanır
+        p.kirmizi = Math.random() < 0.04 ? t + 0.25 : 0;
+        p.sonraki = t + 0.04 + Math.random() * 0.35;
+        p.led.material.color.setHex(p.kirmizi ? 0xff3b30 : Math.random() < 0.6 ? 0x39ff6a : 0x0f3a18);
+      }
+    }
+
     // lamba hafif titreşim
     lambaIsik.intensity += ((kok.dataset.theme !== "light" ? 9 : 3) + Math.sin(t * 13) * 0.05 - lambaIsik.intensity) * 0.1;
 

@@ -148,13 +148,16 @@ $("#kopyala").addEventListener("click", async () => {
 });
 
 // GitHub API'den herkese açık repoları çek
-const RENKLER = { JavaScript: "#f1e05a", HTML: "#e34c26", CSS: "#563d7c", Python: "#3572A5", Java: "#b07219", "C#": "#178600", Dart: "#00B4AB", TypeScript: "#3178c6" };
+const RENKLER = { JavaScript: "#f1e05a", HTML: "#e34c26", CSS: "#563d7c", Python: "#3572A5", Java: "#b07219", "C#": "#178600", Dart: "#00B4AB", TypeScript: "#3178c6", C: "#555555", "C++": "#f34b7d", Go: "#00ADD8" };
 const kacis = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 let repoVerisi = null;
 
 // GitHub'da açıklaması boş olan repolar için yedek açıklamalar
 const ACIKLAMALAR = {
+  "radar-target-tracker": { tr: "Radar Target Tracker: Kalman filtresiyle çoklu hedef takibi ve Qt radar ekranı. C++17, Qt, UDP.", en: "Radar Target Tracker: multi-target Kalman tracking with a Qt radar display. C++17, Qt, UDP." },
+  "taktik-mesaj-gecidi": { tr: "Taktik Mesaj Ağ Geçidi: bit düzeyinde ikili protokol, TCP, fuzz testli kodek. Go.", en: "Tactical Message Gateway: bit-level binary protocol over TCP with a fuzz-tested codec. Go." },
+  "embedded-telemetry": { tr: "Gömülü telemetri: STM32F446RE için FreeRTOS firmware'i ve Python yer istasyonu. C, Renode.", en: "Embedded telemetry: FreeRTOS firmware for STM32F446RE and a Python ground station. C, Renode." },
   "ise-alim": { tr: "Kadro: Claude ile CV puanlayan yapay zekâ destekli işe alım platformu. NestJS, Next.js, PostgreSQL.", en: "Kadro: AI-powered applicant tracking that scores CVs with Claude. NestJS, Next.js, PostgreSQL." },
   ocakbasi: { tr: "Ocakbaşı: Antep mutfağı temalı mobil restoran oyunu. Phaser, Capacitor, Fastify.", en: "Ocakbaşı: a Gaziantep-cuisine mobile restaurant game. Phaser, Capacitor, Fastify." },
   "mobil-okey": { tr: "Okey Salonu: Android için gerçek zamanlı 4 kişilik online Okey. React, Capacitor, Node.js, WebSocket.", en: "Okey Salonu: real-time 4-player online Okey for Android. React, Capacitor, Node.js, WebSocket." },
@@ -329,6 +332,12 @@ kaydirma();
 
 // Öne çıkan proje: görünürken videoyu oynat, tıklayınca önizleme penceresini aç
 const PROJELER = {
+  radar: { ad: "Radar Target Tracker", ekranlar: [
+  ["poster", "Qt PPI ekranı: dönen tarama, izler ve iz tablosu", "Qt PPI display: rotating scan, tracks and track table"],
+  ] },
+  telemetri: { ad: "Gömülü Telemetri", ekranlar: [
+  ["poster", "Renode'da yer istasyonu: irtifa, IMU ve mod", "Ground station on Renode: altitude, IMU and mode"],
+  ] },
   qr: { ad: "QR Sipariş", ekranlar: [
   ["musteri-menu", "Müşteri menüsü: kategoriler, arama ve etiketler", "Customer menu: categories, search and tags"],
   ["sepet", "Sepet ve sipariş notu", "Cart and order note"],
