@@ -811,7 +811,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   dokumaDoku.colorSpace = THREE.NoColorSpace;
   dokumaDoku.wrapS = dokumaDoku.wrapT = THREE.RepeatWrapping;
   dokumaDoku.repeat.set(Math.round(12 * BW / (BH * 1.5)), 8);
-  const bayrakGeo = new THREE.PlaneGeometry(BW, BH, 64, 36);
+  const bayrakGeo = new THREE.PlaneGeometry(BW, BH, 120, 64);
   const bayrakIlk = bayrakGeo.attributes.position.array.slice();
   const bayrak = new THREE.Mesh(bayrakGeo, new THREE.MeshPhysicalMaterial({
     map: bayrakDoku, bumpMap: dokumaDoku, bumpScale: 0.4, roughness: 0.5,
@@ -819,7 +819,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }));
   bayrak.castShadow = bayrak.receiveShadow = true;
   const bayrakGrup = new THREE.Group();
-  bayrak.position.set(0, -BH / 2, 0.03);
+  bayrak.position.set(0, -BH / 2, 0.012);
   bayrakGrup.add(bayrak);
   // işlemeli askılar: duvara vidalı altın rozet (taç yapraklı), ortasında kabartma topuz, altında püskül
   const altin = mat(0xc9a227, { metalness: 0.9, roughness: 0.28 });
@@ -839,29 +839,51 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     }
     const halka = mesh(new THREE.TorusGeometry(0.013, 0.0025, 8, 24), altin, 0, 0, 0.014);
     rozet.add(halka, mesh(new THREE.SphereGeometry(0.009, 16, 12), altin, 0, 0, 0.017));
-    rozet.position.set(sx * (BW / 2 + 0.005), 0.012, 0);
+    rozet.position.set(sx * (BW / 2 - 0.014), -0.012, 0.014);
+    rozet.scale.setScalar(1.3);
     bayrakGrup.add(rozet);
     // püskül: rozetten sarkan ip, başlık ve saçaklar
-    const ip = mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.07, 6), altin, sx * (BW / 2 + 0.005), -0.025, 0.02);
-    const baslik = mesh(new THREE.SphereGeometry(0.008, 12, 10), altin, sx * (BW / 2 + 0.005), -0.062, 0.02);
-    const sacak = mesh(new THREE.CylinderGeometry(0.004, 0.011, 0.045, 14, 1, true), altinKoyu, sx * (BW / 2 + 0.005), -0.09, 0.02);
+    const ip = mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.07, 6), altin, sx * (BW / 2 - 0.014), -0.06, 0.04);
+    const baslik = mesh(new THREE.SphereGeometry(0.008, 12, 10), altin, sx * (BW / 2 - 0.014), -0.097, 0.04);
+    const sacak = mesh(new THREE.CylinderGeometry(0.004, 0.011, 0.045, 14, 1, true), altinKoyu, sx * (BW / 2 - 0.014), -0.125, 0.04);
     bayrakGrup.add(ip, baslik, sacak);
   }
   bayrakGrup.position.set(SOL_DUVAR_X + BAYRAK_BOSLUK + BW / 2, 1.5 + BH / 2, -0.6); // üst kenarı camın üst kenarıyla hizalı
   sahne.add(bayrakGrup);
+  // Kumaş yalnızca iki üst köşeden tutulur: üst kenar zincir eğrisi gibi sarkar, altında U biçimli
+  // sarkma kıvrımları oluşur, köşelerde rozete doğru büzülen ışınsal gerilim kıvrımları, alt yarıda dikey dökümler.
   function bayrakDalga(t) {
     const p = bayrakGeo.attributes.position;
     for (let i = 0; i < p.count; i++) {
-      const x = bayrakIlk[i * 3], y = bayrakIlk[i * 3 + 1];
-      const yan = 1 - Math.pow((2 * x) / BW, 2); // köşelerde 0, ortada 1
-      const asagi = (BH / 2 - y) / BH;
-      const serbest = Math.min(1, yan * 0.7 + asagi); // köşeler sabit, orta ve alt serbest
-      // üst kenar iki askı arasında hafifçe sarkar; yumuşak yatay kıvrımlar + yavaş hava akımı
-      const sarkma = yan * 0.018 * (1 - asagi * 0.4);
-      const kivrim = Math.cos((x / BW) * Math.PI * 5) * 0.006 * serbest;
-      const dalga = (Math.sin(x * 6 + t * 1.1) * 0.6 + Math.sin(x * 3 - y * 4 + t * 0.7) * 0.4) * 0.006 * serbest;
-      p.array[i * 3 + 2] = kivrim + dalga + yan * 0.004;
-      p.array[i * 3 + 1] = y - sarkma - asagi * asagi * 0.004;
+      const x0 = bayrakIlk[i * 3], y0 = bayrakIlk[i * 3 + 1];
+      const u = (x0 + BW / 2) / BW, d = (BH / 2 - y0) / BH; // u: soldan sağa, d: yukarıdan aşağı (0..1)
+      const yan = 4 * u * (1 - u); // köşelerde 0, ortada 1
+      let x = x0, y = y0 - 0.075 * yan * (1 - 0.6 * d), z = 0;
+      // üst kenarın altında U biçimli sarkma kıvrımları (zincir eğrisini izler)
+      const s = d - 0.09 * yan;
+      z += yan * Math.pow(1 - d, 1.3) * 0.022 * (0.5 - 0.5 * Math.cos(Math.PI * 2 * s * 3.2));
+      // köşeler: rozete büzülen kumaş ve ondan yayılan ışınsal gerilim kıvrımları
+      for (const sx of [-1, 1]) {
+        const dx = (sx * BW / 2 - x0) * sx, dy = BH / 2 - y0; // köşeden içeri / aşağı uzaklık
+        const r = Math.hypot(dx, dy), aci = Math.atan2(dy, dx);
+        const yakin = Math.exp(-r / 0.22);
+        z += yakin * (1 - Math.exp(-r / 0.025)) * 0.016 * Math.sin(aci * 7);
+        const buz = Math.exp(-r / 0.07);
+        x -= sx * dx * buz * 0.45; // köşe kumaşı rozete toplanır
+        y += dy * buz * 0.45;
+      }
+      // alt yarıda yerçekimiyle dökülen dikey kıvrımlar, yanlar içe çekilir, alt köşeler hafifçe kıvrılır
+      const alt = Math.max(0, d - 0.25) / 0.75;
+      z += alt * 0.016 * (0.6 * Math.cos(u * Math.PI * 7 + 0.4) + 0.4 * Math.cos(u * Math.PI * 13 - 0.8));
+      x += (0.5 - u) * 2 * alt * alt * 0.03 * (1 - yan);
+      z += Math.pow(alt, 3) * (1 - yan) * 0.03;
+      // kumaş duvardan hafifçe kabarır; köşelerde rozetin altında duvara yakın
+      z += 0.018 * yan + 0.012 * d;
+      // yavaş hava akımı
+      z += (Math.sin(x0 * 6 + t * 1.1) * 0.6 + Math.sin(x0 * 3 - y0 * 4 + t * 0.7) * 0.4) * 0.005 * Math.min(1, yan + d);
+      p.array[i * 3] = x;
+      p.array[i * 3 + 1] = y - d * d * 0.004;
+      p.array[i * 3 + 2] = Math.max(-0.008, z);
     }
     p.needsUpdate = true;
     bayrakGeo.computeVertexNormals();
