@@ -11,7 +11,7 @@
  *     Radar tableti → Radar Target Tracker
  *     Telemetri kutusu (Nucleo kartı + sensörler) → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
- * Pencerenin solunda, pencereyle aynı boyda Türk bayrağı.
+ * Pencerenin solunda, altın rozetlere asılı Türk bayrağı.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -772,15 +772,19 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   pencere.position.set(-1.05, 1.5, -0.585);
   sahne.add(pencere);
 
-  // Türk bayrağı: pencerenin solunda, pencereyle aynı yükseklikte; pirinç çubuğa asılı saten kumaş, kıvrımlı, hafifçe dalgalanır
-  const BH = PH, BW = BH * 1.5; // pencere camıyla aynı yükseklik, resmî 3:2 oran
-  const bayrakDoku = tuvalDokusu(1200, 800, (g) => {
-    // resmî oranlar (Türk Bayrağı Kanunu), 1200×800 ölçekte
+  // Türk bayrağı: pencerenin solunda, üst kenarı camla hizalı; duvarla bayrak ve bayrakla pencere arası eşit.
+  // Çubuk yok: iki üst köşeden işlemeli altın rozetlere asılı, ortası hafifçe sarkan saten kumaş.
+  const BAYRAK_BOSLUK = 0.2;
+  const PENCERE_SOL = -1.05 - PW / 2 - 0.0175; // pencere kasasının sol kenarı
+  const BH = PH, BW = PENCERE_SOL - SOL_DUVAR_X - 2 * BAYRAK_BOSLUK;
+  const TW = Math.round((800 * BW) / BH);
+  const bayrakDoku = tuvalDokusu(TW, 800, (g) => {
+    // ay-yıldız resmî ölçülerde (Türk Bayrağı Kanunu, 800 px yükseklik), gönderden uzaklıkları korunur
     g.fillStyle = "#b0000f"; // kan kırmızısı
-    g.fillRect(0, 0, 1200, 800);
+    g.fillRect(0, 0, TW, 800);
     g.fillStyle = "#fff";
     g.beginPath(); g.arc(425, 400, 200, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#b0000f"; // kan kırmızısı
+    g.fillStyle = "#b0000f";
     g.beginPath(); g.arc(475, 400, 160, 0, Math.PI * 2); g.fill();
     g.fillStyle = "#fff";
     g.beginPath();
@@ -790,9 +794,9 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     // dokuma: ince atkı/çözgü çizgileri, ışığı kumaş gibi kırar
     g.globalAlpha = 0.07;
     g.fillStyle = "#000";
-    for (let y = 0; y < 800; y += 3) g.fillRect(0, y, 1200, 1);
+    for (let y = 0; y < 800; y += 3) g.fillRect(0, y, TW, 1);
     g.fillStyle = "#fff";
-    for (let x = 0; x < 1200; x += 3) g.fillRect(x, 0, 1, 800);
+    for (let x = 0; x < TW; x += 3) g.fillRect(x, 0, 1, 800);
     g.globalAlpha = 1;
   });
   bayrakDoku.anisotropy = 8;
@@ -806,8 +810,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   });
   dokumaDoku.colorSpace = THREE.NoColorSpace;
   dokumaDoku.wrapS = dokumaDoku.wrapT = THREE.RepeatWrapping;
-  dokumaDoku.repeat.set(12, 8);
-  const bayrakGeo = new THREE.PlaneGeometry(BW, BH, 56, 36);
+  dokumaDoku.repeat.set(Math.round(12 * BW / (BH * 1.5)), 8);
+  const bayrakGeo = new THREE.PlaneGeometry(BW, BH, 64, 36);
   const bayrakIlk = bayrakGeo.attributes.position.array.slice();
   const bayrak = new THREE.Mesh(bayrakGeo, new THREE.MeshPhysicalMaterial({
     map: bayrakDoku, bumpMap: dokumaDoku, bumpScale: 0.4, roughness: 0.5,
@@ -815,32 +819,49 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }));
   bayrak.castShadow = bayrak.receiveShadow = true;
   const bayrakGrup = new THREE.Group();
-  bayrak.position.set(0, -BH / 2, 0.035);
+  bayrak.position.set(0, -BH / 2, 0.03);
   bayrakGrup.add(bayrak);
-  const pirinc = mat(0xc9a227, { metalness: 0.9, roughness: 0.25 });
-  const cubuk = mesh(new THREE.CylinderGeometry(0.0065, 0.0065, BW + 0.09, 14), pirinc, 0, 0.004, 0.035);
-  cubuk.rotation.z = Math.PI / 2;
-  bayrakGrup.add(cubuk);
+  // işlemeli askılar: duvara vidalı altın rozet (taç yapraklı), ortasında kabartma topuz, altında püskül
+  const altin = mat(0xc9a227, { metalness: 0.9, roughness: 0.28 });
+  const altinKoyu = mat(0x8a6a12, { metalness: 0.8, roughness: 0.4 });
+  const rozetYaprakGeo = new THREE.SphereGeometry(0.011, 12, 8);
   for (const sx of [-1, 1]) {
-    const uc = mesh(new THREE.ConeGeometry(0.012, 0.03, 14), pirinc, sx * (BW / 2 + 0.06), 0.004, 0.035);
-    uc.rotation.z = -sx * Math.PI / 2;
-    bayrakGrup.add(uc, mesh(new THREE.SphereGeometry(0.01, 14, 10), pirinc, sx * (BW / 2 + 0.045), 0.004, 0.035));
-    bayrakGrup.add(mesh(kutu(0.012, 0.014, 0.036, 0.003), pirinc, sx * (BW / 2 - 0.02), 0.004, 0.017)); // duvar tutucu
+    const rozet = new THREE.Group();
+    const taban = mesh(new THREE.CylinderGeometry(0.03, 0.032, 0.008, 28), altinKoyu, 0, 0, 0.004);
+    taban.rotation.x = Math.PI / 2;
+    rozet.add(taban);
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      const yaprak = mesh(rozetYaprakGeo, altin, Math.cos(a) * 0.021, Math.sin(a) * 0.021, 0.011);
+      yaprak.scale.set(1, 0.55, 0.45);
+      yaprak.rotation.z = a;
+      rozet.add(yaprak);
+    }
+    const halka = mesh(new THREE.TorusGeometry(0.013, 0.0025, 8, 24), altin, 0, 0, 0.014);
+    rozet.add(halka, mesh(new THREE.SphereGeometry(0.009, 16, 12), altin, 0, 0, 0.017));
+    rozet.position.set(sx * (BW / 2 + 0.005), 0.012, 0);
+    bayrakGrup.add(rozet);
+    // püskül: rozetten sarkan ip, başlık ve saçaklar
+    const ip = mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.07, 6), altin, sx * (BW / 2 + 0.005), -0.025, 0.02);
+    const baslik = mesh(new THREE.SphereGeometry(0.008, 12, 10), altin, sx * (BW / 2 + 0.005), -0.062, 0.02);
+    const sacak = mesh(new THREE.CylinderGeometry(0.004, 0.011, 0.045, 14, 1, true), altinKoyu, sx * (BW / 2 + 0.005), -0.09, 0.02);
+    bayrakGrup.add(ip, baslik, sacak);
   }
-  // kumaşı çubuğa bağlayan halkalar
-  for (let i = 0; i < 9; i++) bayrakGrup.add(mesh(new THREE.TorusGeometry(0.009, 0.0018, 6, 16), pirinc, -BW / 2 + 0.03 + i * ((BW - 0.06) / 8), 0.004, 0.035));
-  bayrakGrup.position.set(-1.65 - BW / 2, 1.5 + BH / 2, -0.6); // üst kenarı camın üst kenarıyla hizalı
+  bayrakGrup.position.set(SOL_DUVAR_X + BAYRAK_BOSLUK + BW / 2, 1.5 + BH / 2, -0.6); // üst kenarı camın üst kenarıyla hizalı
   sahne.add(bayrakGrup);
   function bayrakDalga(t) {
     const p = bayrakGeo.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const x = bayrakIlk[i * 3], y = bayrakIlk[i * 3 + 1];
-      const asagi = (BH / 2 - y) / BH; // üst kenar çubukta sabit, aşağı indikçe serbest
-      // halkalar arasında sarkan dikey kıvrımlar + yavaş hava akımı
-      const kivrim = Math.cos(((x + BW / 2) / (BW - 0.06)) * 8 * Math.PI * 2 / 2) * 0.012 * (0.35 + asagi * 0.65);
-      const dalga = (Math.sin(x * 7 + t * 1.2) * 0.6 + Math.sin(x * 3.5 - y * 5 + t * 0.8) * 0.4) * 0.008 * asagi;
-      p.array[i * 3 + 2] = kivrim + dalga;
-      p.array[i * 3 + 1] = y - asagi * asagi * 0.006; // alt kenar hafifçe sarkar
+      const yan = 1 - Math.pow((2 * x) / BW, 2); // köşelerde 0, ortada 1
+      const asagi = (BH / 2 - y) / BH;
+      const serbest = Math.min(1, yan * 0.7 + asagi); // köşeler sabit, orta ve alt serbest
+      // üst kenar iki askı arasında hafifçe sarkar; yumuşak yatay kıvrımlar + yavaş hava akımı
+      const sarkma = yan * 0.018 * (1 - asagi * 0.4);
+      const kivrim = Math.cos((x / BW) * Math.PI * 5) * 0.006 * serbest;
+      const dalga = (Math.sin(x * 6 + t * 1.1) * 0.6 + Math.sin(x * 3 - y * 4 + t * 0.7) * 0.4) * 0.006 * serbest;
+      p.array[i * 3 + 2] = kivrim + dalga + yan * 0.004;
+      p.array[i * 3 + 1] = y - sarkma - asagi * asagi * 0.004;
     }
     p.needsUpdate = true;
     bayrakGeo.computeVertexNormals();
