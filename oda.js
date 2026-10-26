@@ -116,17 +116,25 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   sahne.add(ekranIsik);
 
   // ---- Oda ----
-  const duvarMat = mat(0x3b4152, { roughness: 0.95 });
+  // duvarlar ortam haritasından etkilenmez, hafif öz ışık alır: iki duvar aynı tonda görünür
+  const duvarMat = mat(0x3b4152, { roughness: 0.95, envMapIntensity: 0 });
   const zemin = mesh(new THREE.PlaneGeometry(8, 8), mat(0x4a3426, { roughness: 0.85 }));
   zemin.rotation.x = -Math.PI / 2;
   sahne.add(zemin);
-  const arkaDuvar = mesh(new THREE.PlaneGeometry(8, 4), duvarMat, 0, 2, -0.6);
+  const SOL_DUVAR_X = -3.55; // masanın sol ucundan iki masa eni uzakta
+  const arkaDuvar = mesh(new THREE.PlaneGeometry(4 - SOL_DUVAR_X, 4), duvarMat, (4 + SOL_DUVAR_X) / 2, 2, -0.6);
   sahne.add(arkaDuvar);
-  const solDuvar = mesh(new THREE.PlaneGeometry(6, 4), duvarMat, -3.55, 2, 2.4); // masanın sol ucundan iki masa eni uzakta
+  const solDuvar = mesh(new THREE.PlaneGeometry(6, 4), duvarMat, SOL_DUVAR_X, 2, 2.4);
   solDuvar.rotation.y = Math.PI / 2;
   sahne.add(solDuvar);
-  // süpürgelik
-  sahne.add(mesh(kutu(8, 0.08, 0.02, 0.004), mat(0x2b2f3b), 0, 0.04, -0.59));
+  // süpürgelik iki duvar boyunca, köşede birleşir; köşede ince bir pervaz
+  const supurgelikMat = mat(0x2b2f3b);
+  sahne.add(mesh(kutu(4 - SOL_DUVAR_X, 0.08, 0.02, 0.004), supurgelikMat, (4 + SOL_DUVAR_X) / 2, 0.04, -0.59));
+  const solSupurgelik = mesh(kutu(6, 0.08, 0.02, 0.004), supurgelikMat, SOL_DUVAR_X + 0.01, 0.04, 2.4);
+  solSupurgelik.rotation.y = Math.PI / 2;
+  sahne.add(solSupurgelik);
+  const kosePervaz = mesh(kutu(0.03, 4, 0.03, 0.01), duvarMat, SOL_DUVAR_X + 0.012, 2, -0.588);
+  sahne.add(kosePervaz);
 
   // halı
   const hali = mesh(new THREE.CircleGeometry(1.1, 48), mat(0x8c2f39, { roughness: 1 }), 0.1, 0.003, 0.6);
@@ -137,11 +145,20 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const ahsap = mat(0x9a6a43, { roughness: 0.55 });
   const MASA_Y = 0.75;
   // Tek parça L masa: iki kolu da aynı derinlikte; sol kol öne döner (laboratuvar köşesi), duvarlara yapışmaz
+  // köşeler yuvarlatılır; iki kolun birleştiği iç köşe geniş bir kavisle akar
+  const masaKoseler = [[0.9, -0.425, 0.03], [0.9, 0.425, 0.06], [-1.0, 0.425, 0.38], [-1.0, 1.6, 0.06], [-1.85, 1.6, 0.06], [-1.85, -0.425, 0.03]];
   const masaSekli = new THREE.Shape();
-  for (const [i, [x, z]] of [[0.9, -0.425], [0.9, 0.425], [-1.0, 0.425], [-1.0, 1.6], [-1.85, 1.6], [-1.85, -0.425]].entries()) {
-    if (i === 0) masaSekli.moveTo(x, -z); else masaSekli.lineTo(x, -z);
-  }
-  const masaGeo = new THREE.ExtrudeGeometry(masaSekli, { depth: 0.038, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 3 });
+  masaKoseler.forEach(([x, z, r], i) => {
+    const [ox, oz] = masaKoseler[(i + masaKoseler.length - 1) % masaKoseler.length];
+    const [sx, sz] = masaKoseler[(i + 1) % masaKoseler.length];
+    const once = Math.hypot(ox - x, oz - z), sonra = Math.hypot(sx - x, sz - z);
+    const ax = x + ((ox - x) / once) * r, az = z + ((oz - z) / once) * r;
+    const bx = x + ((sx - x) / sonra) * r, bz = z + ((sz - z) / sonra) * r;
+    if (i === 0) masaSekli.moveTo(ax, -az); else masaSekli.lineTo(ax, -az);
+    masaSekli.quadraticCurveTo(x, -z, bx, -bz);
+  });
+  masaSekli.closePath();
+  const masaGeo = new THREE.ExtrudeGeometry(masaSekli, { depth: 0.038, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 3, curveSegments: 24 });
   masaGeo.rotateX(-Math.PI / 2);
   sahne.add(mesh(masaGeo, ahsap, 0, MASA_Y - 0.044, 0));
   const ayakMat = mat(0x1f2229, { metalness: 0.6, roughness: 0.4 });
@@ -967,6 +984,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     ekranMat.needsUpdate = manzaraMat.needsUpdate = true;
     sahne.background = new THREE.Color(gece ? 0x0e0f16 : 0xdfe6f2);
     duvarMat.color.set(gece ? 0x3b4152 : 0xd9d3c7);
+    duvarMat.emissive.copy(duvarMat.color).multiplyScalar(gece ? 0.2 : 0.38);
     gokIsik.intensity = gece ? 0.35 : 1.0;
     pencereIsik.intensity = gece ? 0.6 : 2.2;
     pencereIsik.color.set(gece ? 0x9db4ff : 0xfff1d6);
