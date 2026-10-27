@@ -1380,14 +1380,13 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       etiket.style.top = ev.clientY + 12 + "px";
     }
   });
-  // ---- Dokunmatik bakınma: parmakla sürükleme ve isteğe bağlı jiroskop ----
+  // ---- Dokunmatik bakınma: parmakla sürükleme ----
   // Sürükleme sahneyi parmakla birlikte kaydırır (sağa sürükle → sola bak). Kısa dokunuş tıklama sayılır.
   // Bırakınca bakış birkaç saniye yerinde kalır, sonra yavaşça ortaya döner.
   const suruk = { x: 0, y: 0, id: null, sx: 0, sy: 0, bx: 0, by: 0, oynadi: false, birakma: 0 };
-  const jiro = { acik: false, x: 0, y: 0, a0: null, b0: null };
   const sinirla = (d) => Math.max(-1, Math.min(1, d));
   function dokunmaBakisi() {
-    fareKonum.set(sinirla(suruk.x + jiro.x), sinirla(suruk.y + jiro.y));
+    fareKonum.set(suruk.x, suruk.y);
   }
   renderer.domElement.addEventListener("pointerdown", (ev) => {
     if (ev.pointerType !== "touch" || odaktaki || suruk.id !== null) return;
@@ -1418,44 +1417,6 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     suruk.y *= 0.97;
     if (Math.abs(suruk.x) + Math.abs(suruk.y) < 0.002) suruk.x = suruk.y = 0;
     dokunmaBakisi();
-  }
-
-  // Jiroskop: telefonu sağa sola çevirince bakış döner. iPhone izin ister, bu yüzden düğmeyle açılır.
-  const jiroBtn = document.querySelector("[data-oda-jiro]");
-  function yonelim(ev) {
-    if (ev.alpha == null || ev.beta == null) return;
-    if (jiro.a0 === null) { jiro.a0 = ev.alpha; jiro.b0 = ev.beta; }
-    const da = ((ev.alpha - jiro.a0 + 540) % 360) - 180; // sola çevirince artar
-    jiro.x = sinirla(-da / 40);
-    const yatay = Math.abs(screen.orientation?.angle ?? 0) === 90;
-    jiro.y = yatay ? 0 : sinirla(-(ev.beta - jiro.b0) / 35);
-    dokunmaBakisi();
-  }
-  function jiroAyarla(ac) {
-    jiro.acik = ac;
-    jiroBtn.setAttribute("aria-pressed", ac);
-    if (ac) {
-      jiro.a0 = jiro.b0 = null; // açıldığı andaki duruş "ileri bakış" sayılır
-      addEventListener("deviceorientation", yonelim);
-    } else {
-      removeEventListener("deviceorientation", yonelim);
-      jiro.x = jiro.y = 0;
-      dokunmaBakisi();
-    }
-  }
-  if (jiroBtn && "DeviceOrientationEvent" in window && matchMedia("(pointer: coarse)").matches) {
-    jiroBtn.hidden = false;
-    jiroBtn.addEventListener("click", async () => {
-      if (jiro.acik) return jiroAyarla(false);
-      try {
-        if (typeof DeviceOrientationEvent.requestPermission === "function") {
-          if ((await DeviceOrientationEvent.requestPermission()) !== "granted") return;
-        }
-        jiroAyarla(true);
-      } catch (e) {
-        /* izin reddedildi ya da sensör yok: sürükleme yeterli */
-      }
-    });
   }
 
   renderer.domElement.addEventListener("click", (ev) => {
