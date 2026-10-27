@@ -3,6 +3,7 @@ const CEVIRI_EN = {
   "oda.unvan": "Software Developer · Gaziantep",
   "oda.klasik": "Classic view",
   "oda.ipucu": "Click the objects on the desk",
+  "oda.ipucuDokun": "Tap the objects, drag to look around",
   "oda.geri": "Back",
   "oda.yukleniyor": "Setting up the room…",
   "oda.projeler": "My projects",

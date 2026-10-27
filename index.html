@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261026a">
-  <link rel="stylesheet" href="oda.css?v=20261025a">
+  <link rel="stylesheet" href="oda.css?v=20261027a">
   <script>
     // Tema, sayfa çizilmeden önce uygulanır (yanıp sönmeyi önler)
     try {
@@ -41,12 +41,13 @@
         <span data-i18n="oda.unvan">Yazılım Geliştirici · Gaziantep</span>
       </div>
       <div class="oda-araclar">
+        <button type="button" class="oda-btn" data-oda-jiro aria-pressed="false" aria-label="Telefonu çevirerek bak" title="Telefonu çevirerek bak" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/><path d="M3 9a9 9 0 0 0 0 6M21 9a9 9 0 0 1 0 6"/></svg></button>
         <button type="button" class="oda-btn" data-oda-dil>EN</button>
         <button type="button" class="oda-btn" data-oda-tema aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
         <button type="button" class="oda-btn oda-btn-metin" data-oda-klasik data-i18n="oda.klasik">Klasik görünüm</button>
       </div>
     </div>
-    <p id="oda-ipucu" class="oda-ipucu"><span data-i18n="oda.ipucu">Masadaki nesnelere tıkla</span></p>
+    <p id="oda-ipucu" class="oda-ipucu"><span class="oda-ipucu-fare" data-i18n="oda.ipucu">Masadaki nesnelere tıkla</span><span class="oda-ipucu-dokun" data-i18n="oda.ipucuDokun">Nesnelere dokun, bakınmak için sürükle</span></p>
     <div id="oda-etiket" class="oda-etiket" hidden></div>
     <button type="button" id="oda-geri" class="oda-btn oda-geri" hidden><span aria-hidden="true">←</span> <span data-i18n="oda.geri">Geri</span></button>
     <div id="oda-yukleniyor" class="oda-yukleniyor"><i></i><span data-i18n="oda.yukleniyor">Oda hazırlanıyor…</span></div>
@@ -732,9 +733,9 @@ SYNC │  │  src  dst  seq  len  yük (13 bayt)               CRC
   <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
   <div id="bildirim" class="toast" role="status"></div>
 
-  <script src="i18n.js?v=20261026a"></script>
+  <script src="i18n.js?v=20261027a"></script>
   <script src="script.js?v=20261026a"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
-  <script type="module" src="oda-arayuz.js?v=20261026t"></script>
+  <script type="module" src="oda-arayuz.js?v=20261027a"></script>
 </body>
 </html>
