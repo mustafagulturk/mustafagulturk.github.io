@@ -213,6 +213,133 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   monitor.position.set(0, MASA_Y + 0.38, -0.2);
   sahne.add(monitor);
 
+  // İkinci monitör: sağda dikey duran kod ekranı; Kalman izleyicisi satır satır yazılıyor
+  const kodMonitor = new THREE.Group();
+  const KOD_W = 0.3, KOD_H = 0.5;
+  kodMonitor.add(mesh(kutu(KOD_W + 0.024, KOD_H + 0.024, 0.022, 0.01), kasa, 0, 0, -0.011));
+  // ince alt çene ve arkada pivot göbeği
+  kodMonitor.add(mesh(kutu(0.07, 0.07, 0.03, 0.01), kasa, 0, 0, -0.035));
+  const kodAyak = new THREE.Group();
+  kodAyak.add(mesh(kutu(0.045, 0.36, 0.03, 0.01), kasa, 0, 0.18, 0));
+  kodAyak.add(mesh(kutu(0.2, 0.012, 0.15, 0.006), kasa, 0, 0.006, 0.02));
+  kodAyak.position.set(0, -0.41, -0.06);
+  kodMonitor.add(kodAyak);
+  const KT_W = 640, KT_H = Math.round((640 * KOD_H) / KOD_W);
+  const kodTuval = document.createElement("canvas");
+  kodTuval.width = KT_W;
+  kodTuval.height = KT_H;
+  const kg = kodTuval.getContext("2d");
+  const kodDoku = new THREE.CanvasTexture(kodTuval);
+  kodDoku.colorSpace = THREE.SRGBColorSpace;
+  kodDoku.anisotropy = 8;
+  const kodEkran = new THREE.Mesh(new THREE.PlaneGeometry(KOD_W, KOD_H), new THREE.MeshBasicMaterial({ map: kodDoku, toneMapped: false }));
+  kodEkran.position.z = 0.0015;
+  kodMonitor.add(kodEkran);
+  kodMonitor.position.set(0.56, MASA_Y + 0.41, -0.24);
+  kodMonitor.rotation.y = -0.38;
+  sahne.add(kodMonitor);
+
+  // basit sözdizimi renkleri: anahtar kelime, tür, sayı, yorum, metin
+  const KOD = [
+    "package iz",
+    "",
+    "// Kalman: sabit hızlı model, 2B konum + hız",
+    "type Kalman struct {",
+    "\tx  mat.VecDense // [px py vx vy]",
+    "\tP  mat.Dense",
+    "\tQ  float64",
+    "\tR  float64",
+    "}",
+    "",
+    "// Tahmin: durumu dt kadar ileri taşı",
+    "func (k *Kalman) Tahmin(dt float64) {",
+    "\tF := sabitHiz(dt)",
+    "\tk.x.MulVec(F, &k.x)",
+    "\tk.P.Mul(F, &k.P)",
+    "\tk.P.Mul(&k.P, F.T())",
+    "\tk.P.Add(&k.P, surec(dt, k.Q))",
+    "}",
+    "",
+    "// Guncelle: radar ölçümüyle düzelt",
+    "func (k *Kalman) Guncelle(z Olcum) {",
+    "\ty := yenilik(z, &k.x)",
+    "\tS := artikKov(&k.P, k.R)",
+    "\tK := kazanc(&k.P, S)",
+    "\tk.x.AddVec(&k.x, carp(K, y))",
+    "\tk.P = joseph(&k.P, K, k.R)",
+    "}",
+    "",
+    "func (k *Kalman) Esle(o Olcum) bool {",
+    "\treturn mahalanobis(o, k) < 9.21",
+    "}",
+  ];
+  const ANAHTAR = /\b(package|type|struct|func|return|if|for|range|var|const)\b/g;
+  const TUR = /\b(float64|bool|int|mat\.VecDense|mat\.Dense|Kalman|Olcum)\b/g;
+  function kodSatir(s, x, y) {
+    if (s.trimStart().startsWith("//")) { kg.fillStyle = "#6a9955"; kg.fillText(s, x, y); return; }
+    const renkler = new Array(s.length).fill("#d4d4d4");
+    const boya = (re, r) => { for (const m of s.matchAll(re)) for (let i = 0; i < m[0].length; i++) renkler[m.index + i] = r; };
+    boya(/[A-Za-zÇĞİÖŞÜçğıöşü_]\w*(?=\()/g, "#dcdcaa");
+    boya(TUR, "#4ec9b0");
+    boya(ANAHTAR, "#c586c0");
+    boya(/\b\d+(\.\d+)?\b/g, "#b5cea8");
+    const yorum = s.indexOf("//");
+    if (yorum > 0) for (let i = yorum; i < s.length; i++) renkler[i] = "#6a9955";
+    let cx = x;
+    for (let i = 0; i < s.length; i++) {
+      kg.fillStyle = renkler[i];
+      kg.fillText(s[i], cx, y);
+      cx += kg.measureText(s[i]).width;
+    }
+  }
+  let kodYazilan = 0, kodBekle = 0, kodSure = 0, kodZaman = 0;
+  const kodToplam = KOD.reduce((t, s) => t + s.length + 1, 0);
+  function kodCiz(dt) {
+    kodSure += dt;
+    kodZaman += dt;
+    if (kodSure < 0.05) return;
+    const adim = kodSure;
+    kodSure = 0;
+    if (kodYazilan >= kodToplam) { kodBekle += adim; if (kodBekle > 4) { kodYazilan = 0; kodBekle = 0; } }
+    else kodYazilan = Math.min(kodToplam, kodYazilan + Math.max(1, Math.round(adim * 38)));
+    const w = KT_W, h = KT_H;
+    kg.fillStyle = "#1e1e1e"; kg.fillRect(0, 0, w, h);
+    // sekme çubuğu
+    kg.fillStyle = "#252526"; kg.fillRect(0, 0, w, 52);
+    kg.fillStyle = "#1e1e1e"; kg.fillRect(0, 0, 200, 52);
+    kg.fillStyle = "#38bdf8"; kg.fillRect(0, 0, 200, 3);
+    kg.font = "500 22px ui-monospace, Menlo, Consolas, monospace";
+    kg.textAlign = "left";
+    kg.fillStyle = "#00add8"; kg.fillText("Go", 18, 34);
+    kg.fillStyle = "#e5e5e5"; kg.fillText("kalman.go", 58, 34);
+    kg.fillStyle = "#8a8a8a"; kg.fillText("olcum.go", 222, 34);
+    // satırlar
+    kg.font = "500 21px ui-monospace, Menlo, Consolas, monospace";
+    let kalan = kodYazilan, y = 92, imlec = null;
+    for (let i = 0; i < KOD.length; i++) {
+      kg.fillStyle = "#5a5a5a";
+      kg.textAlign = "right";
+      kg.fillText(String(i + 1), 46, y);
+      kg.textAlign = "left";
+      const satir = KOD[i].replace(/\t/g, "    ");
+      const n = Math.min(satir.length, Math.max(0, kalan));
+      kodSatir(satir.slice(0, n), 64, y);
+      if (imlec === null && kalan <= satir.length) imlec = [64 + kg.measureText(satir.slice(0, n)).width, y];
+      kalan -= satir.length + 1;
+      y += 29;
+    }
+    if (imlec && Math.floor(kodZaman * 2) % 2 === 0) { kg.fillStyle = "#aeafad"; kg.fillRect(imlec[0] + 1, imlec[1] - 19, 2, 24); }
+    // durum çubuğu
+    kg.fillStyle = "#007acc"; kg.fillRect(0, h - 36, w, 36);
+    kg.fillStyle = "#fff"; kg.font = "500 18px ui-monospace, Menlo, Consolas, monospace";
+    kg.fillText("⎇ main", 14, h - 12);
+    kg.textAlign = "right";
+    kg.fillText("Go 1.22  UTF-8  ✓ 0 hata", w - 14, h - 12);
+    kodDoku.needsUpdate = true;
+  }
+  if (azHareket) kodYazilan = kodToplam;
+  kodCiz(1);
+
   // Klavye ve fare
   const klavye = new THREE.Group();
   klavye.add(mesh(kutu(0.44, 0.018, 0.14, 0.006), mat(0x1c1f26, { roughness: 0.5 })));
@@ -341,7 +468,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   fidan.add(kazik);
   const levha = mesh(new THREE.PlaneGeometry(0.06, 0.027), mat(0xffffff, { map: etiketDoku, roughness: 0.9 }), 0.03, 0.17, 0.037);
   fidan.add(levha);
-  fidan.position.set(0.78, MASA_Y, -0.25);
+  fidan.position.set(0.84, MASA_Y, -0.32);
   fidan.rotation.y = -0.5;
   sahne.add(fidan);
 
@@ -715,8 +842,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   telefon.rotation.x = -0.3;
   telefon.position.set(0, 0.085, -0.005);
   stand.add(telefon);
-  stand.position.set(0.5, MASA_Y, -0.08);
-  stand.rotation.y = -0.35;
+  stand.position.set(0.66, MASA_Y, 0.06);
+  stand.rotation.y = -0.5;
   sahne.add(stand);
 
   // Defter (CV)
@@ -973,7 +1100,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const c2Isik = new THREE.PointLight(0x5aa9ff, 0.25, 1.6, 2);
   c2Isik.position.set(0, 0, 0.35);
   c2.add(c2Isik);
-  c2.position.set(0.92, 1.62, -0.595); // eski kitap rafının yeri, diplomanın sağı
+  c2.position.set(0.92, 1.74, -0.595); // eski kitap rafının yeri, diplomanın sağı
   sahne.add(c2);
 
   // harita alanı solda, bilgi paneli ve olay listesi sağda
@@ -1630,7 +1757,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     { ad: "c2", grup: c2, baslik: "C2 harita ekranı", odak: () => onden(c2, 1.25, 0, -0.08), panel: true },
     { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.5, 0.03, 0.55), panel: true },
     { ad: "gecit", grup: gecit, baslik: "Taktik mesaj ağ geçidi", odak: () => onden(gecit, 0.7, 0.03, 0.35), panel: true },
-    { ad: "fidan", grup: fidan, baslik: "Çınar · dil modeli", odak: () => ({ kamera: v(0.62, 1.12, 0.3), hedef: v(0.78, 0.93, -0.25) }), panel: true },
+    { ad: "fidan", grup: fidan, baslik: "Çınar · dil modeli", odak: () => ({ kamera: v(0.68, 1.12, 0.23), hedef: v(0.84, 0.93, -0.32) }), panel: true },
   );
   for (const e of etkilesimler) e.grup.traverse((o) => (o.userData.etkilesim = e));
 
@@ -1918,6 +2045,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     // laboratuvar köşesi: radar taraması, kartın 1 Hz LED'i, anahtarın port LED'leri
     radarCiz(azHareket ? 0 : dt);
     if (!azHareket) c2Ciz(dt);
+    if (!azHareket) kodCiz(dt);
     panoLedler.forEach((m, i) => { m.emissiveIntensity = azHareket || Math.sin(t * (3 + (i % 5)) + i * 2.3) > -0.4 ? 1.6 : 0.15; });
     oledCiz(t, dt);
     if (!azHareket) bayrakDalga(t);
