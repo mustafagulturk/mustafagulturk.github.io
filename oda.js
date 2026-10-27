@@ -203,11 +203,24 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const monitor = new THREE.Group();
   const EKRAN_W = 0.64, EKRAN_H = 0.4;
   const kasa = mat(0x15171c, { roughness: 0.35, metalness: 0.3 });
-  monitor.add(mesh(kutu(EKRAN_W + 0.03, EKRAN_H + 0.03, 0.025, 0.01), kasa, 0, 0, -0.012));
-  monitor.add(mesh(kutu(0.05, 0.22, 0.03, 0.01), kasa, 0, -0.27, -0.04));
-  monitor.add(mesh(kutu(0.24, 0.012, 0.16, 0.006), kasa, 0, -0.375, -0.02));
+  // kavisli ekran: düz geometriyi önünde duran dikey bir eksen etrafında büker, kenarlar izleyene doğru gelir
+  const KAVIS_R = 1.5;
+  function buk(geo) {
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const a = p.getX(i) / KAVIS_R, r = KAVIS_R - p.getZ(i);
+      p.setXYZ(i, r * Math.sin(a), p.getY(i), KAVIS_R - r * Math.cos(a));
+    }
+    geo.computeVertexNormals();
+    return geo;
+  }
+  const EKRAN_SEHIM = KAVIS_R * (1 - Math.cos(EKRAN_W / 2 / KAVIS_R));
+  monitor.add(mesh(buk(new THREE.BoxGeometry(EKRAN_W + 0.03, EKRAN_H + 0.03, 0.022, 48, 1, 1).translate(0, 0, -0.011)), kasa));
+  monitor.add(mesh(kutu(0.3, 0.2, 0.05, 0.02), kasa, 0, -0.02, -0.045));
+  monitor.add(mesh(kutu(0.05, 0.22, 0.03, 0.01), kasa, 0, -0.27, -0.06));
+  monitor.add(mesh(kutu(0.26, 0.012, 0.17, 0.006), kasa, 0, -0.375, -0.03));
   const ekranMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
-  const ekran = new THREE.Mesh(new THREE.PlaneGeometry(EKRAN_W, EKRAN_H), ekranMat);
+  const ekran = new THREE.Mesh(buk(new THREE.PlaneGeometry(EKRAN_W, EKRAN_H, 48, 1)), ekranMat);
   ekran.position.z = 0.0015;
   monitor.add(ekran);
   monitor.position.set(0, MASA_Y + 0.38, -0.2);
@@ -220,9 +233,9 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   // ince alt çene ve arkada pivot göbeği
   kodMonitor.add(mesh(kutu(0.07, 0.07, 0.03, 0.01), kasa, 0, 0, -0.035));
   const kodAyak = new THREE.Group();
-  kodAyak.add(mesh(kutu(0.045, 0.36, 0.03, 0.01), kasa, 0, 0.18, 0));
-  kodAyak.add(mesh(kutu(0.2, 0.012, 0.15, 0.006), kasa, 0, 0.006, 0.02));
-  kodAyak.position.set(0, -0.41, -0.06);
+  kodAyak.add(mesh(kutu(0.034, 0.3, 0.024, 0.008), kasa, 0, 0.15, 0));
+  kodAyak.add(mesh(kutu(0.15, 0.01, 0.11, 0.005), kasa, 0, 0.005, 0.015));
+  kodAyak.position.set(0, -0.33, -0.05);
   kodMonitor.add(kodAyak);
   const KT_W = 640, KT_H = Math.round((640 * KOD_H) / KOD_W);
   const kodTuval = document.createElement("canvas");
@@ -235,7 +248,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const kodEkran = new THREE.Mesh(new THREE.PlaneGeometry(KOD_W, KOD_H), new THREE.MeshBasicMaterial({ map: kodDoku, toneMapped: false }));
   kodEkran.position.z = 0.0015;
   kodMonitor.add(kodEkran);
-  kodMonitor.position.set(0.56, MASA_Y + 0.41, -0.24);
+  kodMonitor.position.set(0.56, MASA_Y + 0.33, -0.24);
   kodMonitor.rotation.y = -0.38;
   sahne.add(kodMonitor);
 
@@ -1542,8 +1555,10 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       g.fillText(yazi, w / 2, h / 2 + 6);
     });
     const n = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.07), mat(0xffffff, { map: d, roughness: 1 }));
-    n.position.set(x, y, 0.004);
-    n.rotation.z = aci;
+    // kavisli kasanın kenarına oturur
+    const a = x / KAVIS_R;
+    n.position.set(KAVIS_R * Math.sin(a), y, KAVIS_R * (1 - Math.cos(a)) + 0.004);
+    n.rotation.set(0, -a, aci);
     monitor.add(n);
   }
 
@@ -1746,7 +1761,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }
 
   etkilesimler.push(
-    { ad: "monitor", grup: monitor, baslik: "Projeler", odak: () => ekranaBak(monitor, ekran, EKRAN_W, EKRAN_H, kamera.aspect < 1 ? 1.06 : 1.28), yuzey: ekran, w: EKRAN_W, h: EKRAN_H },
+    { ad: "monitor", grup: monitor, baslik: "Projeler", odak: () => ekranaBak(monitor, ekran, EKRAN_W, EKRAN_H, kamera.aspect < 1 ? 1.06 : 1.28), yuzey: ekran, w: EKRAN_W, h: EKRAN_H, sehim: EKRAN_SEHIM },
     { ad: "telefon", grup: stand, baslik: "Telefonda oyna", odak: () => ekranaBak(telefon, telEkran, TEL_W, TEL_H, kamera.aspect < 1 ? 1.45 : 1.25), yuzey: telEkran, w: TEL_W, h: TEL_H },
     { ad: "raf", grup: pano, baslik: "Yetenekler", odak: () => kabinOdak(), panel: true },
     { ad: "diploma", grup: diploma, baslik: "Hakkımda", odak: () => ({ kamera: v(-0.05, 1.6, 0.35), hedef: v(-0.2, 1.6, -0.58) }), panel: true },
@@ -1858,7 +1873,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   function yuzeyDikdortgeni(e) {
     const r = renderer.domElement.getBoundingClientRect();
     const koseler = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
-      const p = new THREE.Vector3((sx * e.w) / 2, (sy * e.h) / 2, 0);
+      const p = new THREE.Vector3((sx * e.w) / 2, (sy * e.h) / 2, e.sehim || 0);
       e.yuzey.localToWorld(p);
       p.project(kamera);
       return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height };
