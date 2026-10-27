@@ -1217,129 +1217,160 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
 
   // Yetenek kabini: masanın sağında, arka duvara yaslı camlı mini sunucu kabini; her ünite bir yetenek grubu, her yuva bir yetenek
   const pano = new THREE.Group();
-  const KAB_W = 0.6, KAB_D = 0.55, KAB_H = 1.16, IC_W = 0.5;
+  const KAB_W = 0.52, KAB_D = 0.55, KAB_H = 1.14, KAB_Y = 0.07, IC_W = 0.43, UW = IC_W + 0.03;
   const YETENEK_GRUPLARI = [
     ["FRONTEND", "#38bdf8", [["React", "#149eca"], ["Next.js", "#e5e7eb"], ["TypeScript", "#3178c6"], ["Tailwind", "#0e9fb5"], ["Three.js", "#e5e7eb"], ["Phaser", "#8b5cf6"]]],
     ["BACKEND", "#34d399", [["C# / .NET", "#7c5cff"], ["Node.js", "#3c873a"], ["NestJS", "#e0234e"], ["PostgreSQL", "#4f8cc9"], ["Redis", "#d82c20"], ["Claude API", "#c96442"]]],
     ["SİSTEM", "#f59e0b", [["C / C++17", "#3b82f6"], ["Go", "#00add8"], ["Java 21", "#e76f00"], ["STM32", "#03a9f4"], ["FreeRTOS", "#2e7d32"], ["Qt 6", "#41cd52"]]],
     ["ARAÇLAR", "#f472b6", [["Git", "#e44c30"], ["GitHub Actions", "#2088ff"], ["Docker", "#1d63ed"], ["Jest / Vitest", "#c2416b"], ["xUnit", "#8b5cf6"], ["Capacitor", "#119eff"]]],
   ];
-  const kabinMetal = mat(0x16181d, { metalness: 0.6, roughness: 0.45 });
-  const kabinKenar = mat(0x2a2e36, { metalness: 0.7, roughness: 0.35 });
-  // gövde: yan, üst, alt ve arka paneller; ön tarafı açık, camlı kapı ayrı
-  pano.add(mesh(kutu(0.02, KAB_H, KAB_D, 0.006), kabinMetal, -KAB_W / 2 + 0.01, KAB_H / 2 + 0.04, 0));
-  pano.add(mesh(kutu(0.02, KAB_H, KAB_D, 0.006), kabinMetal, KAB_W / 2 - 0.01, KAB_H / 2 + 0.04, 0));
-  pano.add(mesh(kutu(KAB_W, 0.03, KAB_D, 0.008), kabinKenar, 0, KAB_H + 0.04 - 0.015, 0));
-  pano.add(mesh(kutu(KAB_W, 0.04, KAB_D, 0.008), kabinKenar, 0, 0.06, 0));
-  pano.add(mesh(new THREE.BoxGeometry(KAB_W - 0.04, KAB_H - 0.06, 0.01), mat(0x0d0f13, { roughness: 0.9 }), 0, KAB_H / 2 + 0.04, -KAB_D / 2 + 0.01));
-  // üst kapakta havalandırma ızgarası
-  for (let i = 0; i < 7; i++) pano.add(mesh(new THREE.BoxGeometry(0.36, 0.002, 0.012), mat(0x050608), 0, KAB_H + 0.041, -0.15 + i * 0.05));
-  // tekerlekler
-  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-    const teker = mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.02, 14), mat(0x111111, { roughness: 0.6 }), x * (KAB_W / 2 - 0.05), 0.022, z * (KAB_D / 2 - 0.05));
-    teker.rotation.z = Math.PI / 2;
-    pano.add(teker);
-  }
+  // dış gövde: antrasit toz boya, yanlarda üst ve altta havalandırma yarıkları
+  const yanDoku = tuvalDokusu(256, 512, (g, w, h) => {
+    g.fillStyle = "#23262d"; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 2) { g.fillStyle = `rgba(255,255,255,${((y * 13) % 7) / 600})`; g.fillRect(0, y, w, 1); }
+    g.fillStyle = "#0c0d10";
+    for (const y0 of [30, h - 92]) for (let i = 0; i < 9; i++) g.fillRect(36 + i * 21, y0, 8, 62);
+  });
+  const kabinGovdeMat = new THREE.MeshStandardMaterial({ map: yanDoku, metalness: 0.55, roughness: 0.42 });
+  const kenarMat = mat(0x2c3038, { metalness: 0.7, roughness: 0.3 });
+  const icMat = mat(0x0d0f13, { roughness: 0.9 });
+  pano.add(mesh(kutu(0.024, KAB_H, KAB_D, 0.01), kabinGovdeMat, -KAB_W / 2 + 0.012, KAB_Y + KAB_H / 2, 0));
+  pano.add(mesh(kutu(0.024, KAB_H, KAB_D, 0.01), kabinGovdeMat, KAB_W / 2 - 0.012, KAB_Y + KAB_H / 2, 0));
+  pano.add(mesh(new THREE.BoxGeometry(KAB_W - 0.04, KAB_H - 0.04, 0.01), icMat, 0, KAB_Y + KAB_H / 2, -KAB_D / 2 + 0.01));
+  pano.add(mesh(new THREE.BoxGeometry(KAB_W - 0.04, 0.02, KAB_D - 0.02), icMat, 0, KAB_Y + 0.01, 0));
+  // taç: hafif taşan, yuvarlak kenarlı üst kapak
+  pano.add(mesh(kutu(KAB_W + 0.016, 0.034, KAB_D + 0.016, 0.012), kenarMat, 0, KAB_Y + KAB_H + 0.012, 0.004));
+  // taban: içeri çekilmiş kaide, gövde havada duruyormuş gibi gölge verir
+  pano.add(mesh(kutu(KAB_W - 0.05, KAB_Y, KAB_D - 0.06, 0.008), mat(0x0b0c0f, { roughness: 0.8 }), 0, KAB_Y / 2, -0.01));
+  pano.add(mesh(kutu(KAB_W + 0.004, 0.018, KAB_D + 0.004, 0.006), kenarMat, 0, KAB_Y + 0.006, 0.002));
+
   // rack rayları: önde iki dikme, U delikleriyle
   const rayDoku = tuvalDokusu(32, 512, (g, w, h) => {
-    g.fillStyle = "#9aa1ab"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#8d949e"; g.fillRect(0, 0, w, h);
     g.fillStyle = "#1c1f25";
     for (let y = 6; y < h; y += 14) g.fillRect(11, y, 10, 7);
   });
-  rayDoku.wrapT = THREE.RepeatWrapping;
   const rayMat = new THREE.MeshStandardMaterial({ map: rayDoku, metalness: 0.7, roughness: 0.4 });
-  for (const x of [-IC_W / 2 - 0.012, IC_W / 2 + 0.012]) pano.add(mesh(new THREE.BoxGeometry(0.024, KAB_H - 0.06, 0.01), rayMat, x, KAB_H / 2 + 0.04, KAB_D / 2 - 0.06));
+  for (const x of [-IC_W / 2 - 0.01, IC_W / 2 + 0.01]) pano.add(mesh(new THREE.BoxGeometry(0.02, KAB_H - 0.06, 0.01), rayMat, x, KAB_Y + KAB_H / 2, KAB_D / 2 - 0.07));
 
   // ünite ön yüzleri: fırçalanmış koyu metal, solda grup adı, ortada altı sürücü yuvası
-  const ON_Z = KAB_D / 2 - 0.05;
+  const ON_Z = KAB_D / 2 - 0.06;
+  const UNITE_H = 0.15, UNITE_ARA = 0.01;
+  const UTW = 1024, UTH = Math.round((UTW * UNITE_H) / UW);
+  const YUVA_W = (UTW - 200) / 3, YUVA_H = (UTH - 66) / 2;
+  const yuvaKonum = (i) => [150 + (i % 3) * YUVA_W, 26 + Math.floor(i / 3) * (YUVA_H + 14)];
   function uniteDokusu(baslik, vurgu, yuvalar) {
-    return tuvalDokusu(1024, 300, (g, w, h) => {
+    return tuvalDokusu(UTW, UTH, (g, w, h) => {
       g.fillStyle = "#24272e"; g.fillRect(0, 0, w, h);
-      for (let y = 0; y < h; y += 3) { g.fillStyle = `rgba(255,255,255,${(y * 7) % 11 / 400})`; g.fillRect(0, y, w, 1); }
-      // kulaklar ve vidalar
-      g.fillStyle = "#3a3f48"; g.fillRect(0, 0, 40, h); g.fillRect(w - 40, 0, 40, h);
+      for (let y = 0; y < h; y += 3) { g.fillStyle = `rgba(255,255,255,${((y * 7) % 11) / 400})`; g.fillRect(0, y, w, 1); }
+      g.fillStyle = "#3a3f48"; g.fillRect(0, 0, 36, h); g.fillRect(w - 36, 0, 36, h);
       g.fillStyle = "#8b929c";
-      for (const x of [20, w - 20]) for (const y of [36, h - 36]) { g.beginPath(); g.arc(x, y, 9, 0, Math.PI * 2); g.fill(); }
-      // grup etiketi
-      g.fillStyle = vurgu; g.fillRect(58, 30, 10, h - 60);
-      g.save(); g.translate(112, h / 2); g.rotate(-Math.PI / 2);
-      g.fillStyle = "#e5e7eb"; g.font = "800 34px ui-monospace, Menlo, Consolas, monospace"; g.textAlign = "center";
+      for (const x of [18, w - 18]) for (const y of [36, h - 36]) { g.beginPath(); g.arc(x, y, 8, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = vurgu; g.fillRect(52, 30, 10, h - 60);
+      g.save(); g.translate(104, h / 2); g.rotate(-Math.PI / 2);
+      g.fillStyle = "#e5e7eb"; g.font = "800 36px ui-monospace, Menlo, Consolas, monospace"; g.textAlign = "center";
       g.fillText(baslik, 0, 12); g.restore();
-      // 3 x 2 sürücü yuvası
       yuvalar.forEach(([ad, renk], i) => {
-        const x = 160 + (i % 3) * 282, y = 26 + Math.floor(i / 3) * 132, bw = 268, bh = 118;
+        const [x, y] = yuvaKonum(i), bw = YUVA_W - 12, bh = YUVA_H;
         g.fillStyle = "#0f1115"; g.fillRect(x, y, bw, bh);
         g.fillStyle = "#2f333b"; g.fillRect(x + 4, y + 4, bw - 8, bh - 8);
-        for (let k = 0; k < 5; k++) { g.fillStyle = "#1a1d22"; g.fillRect(x + 14 + k * 9, y + 16, 4, bh - 32); }
-        g.fillStyle = renk; g.fillRect(x + 62, y + 18, 6, bh - 36);
+        for (let k = 0; k < 4; k++) { g.fillStyle = "#1a1d22"; g.fillRect(x + 14 + k * 9, y + 16, 4, bh - 32); }
+        g.fillStyle = renk; g.fillRect(x + 54, y + 18, 6, bh - 36);
         g.fillStyle = "#f1f5f9"; g.textAlign = "left";
-        g.font = `700 ${ad.length > 11 ? 21 : ad.length > 8 ? 25 : 31}px system-ui, sans-serif`;
-        g.fillText(ad, x + 76, y + bh / 2 + 11);
-        // LED yuvası (ışığı 3D LED verir)
-        g.fillStyle = "#0b0c0f"; g.beginPath(); g.arc(x + bw - 22, y + 22, 9, 0, Math.PI * 2); g.fill();
+        g.font = `700 ${ad.length > 11 ? 22 : ad.length > 8 ? 26 : 32}px system-ui, sans-serif`;
+        g.fillText(ad, x + 68, y + bh / 2 + 11);
+        g.fillStyle = "#0b0c0f"; g.beginPath(); g.arc(x + bw - 20, y + 22, 8, 0, Math.PI * 2); g.fill();
       });
     });
   }
-  const UNITE_H = 0.15, UNITE_ARA = 0.012;
   const panoLedler = [];
-  const ledGeo = new THREE.SphereGeometry(0.0045, 10, 8);
+  const ledGeo = new THREE.SphereGeometry(0.004, 10, 8);
+  const uniteGovde = mat(0x1d2026, { metalness: 0.5, roughness: 0.5 });
   YETENEK_GRUPLARI.forEach(([baslik, vurgu, yuvalar], s) => {
     const y = 0.98 - s * (UNITE_H + UNITE_ARA);
     const doku = uniteDokusu(baslik, vurgu, yuvalar);
     doku.anisotropy = 8;
     const onMat = new THREE.MeshStandardMaterial({ map: doku, metalness: 0.35, roughness: 0.55 });
-    const govdeMat = mat(0x1d2026, { metalness: 0.5, roughness: 0.5 });
-    pano.add(mesh(new THREE.BoxGeometry(IC_W + 0.03, UNITE_H, 0.4), [govdeMat, govdeMat, govdeMat, govdeMat, onMat, govdeMat], 0, y, ON_Z - 0.2));
-    yuvalar.forEach(([, renk], i) => {
-      const ux = (-0.5 + (160 + (i % 3) * 282 + 268 - 22) / 1024) * (IC_W + 0.03);
-      const uy = y + (0.5 - (26 + Math.floor(i / 3) * 132 + 22) / 300) * UNITE_H;
+    pano.add(mesh(new THREE.BoxGeometry(UW, UNITE_H, 0.4), [uniteGovde, uniteGovde, uniteGovde, uniteGovde, onMat, uniteGovde], 0, y, ON_Z - 0.2));
+    yuvalar.forEach((_, i) => {
+      const [x0, y0] = yuvaKonum(i);
+      const ux = (-0.5 + (x0 + YUVA_W - 12 - 20) / UTW) * UW;
+      const uy = y + (0.5 - (y0 + 22) / UTH) * UNITE_H;
       const m = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, emissive: i % 4 === 3 ? "#f59e0b" : "#22c55e", emissiveIntensity: 1, roughness: 0.3 });
       pano.add(mesh(ledGeo, m, ux, uy, ON_Z + 0.002));
       panoLedler.push(m);
     });
   });
   // en üstte 1U ağ anahtarı: port ışıkları ve renkli yama kabloları
-  const SW_Y = 1.105;
-  pano.add(mesh(kutu(IC_W + 0.03, 0.045, 0.3, 0.004), mat(0x2b2f37, { metalness: 0.5, roughness: 0.4 }), 0, SW_Y, ON_Z - 0.15));
-  const kabloRenk = [0x3b82f6, 0xf59e0b, 0x22c55e, 0xef4444, 0xa855f7, 0x3b82f6, 0xf8fafc, 0x22c55e];
+  const SW_Y = 1.095;
+  pano.add(mesh(kutu(UW, 0.042, 0.3, 0.004), mat(0x2b2f37, { metalness: 0.5, roughness: 0.4 }), 0, SW_Y, ON_Z - 0.15));
+  const kabloRenk = [0x3b82f6, 0xf59e0b, 0x22c55e, 0xef4444, 0xa855f7, 0x3b82f6, 0xf8fafc];
   kabloRenk.forEach((r, i) => {
-    const x = -0.17 + i * 0.045;
+    const x = -0.15 + i * 0.045;
     pano.add(mesh(new THREE.BoxGeometry(0.014, 0.012, 0.03), mat(r, { roughness: 0.5 }), x, SW_Y, ON_Z + 0.012));
-    const egri = new THREE.CatmullRomCurve3([v3(x, SW_Y, ON_Z + 0.025), v3(x, SW_Y - 0.03, ON_Z + 0.05), v3(IC_W / 2 - 0.02, SW_Y - 0.06 - i * 0.004, ON_Z + 0.03), v3(IC_W / 2 + 0.005, SW_Y - 0.1, ON_Z - 0.05)]);
-    pano.add(mesh(new THREE.TubeGeometry(egri, 20, 0.0035, 6), mat(r, { roughness: 0.55 })));
+    const egri = new THREE.CatmullRomCurve3([v3(x, SW_Y, ON_Z + 0.025), v3(x, SW_Y - 0.03, ON_Z + 0.045), v3(IC_W / 2 - 0.02, SW_Y - 0.055 - i * 0.004, ON_Z + 0.03), v3(IC_W / 2 + 0.004, SW_Y - 0.1, ON_Z - 0.05)]);
+    pano.add(mesh(new THREE.TubeGeometry(egri, 20, 0.0033, 6), mat(r, { roughness: 0.55 })));
     const m = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: "#22c55e", emissiveIntensity: 1 });
-    pano.add(mesh(new THREE.BoxGeometry(0.006, 0.004, 0.002), m, x + 0.012, SW_Y + 0.016, ON_Z + 0.001));
+    pano.add(mesh(new THREE.BoxGeometry(0.006, 0.004, 0.002), m, x + 0.012, SW_Y + 0.015, ON_Z + 0.001));
     panoLedler.push(m);
   });
   // grup üniteleriyle UPS arasında delikli kör kapak
-  const korDoku = tuvalDokusu(1024, 300, (g, w, h) => {
+  const korDoku = tuvalDokusu(1024, 360, (g, w, h) => {
     g.fillStyle = "#2a2d34"; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#3a3f48"; g.fillRect(0, 0, 40, h); g.fillRect(w - 40, 0, 40, h);
+    g.fillStyle = "#3a3f48"; g.fillRect(0, 0, 36, h); g.fillRect(w - 36, 0, 36, h);
     g.fillStyle = "#121418";
-    for (let y = 40; y < h - 30; y += 22) for (let x = 80 + ((y / 22) % 2) * 11; x < w - 70; x += 22) { g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill(); }
+    for (let y = 40; y < h - 30; y += 22) for (let x = 76 + ((y / 22) % 2) * 11; x < w - 66; x += 22) { g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill(); }
   });
   const korMat = new THREE.MeshStandardMaterial({ map: korDoku, metalness: 0.4, roughness: 0.55 });
-  const korGovde = mat(0x1d2026, { metalness: 0.5, roughness: 0.5 });
-  pano.add(mesh(new THREE.BoxGeometry(IC_W + 0.03, 0.17, 0.02), [korGovde, korGovde, korGovde, korGovde, korMat, korGovde], 0, 0.32, ON_Z - 0.01));
+  pano.add(mesh(new THREE.BoxGeometry(UW, 0.16, 0.02), [uniteGovde, uniteGovde, uniteGovde, uniteGovde, korMat, uniteGovde], 0, 0.335, ON_Z - 0.01));
   // altta UPS: küçük ekran
-  const upsDoku = tuvalDokusu(512, 128, (g, w, h) => {
+  const upsDoku = tuvalDokusu(512, 150, (g, w, h) => {
     g.fillStyle = "#1b1e24"; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#0b1a12"; g.fillRect(300, 30, 170, 68);
-    g.fillStyle = "#4ade80"; g.font = "700 30px ui-monospace, Menlo, Consolas, monospace"; g.fillText("230V 98%", 308, 76);
-    g.fillStyle = "#9ca3af"; g.font = "800 34px system-ui, sans-serif"; g.fillText("UPS 1500", 50, 76);
+    g.fillStyle = "#0b1a12"; g.fillRect(290, 40, 180, 70);
+    g.fillStyle = "#4ade80"; g.font = "700 30px ui-monospace, Menlo, Consolas, monospace"; g.fillText("230V 98%", 298, 87);
+    g.fillStyle = "#9ca3af"; g.font = "800 34px system-ui, sans-serif"; g.fillText("UPS 1500", 44, 87);
   });
   const upsMat = new THREE.MeshStandardMaterial({ map: upsDoku, roughness: 0.5, emissiveMap: upsDoku, emissive: 0xffffff, emissiveIntensity: 0.15 });
   const upsGovde = mat(0x1b1e24, { roughness: 0.5 });
-  pano.add(mesh(new THREE.BoxGeometry(IC_W + 0.03, 0.12, 0.45), [upsGovde, upsGovde, upsGovde, upsGovde, upsMat, upsGovde], 0, 0.15, ON_Z - 0.225));
-  // camlı kapı: koyu çerçeve, hafif füme cam
-  const panoMat = new THREE.MeshPhysicalMaterial({ color: 0x8899aa, transparent: true, opacity: 0.12, roughness: 0.05, metalness: 0, emissive: 0x000000 });
-  const kapiZ = KAB_D / 2 - 0.005;
-  pano.add(mesh(new THREE.PlaneGeometry(KAB_W - 0.06, KAB_H - 0.08), panoMat, 0, KAB_H / 2 + 0.04, kapiZ));
-  for (const [w, h, x, y] of [[KAB_W, 0.03, 0, KAB_H + 0.025], [KAB_W, 0.03, 0, 0.095], [0.03, KAB_H - 0.04, -KAB_W / 2 + 0.015, KAB_H / 2 + 0.06], [0.03, KAB_H - 0.04, KAB_W / 2 - 0.015, KAB_H / 2 + 0.06]]) {
-    pano.add(mesh(kutu(w, h, 0.02, 0.004), kabinKenar, x, y, kapiZ));
+  pano.add(mesh(new THREE.BoxGeometry(UW, 0.135, 0.45), [upsGovde, upsGovde, upsGovde, upsGovde, upsMat, upsGovde], 0, 0.175, ON_Z - 0.225));
+
+  // camlı kapı: kalın yuvarlak profil, füme cam, üst kenarda ince mavi ışık şeridi
+  const kapiZ = KAB_D / 2 + 0.006;
+  const PRF = 0.03;
+  const camMat = new THREE.MeshPhysicalMaterial({ color: 0x1c2a38, transparent: true, opacity: 0.2, roughness: 0.04, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.05 });
+  pano.add(mesh(new THREE.PlaneGeometry(KAB_W - PRF * 2 + 0.01, KAB_H - PRF * 2 + 0.01), camMat, 0, KAB_Y + KAB_H / 2, kapiZ - 0.004));
+  // camın üstünde çapraz yansıma çizgileri
+  const yansimaDoku = tuvalDokusu(256, 512, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    for (const [x0, gen, a] of [[-40, 70, 0.1], [60, 18, 0.07], [150, 40, 0.05]]) {
+      g.fillStyle = `rgba(255,255,255,${a})`;
+      g.beginPath(); g.moveTo(x0, h); g.lineTo(x0 + gen, h); g.lineTo(x0 + gen + 260, 0); g.lineTo(x0 + 260, 0); g.closePath(); g.fill();
+    }
+  });
+  pano.add(mesh(new THREE.PlaneGeometry(KAB_W - PRF * 2 + 0.01, KAB_H - PRF * 2 + 0.01), new THREE.MeshBasicMaterial({ map: yansimaDoku, transparent: true, depthWrite: false }), 0, KAB_Y + KAB_H / 2, kapiZ - 0.003));
+  for (const [w, h, x, y] of [[KAB_W, PRF, 0, KAB_Y + KAB_H - PRF / 2], [KAB_W, PRF, 0, KAB_Y + PRF / 2], [PRF, KAB_H - PRF * 2 + 0.002, -KAB_W / 2 + PRF / 2, KAB_Y + KAB_H / 2], [PRF, KAB_H - PRF * 2 + 0.002, KAB_W / 2 - PRF / 2, KAB_Y + KAB_H / 2]]) {
+    pano.add(mesh(kutu(w, h, 0.022, 0.008), kenarMat, x, y, kapiZ));
   }
-  pano.add(mesh(kutu(0.012, 0.12, 0.02, 0.004), mat(0xb8bec8, { metalness: 0.9, roughness: 0.3 }), KAB_W / 2 - 0.045, KAB_H / 2 + 0.06, kapiZ + 0.015));
-  pano.position.set(1.62, 0, -0.6 + KAB_D / 2 + 0.03);
+  const seritMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 1.4 });
+  // ışık şeridi kapı profilinin önünde: üstte yatay, solda dikey
+  pano.add(mesh(new THREE.BoxGeometry(KAB_W - 0.05, 0.005, 0.003), seritMat, 0, KAB_Y + KAB_H - PRF / 2, kapiZ + 0.012));
+  pano.add(mesh(new THREE.BoxGeometry(0.005, KAB_H - 0.05, 0.003), seritMat, -KAB_W / 2 + PRF / 2, KAB_Y + KAB_H / 2, kapiZ + 0.012));
+  // dikey kulp ve kilit
+  const krom = mat(0xc8ced6, { metalness: 0.95, roughness: 0.18 });
+  const kulpX = KAB_W / 2 - PRF / 2;
+  pano.add(mesh(kutu(0.012, 0.24, 0.012, 0.005), krom, kulpX, KAB_Y + KAB_H * 0.56, kapiZ + 0.03));
+  for (const dy of [-0.11, 0.11]) pano.add(mesh(new THREE.BoxGeometry(0.008, 0.008, 0.024), krom, kulpX, KAB_Y + KAB_H * 0.56 + dy, kapiZ + 0.016));
+  const kilit = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.006, 14), krom, kulpX, KAB_Y + KAB_H * 0.56 - 0.16, kapiZ + 0.013);
+  kilit.rotation.x = Math.PI / 2;
+  pano.add(kilit);
+  // taç önünde küçük fırçalanmış etiket
+  const kabinEtiketDoku = tuvalDokusu(256, 48, (g, w, h) => {
+    g.fillStyle = "#b9c0c9"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#1f2329"; g.font = "800 26px ui-monospace, Menlo, Consolas, monospace"; g.textAlign = "center";
+    g.fillText("MG · SRV-01", w / 2, 33);
+  });
+  pano.add(mesh(new THREE.PlaneGeometry(0.11, 0.0206), new THREE.MeshStandardMaterial({ map: kabinEtiketDoku, metalness: 0.6, roughness: 0.35 }), 0, KAB_Y + KAB_H + 0.012, KAB_D / 2 + 0.0125));
+  pano.position.set(1.6, 0, -0.6 + KAB_D / 2 + 0.03);
   pano.rotation.y = -0.18;
   sahne.add(pano);
 
@@ -1554,6 +1585,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
     bayrakMat.sheen = gece ? 0.2 : 0.45;
     bayrakMat.sheenColor.set(gece ? 0x4a0610 : 0xa0202a);
+    seritMat.emissiveIntensity = gece ? 1.6 : 0.5;
   }
   temaUygula();
   new MutationObserver(temaUygula).observe(kok, { attributes: true, attributeFilter: ["data-theme"] });
