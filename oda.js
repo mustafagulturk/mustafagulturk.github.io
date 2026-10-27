@@ -12,6 +12,7 @@
  *     Telemetri kutusu (Nucleo kartı + sensörler) → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
  * Pencerenin solunda, altın rozetlere asılı Türk bayrağı.
+ * Arka duvarda, diplomanın sağında C2 operasyon ekranı → C2 Map Display.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -201,34 +202,236 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   // Monitör
   const monitor = new THREE.Group();
   const EKRAN_W = 0.64, EKRAN_H = 0.4;
-  const kasa = mat(0x15171c, { roughness: 0.35, metalness: 0.3 });
-  monitor.add(mesh(kutu(EKRAN_W + 0.03, EKRAN_H + 0.03, 0.025, 0.01), kasa, 0, 0, -0.012));
-  monitor.add(mesh(kutu(0.05, 0.22, 0.03, 0.01), kasa, 0, -0.27, -0.04));
-  monitor.add(mesh(kutu(0.24, 0.012, 0.16, 0.006), kasa, 0, -0.375, -0.02));
+  // kavisli ekran: düz geometriyi önünde duran dikey bir eksen etrafında büker, kenarlar izleyene doğru gelir
+  const KAVIS_R = 1.5;
+  function buk(geo) {
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const a = p.getX(i) / KAVIS_R, r = KAVIS_R - p.getZ(i);
+      p.setXYZ(i, r * Math.sin(a), p.getY(i), KAVIS_R - r * Math.cos(a));
+    }
+    geo.computeVertexNormals();
+    return geo;
+  }
+  const EKRAN_SEHIM = KAVIS_R * (1 - Math.cos(EKRAN_W / 2 / KAVIS_R));
+  // premium görünüm: ince parlak cam çerçeve, uzay grisi alüminyum arka kabuk ve ayak
+  const camCerceve = mat(0x07080a, { roughness: 0.12, metalness: 0.2 });
+  const alu = mat(0x5b616b, { metalness: 0.85, roughness: 0.28 });
+  monitor.add(mesh(buk(new THREE.BoxGeometry(EKRAN_W + 0.014, EKRAN_H + 0.014, 0.006, 48, 1, 1).translate(0, 0, -0.002)), camCerceve));
+  monitor.add(mesh(buk(new THREE.BoxGeometry(EKRAN_W + 0.01, EKRAN_H + 0.01, 0.016, 48, 1, 1).translate(0, 0, -0.013)), alu));
+  monitor.add(mesh(kutu(0.28, 0.18, 0.03, 0.014), alu, 0, -0.01, -0.034));
+  const boyun = mesh(kutu(0.07, 0.33, 0.012, 0.005), alu, 0, -0.215, -0.07);
+  boyun.rotation.x = -0.14;
+  monitor.add(boyun);
+  const taban = mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.007, 48), alu, 0, -0.3765, -0.05);
+  taban.scale.z = 0.6;
+  monitor.add(taban);
+  // alt çenede küçük beyaz güç ışığı
+  monitor.add(mesh(new THREE.BoxGeometry(0.012, 0.0015, 0.002), new THREE.MeshBasicMaterial({ color: 0xffffff }), 0, -EKRAN_H / 2 - 0.0045, 0.002));
   const ekranMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
-  const ekran = new THREE.Mesh(new THREE.PlaneGeometry(EKRAN_W, EKRAN_H), ekranMat);
+  const ekran = new THREE.Mesh(buk(new THREE.PlaneGeometry(EKRAN_W, EKRAN_H, 48, 1)), ekranMat);
   ekran.position.z = 0.0015;
   monitor.add(ekran);
   monitor.position.set(0, MASA_Y + 0.38, -0.2);
   sahne.add(monitor);
 
-  // Klavye ve fare
+  // İkinci monitör: sağda dikey duran kod ekranı; Kalman izleyicisi satır satır yazılıyor
+  const kodMonitor = new THREE.Group();
+  const KOD_W = 0.3, KOD_H = 0.5;
+  kodMonitor.add(mesh(kutu(KOD_W + 0.012, KOD_H + 0.012, 0.006, 0.004), camCerceve, 0, 0, -0.002));
+  kodMonitor.add(mesh(kutu(KOD_W + 0.018, KOD_H + 0.018, 0.016, 0.007), alu, 0, 0, -0.012));
+  kodMonitor.add(mesh(new THREE.BoxGeometry(0.01, 0.0015, 0.002), new THREE.MeshBasicMaterial({ color: 0xffffff }), 0, -KOD_H / 2 - 0.0042, 0.002));
+  // arkada pivot göbeği, alüminyum boyun ve oval taban
+  kodMonitor.add(mesh(kutu(0.09, 0.09, 0.024, 0.01), alu, 0, 0, -0.032));
+  const kodAyak = new THREE.Group();
+  kodAyak.add(mesh(kutu(0.045, 0.3, 0.01, 0.004), alu, 0, 0.15, 0));
+  const kodTaban = mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.006, 40), alu, 0, 0.003, 0.02);
+  kodTaban.scale.z = 0.65;
+  kodAyak.add(kodTaban);
+  kodAyak.position.set(0, -0.33, -0.046);
+  kodMonitor.add(kodAyak);
+  const KT_W = 640, KT_H = Math.round((640 * KOD_H) / KOD_W);
+  const kodTuval = document.createElement("canvas");
+  kodTuval.width = KT_W;
+  kodTuval.height = KT_H;
+  const kg = kodTuval.getContext("2d");
+  const kodDoku = new THREE.CanvasTexture(kodTuval);
+  kodDoku.colorSpace = THREE.SRGBColorSpace;
+  kodDoku.anisotropy = 8;
+  const kodEkran = new THREE.Mesh(new THREE.PlaneGeometry(KOD_W, KOD_H), new THREE.MeshBasicMaterial({ map: kodDoku, toneMapped: false }));
+  kodEkran.position.z = 0.0015;
+  kodMonitor.add(kodEkran);
+  kodMonitor.position.set(0.56, MASA_Y + 0.33, -0.24);
+  kodMonitor.rotation.y = -0.38;
+  sahne.add(kodMonitor);
+  // monitörlerin arkasından duvara vuran yumuşak ortam ışığı; gece belirgin, gündüz neredeyse yok
+  const arkaIsikDoku = tuvalDokusu(512, 256, (g, w, h) => {
+    const gr = g.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 2);
+    gr.addColorStop(0, "rgba(140, 110, 255, 0.9)");
+    gr.addColorStop(0.45, "rgba(90, 120, 255, 0.35)");
+    gr.addColorStop(1, "rgba(60, 90, 255, 0)");
+    g.fillStyle = gr;
+    g.fillRect(0, 0, w, h);
+  });
+  const arkaIsikMat = new THREE.MeshBasicMaterial({ map: arkaIsikDoku, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5 });
+  const arkaIsik = mesh(new THREE.PlaneGeometry(1.5, 0.6), arkaIsikMat, 0.22, MASA_Y + 0.4, -0.596);
+  sahne.add(arkaIsik);
+
+  // basit sözdizimi renkleri: anahtar kelime, tür, sayı, yorum, metin
+  const KOD = [
+    "package iz",
+    "",
+    "// Kalman: sabit hızlı model, 2B konum + hız",
+    "type Kalman struct {",
+    "\tx  mat.VecDense // [px py vx vy]",
+    "\tP  mat.Dense",
+    "\tQ  float64",
+    "\tR  float64",
+    "}",
+    "",
+    "// Tahmin: durumu dt kadar ileri taşı",
+    "func (k *Kalman) Tahmin(dt float64) {",
+    "\tF := sabitHiz(dt)",
+    "\tk.x.MulVec(F, &k.x)",
+    "\tk.P.Mul(F, &k.P)",
+    "\tk.P.Mul(&k.P, F.T())",
+    "\tk.P.Add(&k.P, surec(dt, k.Q))",
+    "}",
+    "",
+    "// Guncelle: radar ölçümüyle düzelt",
+    "func (k *Kalman) Guncelle(z Olcum) {",
+    "\ty := yenilik(z, &k.x)",
+    "\tS := artikKov(&k.P, k.R)",
+    "\tK := kazanc(&k.P, S)",
+    "\tk.x.AddVec(&k.x, carp(K, y))",
+    "\tk.P = joseph(&k.P, K, k.R)",
+    "}",
+    "",
+    "func (k *Kalman) Esle(o Olcum) bool {",
+    "\treturn mahalanobis(o, k) < 9.21",
+    "}",
+  ];
+  const ANAHTAR = /\b(package|type|struct|func|return|if|for|range|var|const)\b/g;
+  const TUR = /\b(float64|bool|int|mat\.VecDense|mat\.Dense|Kalman|Olcum)\b/g;
+  function kodSatir(s, x, y) {
+    if (s.trimStart().startsWith("//")) { kg.fillStyle = "#6a9955"; kg.fillText(s, x, y); return; }
+    const renkler = new Array(s.length).fill("#d4d4d4");
+    const boya = (re, r) => { for (const m of s.matchAll(re)) for (let i = 0; i < m[0].length; i++) renkler[m.index + i] = r; };
+    boya(/[A-Za-zÇĞİÖŞÜçğıöşü_]\w*(?=\()/g, "#dcdcaa");
+    boya(TUR, "#4ec9b0");
+    boya(ANAHTAR, "#c586c0");
+    boya(/\b\d+(\.\d+)?\b/g, "#b5cea8");
+    const yorum = s.indexOf("//");
+    if (yorum > 0) for (let i = yorum; i < s.length; i++) renkler[i] = "#6a9955";
+    let cx = x;
+    for (let i = 0; i < s.length; i++) {
+      kg.fillStyle = renkler[i];
+      kg.fillText(s[i], cx, y);
+      cx += kg.measureText(s[i]).width;
+    }
+  }
+  let kodYazilan = 0, kodBekle = 0, kodSure = 0, kodZaman = 0;
+  const kodToplam = KOD.reduce((t, s) => t + s.length + 1, 0);
+  function kodCiz(dt) {
+    kodSure += dt;
+    kodZaman += dt;
+    if (kodSure < 0.05) return;
+    const adim = kodSure;
+    kodSure = 0;
+    if (kodYazilan >= kodToplam) { kodBekle += adim; if (kodBekle > 4) { kodYazilan = 0; kodBekle = 0; } }
+    else kodYazilan = Math.min(kodToplam, kodYazilan + Math.max(1, Math.round(adim * 38)));
+    const w = KT_W, h = KT_H;
+    kg.fillStyle = "#1e1e1e"; kg.fillRect(0, 0, w, h);
+    // etkinlik çubuğu: dosyalar, arama, git, hata ayıklama simgeleri
+    const AB = 48;
+    kg.fillStyle = "#2c2c2c"; kg.fillRect(0, 0, AB, h);
+    kg.fillStyle = "#e5e5e5"; kg.fillRect(0, 60, 3, 40);
+    for (let i = 0; i < 4; i++) {
+      kg.strokeStyle = i === 0 ? "#e5e5e5" : "#858585";
+      kg.lineWidth = 2.5;
+      kg.strokeRect(14, 68 + i * 56, 20, 24);
+    }
+    // sekme çubuğu
+    kg.fillStyle = "#252526"; kg.fillRect(AB, 0, w - AB, 52);
+    kg.fillStyle = "#1e1e1e"; kg.fillRect(AB, 0, 196, 52);
+    kg.fillStyle = "#38bdf8"; kg.fillRect(AB, 0, 196, 3);
+    kg.font = "500 22px ui-monospace, Menlo, Consolas, monospace";
+    kg.textAlign = "left";
+    kg.fillStyle = "#00add8"; kg.fillText("Go", AB + 14, 34);
+    kg.fillStyle = "#e5e5e5"; kg.fillText("kalman.go", AB + 52, 34);
+    kg.fillStyle = "#8a8a8a"; kg.fillText("olcum.go", AB + 214, 34);
+    // satırlar
+    kg.font = "500 21px ui-monospace, Menlo, Consolas, monospace";
+    let kalan = kodYazilan, y = 92, imlec = null;
+    for (let i = 0; i < KOD.length; i++) {
+      kg.fillStyle = "#5a5a5a";
+      kg.textAlign = "right";
+      kg.fillText(String(i + 1), AB + 40, y);
+      kg.textAlign = "left";
+      const satir = KOD[i].replace(/\t/g, "    ");
+      const n = Math.min(satir.length, Math.max(0, kalan));
+      kodSatir(satir.slice(0, n), AB + 56, y);
+      if (imlec === null && kalan <= satir.length) imlec = [AB + 56 + kg.measureText(satir.slice(0, n)).width, y];
+      kalan -= satir.length + 1;
+      y += 29;
+    }
+    if (imlec && Math.floor(kodZaman * 2) % 2 === 0) { kg.fillStyle = "#aeafad"; kg.fillRect(imlec[0] + 1, imlec[1] - 19, 2, 24); }
+    // durum çubuğu
+    kg.fillStyle = "#007acc"; kg.fillRect(0, h - 36, w, 36);
+    kg.fillStyle = "#fff"; kg.font = "500 18px ui-monospace, Menlo, Consolas, monospace";
+    kg.fillText("⎇ main", 14, h - 12);
+    kg.textAlign = "right";
+    kg.fillText("Go 1.22  UTF-8  ✓ 0 hata", w - 14, h - 12);
+    kodDoku.needsUpdate = true;
+  }
+  if (azHareket) kodYazilan = kodToplam;
+  kodCiz(1);
+
+  // Masa matı: klavye ile fareyi tek parça koyu keçe üstünde toplar
+  const ped = mesh(kutu(0.86, 0.003, 0.28, 0.02), mat(0x24272d, { roughness: 1 }), 0.07, MASA_Y + 0.0015, 0.14);
+  sahne.add(ped);
+
+  // Klavye: uzay grisi alüminyum gövde, alçak profilli tuşlar, gece tuş aralarından sızan beyaz arka ışık
   const klavye = new THREE.Group();
-  klavye.add(mesh(kutu(0.44, 0.018, 0.14, 0.006), mat(0x1c1f26, { roughness: 0.5 })));
-  const tusMat = mat(0x2c313b, { roughness: 0.6 });
-  const tusGeo = kutu(0.022, 0.01, 0.022, 0.003);
+  klavye.add(mesh(kutu(0.44, 0.014, 0.135, 0.007), alu, 0, 0.007, 0));
+  klavye.add(mesh(new THREE.BoxGeometry(0.425, 0.002, 0.12), mat(0x111317, { roughness: 0.8 }), 0, 0.0142, 0));
+  const klavyeIsikMat = new THREE.MeshStandardMaterial({ color: 0x111317, emissive: 0xdfe8ff, emissiveIntensity: 0 });
+  klavye.add(mesh(new THREE.BoxGeometry(0.42, 0.001, 0.115), klavyeIsikMat, 0, 0.0155, 0));
+  const tusMat = mat(0x24272e, { roughness: 0.45 });
+  const tusUstMat = mat(0x2e323a, { roughness: 0.4 });
+  const tusGeo = kutu(0.021, 0.008, 0.021, 0.004);
+  const tusUstGeo = kutu(0.017, 0.0015, 0.017, 0.003);
+  const vurguMat = mat(0xd9a441, { roughness: 0.4, metalness: 0.3 });
   for (let r = 0; r < 5; r++) for (let c = 0; c < 17; c++) {
     if (r === 4 && c > 4 && c < 12) continue;
-    klavye.add(mesh(tusGeo, tusMat, -0.2 + c * 0.025, 0.012, -0.05 + r * 0.025));
+    const x = -0.2 + c * 0.025, z = -0.05 + r * 0.025;
+    // Esc ve Enter altın vurgulu
+    const ozel = (r === 0 && c === 0) || (r === 2 && c === 16);
+    klavye.add(mesh(tusGeo, ozel ? vurguMat : tusMat, x, 0.02, z));
+    if (!ozel) klavye.add(mesh(tusUstGeo, tusUstMat, x, 0.0245, z));
   }
-  klavye.add(mesh(kutu(0.17, 0.01, 0.022, 0.003), tusMat, 0, 0.012, 0.05));
-  klavye.position.set(-0.02, MASA_Y + 0.01, 0.13);
+  klavye.add(mesh(kutu(0.17, 0.008, 0.021, 0.004), tusMat, 0, 0.02, 0.05));
+  klavye.position.set(-0.02, MASA_Y + 0.003, 0.13);
+  klavye.rotation.x = 0.04;
   sahne.add(klavye);
-  const fare = mesh(new THREE.SphereGeometry(0.03, 20, 12), mat(0x1c1f26, { roughness: 0.4 }), 0.33, MASA_Y + 0.01, 0.15);
-  fare.scale.set(0.9, 0.45, 1.4);
+
+  // Fare: ergonomik gövde, sol/sağ tuş ayrımı, kaydırma tekerleği ve altında ince ışık çizgisi
+  const fare = new THREE.Group();
+  const fareGovde = mesh(new THREE.SphereGeometry(0.03, 32, 20), mat(0x1b1d22, { roughness: 0.35, metalness: 0.2 }));
+  fareGovde.scale.set(0.95, 0.5, 1.5);
+  fare.add(fareGovde);
+  fare.add(mesh(new THREE.BoxGeometry(0.0012, 0.004, 0.026), mat(0x050506), 0, 0.0145, -0.018));
+  const teker = mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.004, 16), alu, 0, 0.0145, -0.02);
+  teker.rotation.z = Math.PI / 2;
+  fare.add(teker);
+  const fareIsikMat = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x38bdf8, emissiveIntensity: 0.4 });
+  const fareIsik = mesh(new THREE.TorusGeometry(0.028, 0.0012, 6, 40), fareIsikMat, 0, -0.004, 0);
+  fareIsik.rotation.x = Math.PI / 2;
+  fareIsik.scale.set(1, 1.5, 1);
+  fare.add(fareIsik);
+  fare.position.set(0.33, MASA_Y + 0.016, 0.15);
+  fare.rotation.y = -0.12;
   sahne.add(fare);
-  const ped = mesh(kutu(0.26, 0.004, 0.22, 0.004), mat(0x2a9d8f, { roughness: 1 }), 0.33, MASA_Y + 0.002, 0.14);
-  sahne.add(ped);
 
   // Lamba
   const lamba = new THREE.Group();
@@ -340,7 +543,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   fidan.add(kazik);
   const levha = mesh(new THREE.PlaneGeometry(0.06, 0.027), mat(0xffffff, { map: etiketDoku, roughness: 0.9 }), 0.03, 0.17, 0.037);
   fidan.add(levha);
-  fidan.position.set(0.78, MASA_Y, -0.25);
+  fidan.position.set(0.84, MASA_Y, -0.32);
   fidan.rotation.y = -0.5;
   sahne.add(fidan);
 
@@ -714,8 +917,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   telefon.rotation.x = -0.3;
   telefon.position.set(0, 0.085, -0.005);
   stand.add(telefon);
-  stand.position.set(0.5, MASA_Y, -0.08);
-  stand.rotation.y = -0.35;
+  stand.position.set(0.66, MASA_Y, 0.06);
+  stand.rotation.y = -0.5;
   sahne.add(stand);
 
   // Defter (CV)
@@ -739,7 +942,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const kalem = mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.15, 8), mat(0x2a9d8f), 0.13, 0.006, 0.02);
   kalem.rotation.set(Math.PI / 2, 0, 0.3);
   defter.add(kalem);
-  defter.position.set(0.32, MASA_Y, 0.32);
+  defter.position.set(0.56, MASA_Y, 0.3);
   defter.rotation.y = -0.25;
   sahne.add(defter);
 
@@ -951,47 +1154,428 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   bayrakSpot.shadow.radius = 4;
   sahne.add(bayrakSpot);
 
-  // Kitaplık rafı
-  const raf = new THREE.Group();
-  raf.add(mesh(kutu(0.9, 0.03, 0.22, 0.006), ahsap, 0, 0, 0));
-  raf.add(mesh(kutu(0.9, 0.03, 0.22, 0.006), ahsap, 0, 0.34, 0));
-  for (const x of [-0.3, 0.3]) raf.add(mesh(kutu(0.03, 0.06, 0.12, 0.004), ayakMat, x, -0.04, -0.05));
-  const KITAPLAR = [
-    ["C#", "#6b2fa0"], ["React", "#1f7a8c"], ["TypeScript", "#2f5fb3"], ["PostgreSQL", "#33658a"], ["Node.js", "#3c873a"],
-    ["Docker", "#1d63ed"], ["Next.js", "#222"], ["Three.js", "#444"], [".NET", "#512bd4"], ["Git", "#e44c30"],
+  // ---- Arka duvar, sağ: C2 operasyon ekranı (C2 Map Display) ----
+  // Duvara asılı ince çerçeveli büyük ekran; canlı çizilen çevrimdışı harita, izler, yasak bölge ve alarm
+  const c2 = new THREE.Group();
+  const C2_W = 1.12, C2_H = 0.67;
+  c2.add(mesh(kutu(C2_W + 0.03, C2_H + 0.03, 0.035, 0.008), mat(0x111317, { roughness: 0.35, metalness: 0.5 }), 0, 0, 0.0175));
+  c2.add(mesh(kutu(0.3, 0.2, 0.02, 0.004), mat(0x1b1d22, { metalness: 0.6, roughness: 0.4 }), 0, 0, 0.01)); // duvar askısı
+  const CW = 1280, CH = 764;
+  const c2Tuval = document.createElement("canvas");
+  c2Tuval.width = CW;
+  c2Tuval.height = CH;
+  const cg = c2Tuval.getContext("2d");
+  const c2Doku = new THREE.CanvasTexture(c2Tuval);
+  c2Doku.colorSpace = THREE.SRGBColorSpace;
+  c2Doku.anisotropy = 8;
+  const c2Ekran = new THREE.Mesh(new THREE.PlaneGeometry(C2_W, C2_H), new THREE.MeshBasicMaterial({ map: c2Doku, toneMapped: false }));
+  c2Ekran.position.z = 0.0355;
+  c2.add(c2Ekran);
+  // ekranın duvara ve masaya vuran soğuk mavi ışığı
+  const c2Isik = new THREE.PointLight(0x5aa9ff, 0.25, 1.6, 2);
+  c2Isik.position.set(0, 0, 0.35);
+  c2.add(c2Isik);
+  c2.position.set(0.92, 1.74, -0.595); // eski kitap rafının yeri, diplomanın sağı
+  sahne.add(c2);
+
+  // harita alanı solda, bilgi paneli ve olay listesi sağda
+  const MW = 960, UST = 34, ALT = 24;
+  const ozluRastgele = (n) => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
+  const c2Taban = document.createElement("canvas");
+  c2Taban.width = CW;
+  c2Taban.height = CH;
+  {
+    const g = c2Taban.getContext("2d");
+    g.fillStyle = "#13283d"; // deniz
+    g.fillRect(0, 0, MW, CH);
+    // kara: doğuda girintili kıyı, batıda iki ada (Ege kıyısını andırır)
+    const kara = (pts) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.fill(); g.stroke(); };
+    g.fillStyle = "#2a3a35";
+    g.strokeStyle = "#4d6b62";
+    g.lineWidth = 1.5;
+    const kiyi = [[MW, 0]];
+    for (let y = 0; y <= CH; y += 18) {
+      const x = 330 + Math.sin(y * 0.012) * 70 + Math.sin(y * 0.041 + 1) * 28 + (ozluRastgele(y) - 0.5) * 18 - (y > 330 && y < 420 ? 120 : 0);
+      kiyi.push([x, y]);
+    }
+    kiyi.push([MW, CH]);
+    kara(kiyi);
+    for (const [cx, cy, r] of [[150, 300, 70], [120, 560, 55]]) {
+      const ada = [];
+      for (let a = 0; a < Math.PI * 2; a += 0.25) ada.push([cx + Math.cos(a) * r * (0.75 + ozluRastgele(a * 9 + cx) * 0.4), cy + Math.sin(a) * r * 0.7 * (0.75 + ozluRastgele(a * 7 + cy) * 0.4)]);
+      kara(ada);
+    }
+    // enlem/boylam ızgarası
+    g.strokeStyle = "rgba(140, 180, 210, .08)";
+    g.lineWidth = 1;
+    for (let x = 0; x < MW; x += 120) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, CH); g.stroke(); }
+    for (let y = 0; y < CH; y += 120) { g.beginPath(); g.moveTo(0, y); g.lineTo(MW, y); g.stroke(); }
+    // şehirler
+    g.font = "500 15px system-ui, sans-serif";
+    g.fillStyle = "rgba(220, 230, 235, .75)";
+    for (const [ad, x, y] of [["İzmir", 470, 400], ["Manisa", 620, 250], ["Aliağa", 430, 150], ["Torbalı", 560, 560], ["Kuşadası", 470, 690], ["Akhisar", 760, 120], ["Turgutlu", 760, 330], ["Ödemiş", 800, 560]]) {
+      g.beginPath(); g.arc(x, y, 3, 0, Math.PI * 2); g.fill();
+      g.fillText(ad, x + 8, y + 5);
+    }
+    // radar ve menzil halkaları
+    g.strokeStyle = "rgba(90, 200, 140, .35)";
+    for (const r of [90, 180, 270]) { g.beginPath(); g.arc(470, 400, r, 0, Math.PI * 2); g.stroke(); }
+    g.fillStyle = "rgba(90, 200, 140, .7)";
+    g.font = "600 12px monospace";
+    [10, 20, 30].forEach((km, i) => g.fillText(km + " km", 476, 400 - (i + 1) * 90 + 14));
+    g.strokeRect(463, 393, 14, 14);
+    g.fillText("RADAR", 450, 424);
+    // ölçek çubuğu
+    g.strokeStyle = g.fillStyle = "rgba(220, 230, 235, .8)";
+    g.beginPath(); g.moveTo(20, CH - ALT - 18); g.lineTo(20, CH - ALT - 12); g.lineTo(140, CH - ALT - 12); g.lineTo(140, CH - ALT - 18); g.stroke();
+    g.font = "500 13px system-ui, sans-serif";
+    g.fillText("20 km", 60, CH - ALT - 20);
+    // sağ panel çerçevesi
+    g.fillStyle = "#0d1722";
+    g.fillRect(MW, 0, CW - MW, CH);
+    g.fillStyle = "#162231";
+    g.fillRect(MW + 12, UST + 10, CW - MW - 24, 250);
+    g.fillRect(MW + 12, UST + 272, CW - MW - 24, CH - UST - ALT - 284);
+    // üst araç çubuğu ve alt durum çubuğu
+    g.fillStyle = "#1a2433";
+    g.fillRect(0, 0, CW, UST);
+    g.fillRect(0, CH - ALT, CW, ALT);
+    g.font = "500 14px system-ui, sans-serif";
+    let x = 10;
+    for (const [ad, aktif] of [["Kaydır", 1], ["Mesafe / Kerteriz"], ["Yasak bölge çiz"], ["İz çizgileri"], ["Etiketler"], ["● Kayıt"], ["4×"], ["Canlıya dön"]]) {
+      const w = g.measureText(ad).width + 18;
+      g.fillStyle = aktif ? "#1f6fb2" : "#25324a";
+      g.fillRect(x, 6, w, 22);
+      g.fillStyle = "#dbe5f0";
+      g.fillText(ad, x + 9, 22);
+      x += w + 6;
+    }
+  }
+  const bolgeler = [
+    { ad: "Bölge-1", pts: [[540, 230], [640, 190], [690, 300], [585, 345]] },
+    { ad: "Bölge-2", pts: [[330, 560], [410, 520], [455, 610], [375, 650]] },
   ];
-  let kx = -0.4;
-  KITAPLAR.forEach(([ad, renk], i) => {
-    const kal = 0.035 + ((i * 7) % 3) * 0.008;
-    const boy = 0.2 + ((i * 5) % 4) * 0.02;
-    const sirt = tuvalDokusu(64, 320, (g, w, h) => {
-      g.fillStyle = renk;
-      g.fillRect(0, 0, w, h);
-      g.fillStyle = "rgba(255,255,255,.18)";
-      g.fillRect(0, 18, w, 6);
-      g.fillRect(0, h - 24, w, 6);
-      g.save();
-      g.translate(w / 2 + 9, h / 2);
-      g.rotate(-Math.PI / 2);
-      g.fillStyle = "#fff";
-      g.font = `700 ${ad.length > 8 ? 24 : 30}px system-ui, sans-serif`;
-      g.textAlign = "center";
-      g.fillText(ad, 0, 0);
-      g.restore();
+  const icinde = ([px, py], pts) => {
+    let ic = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const [xi, yi] = pts[i], [xj, yj] = pts[j];
+      if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) ic = !ic;
+    }
+    return ic;
+  };
+  // kimlik: 0 dost, 1 düşman, 2 bilinmeyen; R- radar izleri, L- veri bağı izleri
+  const c2Izler = [
+    ["L-1005", 1, 700, 140, -9, 11], ["L-1004", 1, 300, 470, 8, 12], ["L-1000", 0, 610, 360, 6, -8], ["L-1001", 0, 560, 640, 3, -12],
+    ["L-1007", 0, 260, 330, 10, 4], ["R-214", 2, 700, 420, -12, -4], ["R-149", 2, 640, 520, -9, 7], ["R-53", 2, 380, 250, 11, 6],
+    ["R-22", 2, 420, 330, 12, -3], ["R-9", 2, 560, 470, -6, -10],
+  ].map(([ad, kimlik, x, y, vx, vy]) => ({ ad, kimlik, x, y, vx, vy, iz: [], bolge: null }));
+  const KIMLIK = [["Dost", "#38bdf8"], ["Düşman", "#f43f5e"], ["Bilinmeyen", "#facc15"]];
+  const olaylar = [];
+  let alarm = null, c2Saat = 13 * 3600 + 55 * 60 + 30, c2Bekle = 0, c2Yanip = 0, seciliIz = c2Izler[0];
+  const saatYaz = (s) => [s / 3600, (s / 60) % 60, s % 60].map((n) => String(Math.floor(n)).padStart(2, "0")).join(":");
+  function sembol(g, iz) {
+    const [, renk] = KIMLIK[iz.kimlik];
+    g.strokeStyle = renk;
+    g.lineWidth = 2.5;
+    g.beginPath();
+    if (iz.kimlik === 0) g.arc(iz.x, iz.y, 9, 0, Math.PI * 2);
+    else if (iz.kimlik === 1) { g.moveTo(iz.x, iz.y - 11); g.lineTo(iz.x + 11, iz.y); g.lineTo(iz.x, iz.y + 11); g.lineTo(iz.x - 11, iz.y); g.closePath(); }
+    else for (const [dx, dy] of [[0, -5], [5, 0], [0, 5], [-5, 0]]) { g.moveTo(iz.x + dx + 5, iz.y + dy); g.arc(iz.x + dx, iz.y + dy, 5, 0, Math.PI * 2); }
+    g.stroke();
+  }
+  function c2Ciz(dt) {
+    c2Bekle -= dt;
+    if (c2Bekle > 0) return;
+    const adim = 0.12 - c2Bekle; // ~8 kare/sn yeterli; dokuyu her karede yüklemeyelim
+    c2Bekle = 0.12;
+    c2Saat += adim * 4; // kayıttan 4× tekrar
+    c2Yanip += adim;
+    for (const iz of c2Izler) {
+      iz.x += iz.vx * adim;
+      iz.y += iz.vy * adim;
+      if (iz.x < 40 || iz.x > MW - 40) iz.vx = -iz.vx;
+      if (iz.y < UST + 40 || iz.y > CH - ALT - 40) iz.vy = -iz.vy;
+      iz.iz.push([iz.x, iz.y]);
+      if (iz.iz.length > 40) iz.iz.shift();
+      const yeni = bolgeler.find((b) => icinde([iz.x, iz.y], b.pts))?.ad ?? null;
+      if (yeni !== iz.bolge) {
+        const zaman = saatYaz(c2Saat);
+        if (yeni && iz.kimlik === 1) {
+          alarm = { zaman, metin: `${iz.ad} (Düşman) yasak bölgeye girdi: ${yeni}`, sure: 6 };
+          olaylar.unshift([zaman, "ALARM", `${iz.ad} (Düşman) yasak bölgeye girdi: ${yeni}`]);
+          seciliIz = iz;
+        } else if (yeni) olaylar.unshift([zaman, "UYARI", `${iz.ad} (${KIMLIK[iz.kimlik][0]}) yasak bölge içinde: ${yeni}`]);
+        else olaylar.unshift([zaman, "BİLGİ", `${iz.ad} yasak bölgeden çıktı: ${iz.bolge}`]);
+        if (olaylar.length > 9) olaylar.pop();
+        iz.bolge = yeni;
+      }
+    }
+    if (alarm && (alarm.sure -= adim) <= 0) alarm = null;
+
+    cg.drawImage(c2Taban, 0, 0);
+    // yasak bölgeler: içinde düşman varsa yanıp söner
+    for (const b of bolgeler) {
+      const ihlal = c2Izler.some((iz) => iz.bolge === b.ad && iz.kimlik === 1);
+      cg.fillStyle = ihlal && Math.sin(c2Yanip * 9) > 0 ? "rgba(244, 63, 94, .45)" : "rgba(244, 63, 94, .22)";
+      cg.strokeStyle = "#f43f5e";
+      cg.lineWidth = 2;
+      cg.beginPath();
+      b.pts.forEach(([x, y], i) => (i ? cg.lineTo(x, y) : cg.moveTo(x, y)));
+      cg.closePath();
+      cg.fill();
+      cg.stroke();
+      cg.fillStyle = "#fecdd3";
+      cg.font = "700 14px system-ui, sans-serif";
+      cg.fillText(b.ad, b.pts[0][0] + 10, b.pts[0][1] + 40);
+    }
+    // izler: solan iz çizgisi, 60 sn hız vektörü, sembol ve etiket
+    cg.save();
+    cg.beginPath();
+    cg.rect(0, UST, MW, CH - UST - ALT);
+    cg.clip();
+    for (const iz of c2Izler) {
+      const renk = KIMLIK[iz.kimlik][1];
+      iz.iz.forEach(([x, y], i) => {
+        cg.globalAlpha = (i / iz.iz.length) * 0.6;
+        cg.fillStyle = renk;
+        cg.fillRect(x - 1.5, y - 1.5, 3, 3);
+      });
+      cg.globalAlpha = 1;
+      cg.strokeStyle = renk;
+      cg.lineWidth = 1.5;
+      cg.beginPath();
+      cg.moveTo(iz.x, iz.y);
+      cg.lineTo(iz.x + iz.vx * 5, iz.y + iz.vy * 5);
+      cg.stroke();
+      sembol(cg, iz);
+      const hiz = Math.round(Math.hypot(iz.vx, iz.vy) * 22), rota = Math.round((Math.atan2(iz.vx, -iz.vy) * 180 / Math.PI + 360) % 360);
+      cg.fillStyle = "rgba(235, 240, 245, .9)";
+      cg.font = "600 13px monospace";
+      cg.fillText(`${iz.ad}  ${hiz}kt ${String(rota).padStart(3, "0")}°`, iz.x + 14, iz.y - 8);
+      if (iz === seciliIz) {
+        cg.strokeStyle = "#e2e8f0";
+        cg.lineWidth = 1.5;
+        cg.strokeRect(iz.x - 16, iz.y - 16, 32, 32);
+      }
+    }
+    cg.restore();
+    // alarm bandı
+    if (alarm) {
+      cg.fillStyle = Math.sin(c2Yanip * 6) > -0.3 ? "#b91c1c" : "#7f1d1d";
+      cg.fillRect(30, UST + 14, MW - 60, 38);
+      cg.fillStyle = "#fff";
+      cg.font = "700 17px monospace";
+      cg.fillText(`⚠ ALARM  ${alarm.zaman}  ${alarm.metin}`, 46, UST + 39);
+    }
+    // bilgi paneli
+    const px = MW + 26;
+    cg.fillStyle = "#162231";
+    cg.fillRect(MW + 12, UST + 10, CW - MW - 24, 250);
+    cg.fillStyle = "#e2e8f0";
+    cg.font = "700 19px system-ui, sans-serif";
+    cg.fillText(`Hedef ${seciliIz.ad}`, px, UST + 42);
+    cg.font = "500 15px monospace";
+    const [kimlikAd, kimlikRenk] = KIMLIK[seciliIz.kimlik];
+    const satirlar = [
+      ["Kimlik", kimlikAd, kimlikRenk],
+      ["Konum", `${(38.9 - seciliIz.y / 900).toFixed(4)}° K`],
+      ["", `${(26.6 + seciliIz.x / 700).toFixed(4)}° D`],
+      ["Hız", `${Math.round(Math.hypot(seciliIz.vx, seciliIz.vy) * 22)} kt`],
+      ["Rota", `${Math.round((Math.atan2(seciliIz.vx, -seciliIz.vy) * 180 / Math.PI + 360) % 360)}°`],
+      ["Radardan", `${(Math.hypot(seciliIz.x - 470, seciliIz.y - 400) / 9).toFixed(1)} km`],
+      ["Bölge", seciliIz.bolge ?? "-"],
+      ["Güncelleme", saatYaz(c2Saat)],
+    ];
+    satirlar.forEach(([a, d, renk], i) => {
+      cg.fillStyle = "rgba(148, 163, 184, .9)";
+      cg.fillText(a, px, UST + 72 + i * 23);
+      cg.fillStyle = renk ?? "#e2e8f0";
+      cg.fillText(d, px + 110, UST + 72 + i * 23);
     });
-    const malz = [mat(renk), mat(renk), mat(0xf3ead8), mat(0xf3ead8), mat(0xffffff, { map: sirt }), mat(renk)];
-    const kitap = new THREE.Mesh(new THREE.BoxGeometry(kal, boy, 0.16), malz);
-    kitap.castShadow = kitap.receiveShadow = true;
-    kitap.position.set(kx + kal / 2, 0.015 + boy / 2, 0.02);
-    if (i === 7) kitap.rotation.z = 0.18;
-    raf.add(kitap);
-    kx += kal + 0.004;
+    // olay listesi
+    cg.fillStyle = "#162231";
+    cg.fillRect(MW + 12, UST + 272, CW - MW - 24, CH - UST - ALT - 284);
+    cg.fillStyle = "#e2e8f0";
+    cg.font = "700 18px system-ui, sans-serif";
+    cg.fillText("Olay listesi", px, UST + 302);
+    cg.font = "500 13px monospace";
+    olaylar.forEach(([zaman, tur, metin], i) => {
+      cg.fillStyle = tur === "ALARM" ? "#fb7185" : tur === "UYARI" ? "#fde047" : "#cbd5e1";
+      const y = UST + 332 + i * 40;
+      cg.fillText(`${zaman} ${tur}`, px, y);
+      cg.fillText(metin.length > 30 ? metin.slice(0, 29) + "…" : metin, px, y + 17);
+    });
+    // durum çubuğu
+    cg.fillStyle = "#1a2433";
+    cg.fillRect(0, CH - ALT, CW, ALT);
+    cg.fillStyle = "rgba(203, 213, 225, .85)";
+    cg.font = "500 13px monospace";
+    cg.textAlign = "right";
+    cg.fillText(`TEKRAR · ${c2Izler.length} hedef · RDR1 1501 pkt, 0 kayıp · TRK1 40 pkt · ${saatYaz(c2Saat)}`, CW - 14, CH - 7);
+    cg.textAlign = "left";
+    c2Doku.needsUpdate = true;
+  }
+  c2Ciz(1);
+
+  // Yetenek kabini: masanın sağında, arka duvara yaslı camlı mini sunucu kabini; her ünite bir yetenek grubu, her yuva bir yetenek
+  const pano = new THREE.Group();
+  const KAB_W = 0.52, KAB_D = 0.55, KAB_H = 1.14, KAB_Y = 0.07, IC_W = 0.43, UW = IC_W + 0.03;
+  const YETENEK_GRUPLARI = [
+    ["FRONTEND", "#38bdf8", [["React", "#149eca"], ["Next.js", "#e5e7eb"], ["TypeScript", "#3178c6"], ["Tailwind", "#0e9fb5"], ["Three.js", "#e5e7eb"], ["Phaser", "#8b5cf6"]]],
+    ["BACKEND", "#34d399", [["C# / .NET", "#7c5cff"], ["Node.js", "#3c873a"], ["NestJS", "#e0234e"], ["PostgreSQL", "#4f8cc9"], ["Redis", "#d82c20"], ["Claude API", "#c96442"]]],
+    ["SİSTEM", "#f59e0b", [["C / C++17", "#3b82f6"], ["Go", "#00add8"], ["Java 21", "#e76f00"], ["STM32", "#03a9f4"], ["FreeRTOS", "#2e7d32"], ["Qt 6", "#41cd52"]]],
+    ["ARAÇLAR", "#f472b6", [["Git", "#e44c30"], ["GitHub Actions", "#2088ff"], ["Docker", "#1d63ed"], ["Jest / Vitest", "#c2416b"], ["xUnit", "#8b5cf6"], ["Capacitor", "#119eff"]]],
+  ];
+  // dış gövde: antrasit toz boya, yanlarda üst ve altta havalandırma yarıkları
+  const yanDoku = tuvalDokusu(256, 512, (g, w, h) => {
+    g.fillStyle = "#23262d"; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 2) { g.fillStyle = `rgba(255,255,255,${((y * 13) % 7) / 600})`; g.fillRect(0, y, w, 1); }
+    g.fillStyle = "#0c0d10";
+    for (const y0 of [30, h - 92]) for (let i = 0; i < 9; i++) g.fillRect(36 + i * 21, y0, 8, 62);
   });
-  // üst rafta küçük süsler: kupa ödül, saksı
-  raf.add(mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.06, 16), lambaMat, 0.32, 0.375, 0));
-  raf.add(mesh(new THREE.SphereGeometry(0.035, 16, 12), lambaMat, 0.32, 0.43, 0));
-  raf.position.set(0.85, 1.4, -0.48);
-  sahne.add(raf);
+  const kabinGovdeMat = new THREE.MeshStandardMaterial({ map: yanDoku, metalness: 0.55, roughness: 0.42 });
+  const kenarMat = mat(0x2c3038, { metalness: 0.7, roughness: 0.3 });
+  const icMat = mat(0x0d0f13, { roughness: 0.9 });
+  pano.add(mesh(kutu(0.024, KAB_H, KAB_D, 0.01), kabinGovdeMat, -KAB_W / 2 + 0.012, KAB_Y + KAB_H / 2, 0));
+  pano.add(mesh(kutu(0.024, KAB_H, KAB_D, 0.01), kabinGovdeMat, KAB_W / 2 - 0.012, KAB_Y + KAB_H / 2, 0));
+  pano.add(mesh(new THREE.BoxGeometry(KAB_W - 0.04, KAB_H - 0.04, 0.01), icMat, 0, KAB_Y + KAB_H / 2, -KAB_D / 2 + 0.01));
+  pano.add(mesh(new THREE.BoxGeometry(KAB_W - 0.04, 0.02, KAB_D - 0.02), icMat, 0, KAB_Y + 0.01, 0));
+  // taç: hafif taşan, yuvarlak kenarlı üst kapak
+  pano.add(mesh(kutu(KAB_W + 0.016, 0.034, KAB_D + 0.016, 0.012), kenarMat, 0, KAB_Y + KAB_H + 0.012, 0.004));
+  // taban: içeri çekilmiş kaide, gövde havada duruyormuş gibi gölge verir
+  pano.add(mesh(kutu(KAB_W - 0.05, KAB_Y, KAB_D - 0.06, 0.008), mat(0x0b0c0f, { roughness: 0.8 }), 0, KAB_Y / 2, -0.01));
+  pano.add(mesh(kutu(KAB_W + 0.004, 0.018, KAB_D + 0.004, 0.006), kenarMat, 0, KAB_Y + 0.006, 0.002));
+
+  // rack rayları: önde iki dikme, U delikleriyle
+  const rayDoku = tuvalDokusu(32, 512, (g, w, h) => {
+    g.fillStyle = "#8d949e"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#1c1f25";
+    for (let y = 6; y < h; y += 14) g.fillRect(11, y, 10, 7);
+  });
+  const rayMat = new THREE.MeshStandardMaterial({ map: rayDoku, metalness: 0.7, roughness: 0.4 });
+  for (const x of [-IC_W / 2 - 0.01, IC_W / 2 + 0.01]) pano.add(mesh(new THREE.BoxGeometry(0.02, KAB_H - 0.06, 0.01), rayMat, x, KAB_Y + KAB_H / 2, KAB_D / 2 - 0.07));
+
+  // ünite ön yüzleri: fırçalanmış koyu metal, solda grup adı, ortada altı sürücü yuvası
+  const ON_Z = KAB_D / 2 - 0.06;
+  const UNITE_H = 0.15, UNITE_ARA = 0.01;
+  const UTW = 1024, UTH = Math.round((UTW * UNITE_H) / UW);
+  const YUVA_W = (UTW - 200) / 3, YUVA_H = (UTH - 66) / 2;
+  const yuvaKonum = (i) => [150 + (i % 3) * YUVA_W, 26 + Math.floor(i / 3) * (YUVA_H + 14)];
+  function uniteDokusu(baslik, vurgu, yuvalar) {
+    return tuvalDokusu(UTW, UTH, (g, w, h) => {
+      g.fillStyle = "#24272e"; g.fillRect(0, 0, w, h);
+      for (let y = 0; y < h; y += 3) { g.fillStyle = `rgba(255,255,255,${((y * 7) % 11) / 400})`; g.fillRect(0, y, w, 1); }
+      g.fillStyle = "#3a3f48"; g.fillRect(0, 0, 36, h); g.fillRect(w - 36, 0, 36, h);
+      g.fillStyle = "#8b929c";
+      for (const x of [18, w - 18]) for (const y of [36, h - 36]) { g.beginPath(); g.arc(x, y, 8, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = vurgu; g.fillRect(52, 30, 10, h - 60);
+      g.save(); g.translate(104, h / 2); g.rotate(-Math.PI / 2);
+      g.fillStyle = "#e5e7eb"; g.font = "800 36px ui-monospace, Menlo, Consolas, monospace"; g.textAlign = "center";
+      g.fillText(baslik, 0, 12); g.restore();
+      yuvalar.forEach(([ad, renk], i) => {
+        const [x, y] = yuvaKonum(i), bw = YUVA_W - 12, bh = YUVA_H;
+        g.fillStyle = "#0f1115"; g.fillRect(x, y, bw, bh);
+        g.fillStyle = "#2f333b"; g.fillRect(x + 4, y + 4, bw - 8, bh - 8);
+        for (let k = 0; k < 4; k++) { g.fillStyle = "#1a1d22"; g.fillRect(x + 14 + k * 9, y + 16, 4, bh - 32); }
+        g.fillStyle = renk; g.fillRect(x + 54, y + 18, 6, bh - 36);
+        g.fillStyle = "#f1f5f9"; g.textAlign = "left";
+        g.font = `700 ${ad.length > 11 ? 22 : ad.length > 8 ? 26 : 32}px system-ui, sans-serif`;
+        g.fillText(ad, x + 68, y + bh / 2 + 11);
+        g.fillStyle = "#0b0c0f"; g.beginPath(); g.arc(x + bw - 20, y + 22, 8, 0, Math.PI * 2); g.fill();
+      });
+    });
+  }
+  const panoLedler = [];
+  const ledGeo = new THREE.SphereGeometry(0.004, 10, 8);
+  const uniteGovde = mat(0x1d2026, { metalness: 0.5, roughness: 0.5 });
+  YETENEK_GRUPLARI.forEach(([baslik, vurgu, yuvalar], s) => {
+    const y = 0.98 - s * (UNITE_H + UNITE_ARA);
+    const doku = uniteDokusu(baslik, vurgu, yuvalar);
+    doku.anisotropy = 8;
+    const onMat = new THREE.MeshStandardMaterial({ map: doku, metalness: 0.35, roughness: 0.55 });
+    pano.add(mesh(new THREE.BoxGeometry(UW, UNITE_H, 0.4), [uniteGovde, uniteGovde, uniteGovde, uniteGovde, onMat, uniteGovde], 0, y, ON_Z - 0.2));
+    yuvalar.forEach((_, i) => {
+      const [x0, y0] = yuvaKonum(i);
+      const ux = (-0.5 + (x0 + YUVA_W - 12 - 20) / UTW) * UW;
+      const uy = y + (0.5 - (y0 + 22) / UTH) * UNITE_H;
+      const m = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, emissive: i % 4 === 3 ? "#f59e0b" : "#22c55e", emissiveIntensity: 1, roughness: 0.3 });
+      pano.add(mesh(ledGeo, m, ux, uy, ON_Z + 0.002));
+      panoLedler.push(m);
+    });
+  });
+  // en üstte 1U ağ anahtarı: port ışıkları ve renkli yama kabloları
+  const SW_Y = 1.095;
+  pano.add(mesh(kutu(UW, 0.042, 0.3, 0.004), mat(0x2b2f37, { metalness: 0.5, roughness: 0.4 }), 0, SW_Y, ON_Z - 0.15));
+  const kabloRenk = [0x3b82f6, 0xf59e0b, 0x22c55e, 0xef4444, 0xa855f7, 0x3b82f6, 0xf8fafc];
+  kabloRenk.forEach((r, i) => {
+    const x = -0.15 + i * 0.045;
+    pano.add(mesh(new THREE.BoxGeometry(0.014, 0.012, 0.03), mat(r, { roughness: 0.5 }), x, SW_Y, ON_Z + 0.012));
+    const egri = new THREE.CatmullRomCurve3([v3(x, SW_Y, ON_Z + 0.025), v3(x, SW_Y - 0.03, ON_Z + 0.045), v3(IC_W / 2 - 0.02, SW_Y - 0.055 - i * 0.004, ON_Z + 0.03), v3(IC_W / 2 + 0.004, SW_Y - 0.1, ON_Z - 0.05)]);
+    pano.add(mesh(new THREE.TubeGeometry(egri, 20, 0.0033, 6), mat(r, { roughness: 0.55 })));
+    const m = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: "#22c55e", emissiveIntensity: 1 });
+    pano.add(mesh(new THREE.BoxGeometry(0.006, 0.004, 0.002), m, x + 0.012, SW_Y + 0.015, ON_Z + 0.001));
+    panoLedler.push(m);
+  });
+  // grup üniteleriyle UPS arasında delikli kör kapak
+  const korDoku = tuvalDokusu(1024, 360, (g, w, h) => {
+    g.fillStyle = "#2a2d34"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#3a3f48"; g.fillRect(0, 0, 36, h); g.fillRect(w - 36, 0, 36, h);
+    g.fillStyle = "#121418";
+    for (let y = 40; y < h - 30; y += 22) for (let x = 76 + ((y / 22) % 2) * 11; x < w - 66; x += 22) { g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.fill(); }
+  });
+  const korMat = new THREE.MeshStandardMaterial({ map: korDoku, metalness: 0.4, roughness: 0.55 });
+  pano.add(mesh(new THREE.BoxGeometry(UW, 0.16, 0.02), [uniteGovde, uniteGovde, uniteGovde, uniteGovde, korMat, uniteGovde], 0, 0.335, ON_Z - 0.01));
+  // altta UPS: küçük ekran
+  const upsDoku = tuvalDokusu(512, 150, (g, w, h) => {
+    g.fillStyle = "#1b1e24"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#0b1a12"; g.fillRect(290, 40, 180, 70);
+    g.fillStyle = "#4ade80"; g.font = "700 30px ui-monospace, Menlo, Consolas, monospace"; g.fillText("230V 98%", 298, 87);
+    g.fillStyle = "#9ca3af"; g.font = "800 34px system-ui, sans-serif"; g.fillText("UPS 1500", 44, 87);
+  });
+  const upsMat = new THREE.MeshStandardMaterial({ map: upsDoku, roughness: 0.5, emissiveMap: upsDoku, emissive: 0xffffff, emissiveIntensity: 0.15 });
+  const upsGovde = mat(0x1b1e24, { roughness: 0.5 });
+  pano.add(mesh(new THREE.BoxGeometry(UW, 0.135, 0.45), [upsGovde, upsGovde, upsGovde, upsGovde, upsMat, upsGovde], 0, 0.175, ON_Z - 0.225));
+
+  // camlı kapı: kalın yuvarlak profil, füme cam, üst kenarda ince mavi ışık şeridi
+  const kapiZ = KAB_D / 2 + 0.006;
+  const PRF = 0.03;
+  const camMat = new THREE.MeshPhysicalMaterial({ color: 0x1c2a38, transparent: true, opacity: 0.2, roughness: 0.04, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.05 });
+  pano.add(mesh(new THREE.PlaneGeometry(KAB_W - PRF * 2 + 0.01, KAB_H - PRF * 2 + 0.01), camMat, 0, KAB_Y + KAB_H / 2, kapiZ - 0.004));
+  // camın üstünde çapraz yansıma çizgileri
+  const yansimaDoku = tuvalDokusu(256, 512, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    for (const [x0, gen, a] of [[-40, 70, 0.1], [60, 18, 0.07], [150, 40, 0.05]]) {
+      g.fillStyle = `rgba(255,255,255,${a})`;
+      g.beginPath(); g.moveTo(x0, h); g.lineTo(x0 + gen, h); g.lineTo(x0 + gen + 260, 0); g.lineTo(x0 + 260, 0); g.closePath(); g.fill();
+    }
+  });
+  pano.add(mesh(new THREE.PlaneGeometry(KAB_W - PRF * 2 + 0.01, KAB_H - PRF * 2 + 0.01), new THREE.MeshBasicMaterial({ map: yansimaDoku, transparent: true, depthWrite: false }), 0, KAB_Y + KAB_H / 2, kapiZ - 0.003));
+  for (const [w, h, x, y] of [[KAB_W, PRF, 0, KAB_Y + KAB_H - PRF / 2], [KAB_W, PRF, 0, KAB_Y + PRF / 2], [PRF, KAB_H - PRF * 2 + 0.002, -KAB_W / 2 + PRF / 2, KAB_Y + KAB_H / 2], [PRF, KAB_H - PRF * 2 + 0.002, KAB_W / 2 - PRF / 2, KAB_Y + KAB_H / 2]]) {
+    pano.add(mesh(kutu(w, h, 0.022, 0.008), kenarMat, x, y, kapiZ));
+  }
+  const seritMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 1.4 });
+  // ışık şeridi kapı profilinin önünde: üstte yatay, solda dikey
+  pano.add(mesh(new THREE.BoxGeometry(KAB_W - 0.05, 0.005, 0.003), seritMat, 0, KAB_Y + KAB_H - PRF / 2, kapiZ + 0.012));
+  pano.add(mesh(new THREE.BoxGeometry(0.005, KAB_H - 0.05, 0.003), seritMat, -KAB_W / 2 + PRF / 2, KAB_Y + KAB_H / 2, kapiZ + 0.012));
+  // dikey kulp ve kilit
+  const krom = mat(0xc8ced6, { metalness: 0.95, roughness: 0.18 });
+  const kulpX = KAB_W / 2 - PRF / 2;
+  pano.add(mesh(kutu(0.012, 0.24, 0.012, 0.005), krom, kulpX, KAB_Y + KAB_H * 0.56, kapiZ + 0.03));
+  for (const dy of [-0.11, 0.11]) pano.add(mesh(new THREE.BoxGeometry(0.008, 0.008, 0.024), krom, kulpX, KAB_Y + KAB_H * 0.56 + dy, kapiZ + 0.016));
+  const kilit = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.006, 14), krom, kulpX, KAB_Y + KAB_H * 0.56 - 0.16, kapiZ + 0.013);
+  kilit.rotation.x = Math.PI / 2;
+  pano.add(kilit);
+  // taç önünde küçük fırçalanmış etiket
+  const kabinEtiketDoku = tuvalDokusu(256, 48, (g, w, h) => {
+    g.fillStyle = "#b9c0c9"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#1f2329"; g.font = "800 26px ui-monospace, Menlo, Consolas, monospace"; g.textAlign = "center";
+    g.fillText("MG · SRV-01", w / 2, 33);
+  });
+  pano.add(mesh(new THREE.PlaneGeometry(0.11, 0.0206), new THREE.MeshStandardMaterial({ map: kabinEtiketDoku, metalness: 0.6, roughness: 0.35 }), 0, KAB_Y + KAB_H + 0.012, KAB_D / 2 + 0.0125));
+  pano.position.set(1.6, 0, -0.6 + KAB_D / 2 + 0.03);
+  pano.rotation.y = -0.18;
+  sahne.add(pano);
+
 
   // Diploma çerçevesi
   const diploma = new THREE.Group();
@@ -1033,8 +1617,10 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       g.fillText(yazi, w / 2, h / 2 + 6);
     });
     const n = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.07), mat(0xffffff, { map: d, roughness: 1 }));
-    n.position.set(x, y, 0.004);
-    n.rotation.z = aci;
+    // kavisli kasanın kenarına oturur
+    const a = x / KAVIS_R;
+    n.position.set(KAVIS_R * Math.sin(a), y, KAVIS_R * (1 - Math.cos(a)) + 0.004);
+    n.rotation.set(0, -a, aci);
     monitor.add(n);
   }
 
@@ -1203,6 +1789,10 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
     bayrakMat.sheen = gece ? 0.2 : 0.45;
     bayrakMat.sheenColor.set(gece ? 0x4a0610 : 0xa0202a);
+    seritMat.emissiveIntensity = gece ? 1.6 : 0.5;
+    arkaIsikMat.opacity = gece ? 0.55 : 0.08;
+    klavyeIsikMat.emissiveIntensity = gece ? 0.9 : 0;
+    fareIsikMat.emissiveIntensity = gece ? 1.4 : 0.3;
   }
   temaUygula();
   new MutationObserver(temaUygula).observe(kok, { attributes: true, attributeFilter: ["data-theme"] });
@@ -1228,18 +1818,26 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     return { kamera: hedef.clone().addScaledVector(ileri, uzak).add(v(0, uzak * egim + 0.12, 0)), hedef };
   }
 
+  // kabin uzun ve geniş: panel kaydırmasını dengelemek için bakışı biraz sola alır
+  function kabinOdak() {
+    const o = onden(pano, 1.55, 0.64, 0.08);
+    const sol = new THREE.Vector3(-Math.cos(pano.rotation.y), 0, Math.sin(pano.rotation.y)).multiplyScalar(0.24);
+    return { kamera: o.kamera.add(sol), hedef: o.hedef.add(sol) };
+  }
+
   etkilesimler.push(
-    { ad: "monitor", grup: monitor, baslik: "Projeler", odak: () => ekranaBak(monitor, ekran, EKRAN_W, EKRAN_H, kamera.aspect < 1 ? 1.06 : 1.28), yuzey: ekran, w: EKRAN_W, h: EKRAN_H },
+    { ad: "monitor", grup: monitor, baslik: "Projeler", odak: () => ekranaBak(monitor, ekran, EKRAN_W, EKRAN_H, kamera.aspect < 1 ? 1.06 : 1.28), yuzey: ekran, w: EKRAN_W, h: EKRAN_H, sehim: EKRAN_SEHIM },
     { ad: "telefon", grup: stand, baslik: "Telefonda oyna", odak: () => ekranaBak(telefon, telEkran, TEL_W, TEL_H, kamera.aspect < 1 ? 1.45 : 1.25), yuzey: telEkran, w: TEL_W, h: TEL_H },
-    { ad: "raf", grup: raf, baslik: "Yetenekler", odak: () => ({ kamera: v(0.55, 1.5, 0.55), hedef: v(0.85, 1.5, -0.45) }), panel: true },
+    { ad: "raf", grup: pano, baslik: "Yetenekler", odak: () => kabinOdak(), panel: true },
     { ad: "diploma", grup: diploma, baslik: "Hakkımda", odak: () => ({ kamera: v(-0.05, 1.6, 0.35), hedef: v(-0.2, 1.6, -0.58) }), panel: true },
     { ad: "pencere", grup: pencere, baslik: "Gaziantep", odak: () => ({ kamera: v(-0.75, 1.5, 0.6), hedef: v(-1.05, 1.45, -0.6) }), panel: true },
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
-    { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.3, 1.2, 0.72), hedef: v(0.32, 0.76, 0.3) }), panel: true },
+    { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.54, 1.2, 0.7), hedef: v(0.56, 0.76, 0.28) }), panel: true },
     { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 0.7, 0.13, 0.12), panel: true },
+    { ad: "c2", grup: c2, baslik: "C2 harita ekranı", odak: () => onden(c2, 1.25, 0, -0.08), panel: true },
     { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.5, 0.03, 0.55), panel: true },
     { ad: "gecit", grup: gecit, baslik: "Taktik mesaj ağ geçidi", odak: () => onden(gecit, 0.7, 0.03, 0.35), panel: true },
-    { ad: "fidan", grup: fidan, baslik: "Çınar · dil modeli", odak: () => ({ kamera: v(0.62, 1.12, 0.3), hedef: v(0.78, 0.93, -0.25) }), panel: true },
+    { ad: "fidan", grup: fidan, baslik: "Çınar · dil modeli", odak: () => ({ kamera: v(0.68, 1.12, 0.23), hedef: v(0.84, 0.93, -0.32) }), panel: true },
   );
   for (const e of etkilesimler) e.grup.traverse((o) => (o.userData.etkilesim = e));
 
@@ -1340,7 +1938,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   function yuzeyDikdortgeni(e) {
     const r = renderer.domElement.getBoundingClientRect();
     const koseler = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
-      const p = new THREE.Vector3((sx * e.w) / 2, (sy * e.h) / 2, 0);
+      const p = new THREE.Vector3((sx * e.w) / 2, (sy * e.h) / 2, e.sehim || 0);
       e.yuzey.localToWorld(p);
       p.project(kamera);
       return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height };
@@ -1526,6 +2124,9 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     }
     // laboratuvar köşesi: radar taraması, kartın 1 Hz LED'i, anahtarın port LED'leri
     radarCiz(azHareket ? 0 : dt);
+    if (!azHareket) c2Ciz(dt);
+    if (!azHareket) kodCiz(dt);
+    panoLedler.forEach((m, i) => { m.emissiveIntensity = azHareket || Math.sin(t * (3 + (i % 5)) + i * 2.3) > -0.4 ? 1.6 : 0.15; });
     oledCiz(t, dt);
     if (!azHareket) bayrakDalga(t);
     radarLed.visible = t % 1 < 0.85;

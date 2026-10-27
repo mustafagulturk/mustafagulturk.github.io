@@ -156,6 +156,7 @@ let repoVerisi = null;
 // GitHub'da açıklaması boş olan repolar için yedek açıklamalar
 const ACIKLAMALAR = {
   "radar-target-tracker": { tr: "Radar Target Tracker: Kalman filtresiyle çoklu hedef takibi ve Qt radar ekranı. C++17, Qt, UDP.", en: "Radar Target Tracker: multi-target Kalman tracking with a Qt radar display. C++17, Qt, UDP." },
+  "c2-map-display": { tr: "C2 Harita Ekranı: UDP radar verisini Kalman ile izleyen, çevrimdışı haritalı komuta kontrol ekranı. Java 21, JavaFX.", en: "C2 Map Display: a command-and-control display tracking UDP radar data with a Kalman filter on an offline map. Java 21, JavaFX." },
   "taktik-mesaj-gecidi": { tr: "Taktik Mesaj Ağ Geçidi: bit düzeyinde ikili protokol, TCP, fuzz testli kodek. Go.", en: "Tactical Message Gateway: bit-level binary protocol over TCP with a fuzz-tested codec. Go." },
   "embedded-telemetry": { tr: "Gömülü telemetri: STM32F446RE için FreeRTOS firmware'i ve Python yer istasyonu. C, Renode.", en: "Embedded telemetry: FreeRTOS firmware for STM32F446RE and a Python ground station. C, Renode." },
   "ise-alim": { tr: "Kadro: Claude ile CV puanlayan yapay zekâ destekli işe alım platformu. NestJS, Next.js, PostgreSQL.", en: "Kadro: AI-powered applicant tracking that scores CVs with Claude. NestJS, Next.js, PostgreSQL." },
@@ -334,6 +335,9 @@ kaydirma();
 const PROJELER = {
   radar: { ad: "Radar Target Tracker", ekranlar: [
   ["poster", "Qt PPI ekranı: dönen tarama, izler ve iz tablosu", "Qt PPI display: rotating scan, tracks and track table"],
+  ] },
+  c2: { ad: "C2 Harita Ekranı", ekranlar: [
+  ["poster", "Operatör ekranı: izler, yasak bölge alarmı, bilgi paneli ve olay listesi", "Operator display: tracks, restricted-zone alarm, info panel and event log"],
   ] },
   telemetri: { ad: "Gömülü Telemetri", ekranlar: [
   ["poster", "Renode'da yer istasyonu: irtifa, IMU ve mod", "Ground station on Renode: altitude, IMU and mode"],
