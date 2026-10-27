@@ -19,7 +19,12 @@
 .oda-modu .nav, .oda-modu main, .oda-modu footer, .oda-modu .progress, .oda-modu .skip-link, .oda-modu #yukari { visibility: hidden; }
 
 .oda-sahne { position: absolute; inset: 0; }
-.oda-sahne canvas { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+.oda-sahne canvas { display: block; width: 100%; height: 100%; touch-action: none; } /* sürükleme bakınmaya gider, sayfa kaymaz */
+.oda-ipucu-dokun { display: none; }
+@media (pointer: coarse) {
+  .oda-ipucu-fare { display: none; }
+  .oda-ipucu-dokun { display: inline; }
+}
 
 .oda-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;

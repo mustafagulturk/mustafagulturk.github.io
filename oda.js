@@ -1380,7 +1380,47 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       etiket.style.top = ev.clientY + 12 + "px";
     }
   });
+  // ---- Dokunmatik bakınma: parmakla sürükleme ----
+  // Sürükleme sahneyi parmakla birlikte kaydırır (sağa sürükle → sola bak). Kısa dokunuş tıklama sayılır.
+  // Bırakınca bakış birkaç saniye yerinde kalır, sonra yavaşça ortaya döner.
+  const suruk = { x: 0, y: 0, id: null, sx: 0, sy: 0, bx: 0, by: 0, oynadi: false, birakma: 0 };
+  const sinirla = (d) => Math.max(-1, Math.min(1, d));
+  function dokunmaBakisi() {
+    fareKonum.set(suruk.x, suruk.y);
+  }
+  renderer.domElement.addEventListener("pointerdown", (ev) => {
+    if (ev.pointerType !== "touch" || odaktaki || suruk.id !== null) return;
+    Object.assign(suruk, { id: ev.pointerId, sx: ev.clientX, sy: ev.clientY, bx: suruk.x, by: suruk.y, oynadi: false });
+    renderer.domElement.setPointerCapture?.(ev.pointerId);
+  });
+  renderer.domElement.addEventListener("pointermove", (ev) => {
+    if (ev.pointerId !== suruk.id) return;
+    const dx = ev.clientX - suruk.sx, dy = ev.clientY - suruk.sy;
+    if (!suruk.oynadi && Math.hypot(dx, dy) < 10) return;
+    suruk.oynadi = true;
+    const olcek = 2.4 / Math.min(innerWidth, innerHeight); // ekranın yarısı kadar sürükleme tam dönüş
+    suruk.x = sinirla(suruk.bx - dx * olcek);
+    suruk.y = sinirla(suruk.by - dy * olcek * 0.6);
+    dokunmaBakisi();
+  });
+  function surukBitti(ev) {
+    if (ev.pointerId !== suruk.id) return;
+    suruk.id = null;
+    suruk.birakma = performance.now();
+  }
+  renderer.domElement.addEventListener("pointerup", surukBitti);
+  renderer.domElement.addEventListener("pointercancel", surukBitti);
+  function surukGeriDon() {
+    // kare döngüsünden çağrılır: 3 sn dokunulmazsa sürükleme payı yavaşça sıfırlanır
+    if (suruk.id !== null || (!suruk.x && !suruk.y) || performance.now() - suruk.birakma < 3000) return;
+    suruk.x *= 0.97;
+    suruk.y *= 0.97;
+    if (Math.abs(suruk.x) + Math.abs(suruk.y) < 0.002) suruk.x = suruk.y = 0;
+    dokunmaBakisi();
+  }
+
   renderer.domElement.addEventListener("click", (ev) => {
+    if (suruk.oynadi && performance.now() - suruk.birakma < 400) return; // sürüklemenin sonu tıklama sayılmaz
     const e = sec(ev.clientX, ev.clientY);
     if (e) odaklan(e);
     else if (odaktaki) cik();
@@ -1439,6 +1479,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
 
     // genel görünüşte fareyle hafif bakınma
     // baş hareketini kullanıcı fareyle kendisi yaptığı için "animasyonları azalt" ayarında da açık kalır
+    surukGeriDon();
     fareYumusak.lerp(odaktaki ? new THREE.Vector2() : fareKonum, 0.05);
     // genel görünüşte baş hareketi, insan başı gibi: ortada sakin, kenara gittikçe açılan dönüş.
     // Sola ~63° (yan duvar ve bayrak görünür), sağa ~23°. Gözler boyun ekseninin önünde olduğundan
