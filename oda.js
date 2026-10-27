@@ -942,7 +942,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const kalem = mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.15, 8), mat(0x2a9d8f), 0.13, 0.006, 0.02);
   kalem.rotation.set(Math.PI / 2, 0, 0.3);
   defter.add(kalem);
-  defter.position.set(0.32, MASA_Y, 0.32);
+  defter.position.set(0.56, MASA_Y, 0.3);
   defter.rotation.y = -0.25;
   sahne.add(defter);
 
@@ -1832,7 +1832,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     { ad: "diploma", grup: diploma, baslik: "Hakkımda", odak: () => ({ kamera: v(-0.05, 1.6, 0.35), hedef: v(-0.2, 1.6, -0.58) }), panel: true },
     { ad: "pencere", grup: pencere, baslik: "Gaziantep", odak: () => ({ kamera: v(-0.75, 1.5, 0.6), hedef: v(-1.05, 1.45, -0.6) }), panel: true },
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
-    { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.3, 1.2, 0.72), hedef: v(0.32, 0.76, 0.3) }), panel: true },
+    { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.54, 1.2, 0.7), hedef: v(0.56, 0.76, 0.28) }), panel: true },
     { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 0.7, 0.13, 0.12), panel: true },
     { ad: "c2", grup: c2, baslik: "C2 harita ekranı", odak: () => onden(c2, 1.25, 0, -0.08), panel: true },
     { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.5, 0.03, 0.55), panel: true },
