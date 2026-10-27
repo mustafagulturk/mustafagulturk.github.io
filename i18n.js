@@ -25,7 +25,7 @@ const CEVIRI_EN = {
   "oda.github": "All my repos are on GitHub →",
   "oda.telnot": "The game runs inside the phone, go ahead and play.",
   "oda.tamekran": "Open full screen ↗",
-  "oda.raf.b": "Skills board",
+  "oda.raf.b": "Skills rack",
   "oda.mobil": "Mobile",
   "oda.dip.b": "Hi, I'm Mustafa",
   "oda.pen.p": "Gaziantep Castle, seen from the window. I live in Gaziantep and I'm open to remote work and opportunities in other cities.",
