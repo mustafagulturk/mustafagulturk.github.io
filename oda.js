@@ -1398,7 +1398,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     const dx = ev.clientX - suruk.sx, dy = ev.clientY - suruk.sy;
     if (!suruk.oynadi && Math.hypot(dx, dy) < 10) return;
     suruk.oynadi = true;
-    const olcek = 2.4 / Math.min(innerWidth, innerHeight); // ekranın yarısı kadar sürükleme tam dönüş
+    const olcek = 2.0 / Math.min(innerWidth, innerHeight); // ekran kısa kenarının ~%60ı kadar sürükleme tam dönüş
     suruk.x = sinirla(suruk.bx - dx * olcek);
     suruk.y = sinirla(suruk.by - dy * olcek * 0.6);
     dokunmaBakisi();
