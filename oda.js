@@ -1215,82 +1215,171 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }
   c2Ciz(1);
 
-  // Yetenek panosu: arka duvarda, operasyon ekranının sağında delikli huş pano; gruplara ayrılmış renkli teknoloji rozetleri
+  // Yetenek kartı: arka duvarda, operasyon ekranının sağında çerçeveli devre kartı; her çip bir yetenek, gece bakır yollar ışır
   const pano = new THREE.Group();
   const PANO_W = 1.05, PANO_H = 0.68;
+  const PCB_W = 1560, PCB_H = 1008;
   const YETENEK_GRUPLARI = [
-    ["FRONTEND", "#38bdf8", [["React", "#149eca"], ["Next.js", "#111"], ["TypeScript", "#3178c6"], ["Tailwind", "#0e9fb5"], ["Three.js", "#333"], ["Phaser", "#7c3aed"]]],
+    ["FRONTEND", "#38bdf8", [["React", "#149eca"], ["Next.js", "#e5e7eb"], ["TypeScript", "#3178c6"], ["Tailwind", "#0e9fb5"], ["Three.js", "#e5e7eb"], ["Phaser", "#7c3aed"]]],
     ["BACKEND", "#34d399", [["C# / .NET", "#512bd4"], ["Node.js", "#3c873a"], ["NestJS", "#e0234e"], ["PostgreSQL", "#33658a"], ["Redis", "#d82c20"], ["Claude API", "#c96442"]]],
-    ["SİSTEM", "#f59e0b", [["C / C++17", "#00599c"], ["Go", "#0088a9"], ["Java 21", "#b07219"], ["STM32", "#03234b"], ["FreeRTOS", "#2e7d32"], ["Qt 6", "#2f9e44"]]],
+    ["SİSTEM", "#f59e0b", [["C / C++17", "#00599c"], ["Go", "#0088a9"], ["Java 21", "#b07219"], ["STM32", "#03a9f4"], ["FreeRTOS", "#2e7d32"], ["Qt 6", "#41cd52"]]],
     ["ARAÇLAR", "#f472b6", [["Git", "#e44c30"], ["GitHub Actions", "#2088ff"], ["Docker", "#1d63ed"], ["Jest / Vitest", "#99425b"], ["xUnit", "#5c2d91"], ["Capacitor", "#119eff"]]],
   ];
-  const panoDoku = tuvalDokusu(1560, 1008, (g, w, h) => {
-    // huş kontrplak: sıcak açık zemin, hafif damar
-    g.fillStyle = "#d9c3a0";
-    g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 70; i++) {
-      g.strokeStyle = `rgba(150, 110, 70, ${0.04 + ((i * 37) % 10) / 200})`;
-      g.lineWidth = 1 + (i % 3);
+  // çip yerleşimi: dört blok, her blokta altı çip; yollar çipin sağ bacağından blok veri yoluna, oradan alttaki konnektöre iner
+  const PCB_SUTUN = (PCB_W - 120) / 4, CIP_W = 230, CIP_H = 72, CIP_ARA = 112, CIP_Y0 = 236;
+  const cipKonum = (s, i) => [60 + PCB_SUTUN * s + 34, CIP_Y0 + i * CIP_ARA];
+  const busX = (s) => 60 + PCB_SUTUN * (s + 1) - 46;
+  function pcbYollar(g, renk, kalin) {
+    g.strokeStyle = renk;
+    g.fillStyle = renk;
+    g.lineWidth = kalin;
+    g.lineJoin = "round";
+    g.lineCap = "round";
+    YETENEK_GRUPLARI.forEach((_, s) => {
+      const bx = busX(s);
+      for (let i = 0; i < 6; i++) {
+        const [x, y] = cipKonum(s, i);
+        const py = y + CIP_H / 2 + ((i % 3) - 1) * 14;
+        // çipten çıkış, 45° kırılım, veri yolu
+        g.beginPath();
+        g.moveTo(x + CIP_W + 10, py);
+        g.lineTo(bx - 24 - (i % 3) * 6, py);
+        g.lineTo(bx - (i % 3) * 6, py + 24);
+        g.lineTo(bx - (i % 3) * 6, 930);
+        g.stroke();
+        // geçiş deliği
+        g.beginPath(); g.arc(x + CIP_W + 10, py, kalin * 1.6, 0, Math.PI * 2); g.fill();
+      }
+      // veri yolu konnektöre
       g.beginPath();
-      const y0 = (i * 97) % h;
-      g.moveTo(0, y0);
-      g.bezierCurveTo(w * 0.3, y0 + 14, w * 0.6, y0 - 12, w, y0 + 6);
+      g.moveTo(bx - 12, 930);
+      g.lineTo(bx - 12, 952);
+      g.lineTo(PCB_W / 2 + (s - 1.5) * 52, 952);
+      g.lineTo(PCB_W / 2 + (s - 1.5) * 52, 975);
       g.stroke();
+    });
+    // başlık çevresinde güç hattı
+    g.beginPath();
+    g.moveTo(60, 120); g.lineTo(PCB_W / 2 - 300, 120); g.lineTo(PCB_W / 2 - 280, 100);
+    g.moveTo(PCB_W - 60, 120); g.lineTo(PCB_W / 2 + 300, 120); g.lineTo(PCB_W / 2 + 280, 100);
+    g.stroke();
+  }
+  const panoDoku = tuvalDokusu(PCB_W, PCB_H, (g, w, h) => {
+    // lehim maskesi: koyu yeşil, kenarlara doğru hafif koyulaşır
+    const zemin = g.createRadialGradient(w / 2, h / 2, 100, w / 2, h / 2, w * 0.7);
+    zemin.addColorStop(0, "#0f6a44");
+    zemin.addColorStop(1, "#08452c");
+    g.fillStyle = zemin;
+    g.fillRect(0, 0, w, h);
+    // ince dolgu deseni (bakır dökümü)
+    g.fillStyle = "rgba(255,255,255,.025)";
+    for (let y = 0; y < h; y += 12) for (let x = (y / 12) % 2 ? 6 : 0; x < w; x += 12) g.fillRect(x, y, 3, 3);
+    // bakır yollar maskenin altından parlıyor
+    pcbYollar(g, "#3fa86a", 7);
+    pcbYollar(g, "rgba(201, 162, 74, .55)", 3);
+    // köşelerde montaj delikleri
+    for (const [x, y] of [[34, 34], [w - 34, 34], [34, h - 34], [w - 34, h - 34]]) {
+      g.fillStyle = "#d4b36a"; g.beginPath(); g.arc(x, y, 20, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#2b2b2b"; g.beginPath(); g.arc(x, y, 11, 0, Math.PI * 2); g.fill();
     }
-    // delik ızgarası
-    g.fillStyle = "rgba(70, 50, 30, .55)";
-    for (let y = 24; y < h; y += 36) for (let x = 24; x < w; x += 36) { g.beginPath(); g.arc(x, y, 4.5, 0, Math.PI * 2); g.fill(); }
-    // başlık şeridi
-    g.fillStyle = "#1f2937";
-    g.fillRect(w / 2 - 260, 34, 520, 74);
-    g.fillStyle = "#f8fafc";
-    g.font = "800 46px system-ui, sans-serif";
+    // serigrafi: başlık ve kart kodu
+    g.fillStyle = "#f1f5f0";
     g.textAlign = "center";
-    g.fillText("YETENEKLER", w / 2, 88);
-    // dört sütun: grup başlığı ve rozetler
-    const sutunW = (w - 80) / 4;
-    YETENEK_GRUPLARI.forEach(([grup, vurgu, rozetler], s) => {
-      const cx = 40 + sutunW * s + sutunW / 2;
+    g.font = "800 52px ui-monospace, Menlo, Consolas, monospace";
+    g.fillText("YETENEKLER", w / 2, 100);
+    g.font = "600 22px ui-monospace, Menlo, Consolas, monospace";
+    g.textAlign = "left";
+    g.fillText("MG-SKL-01  REV 2026", 74, 82);
+    g.textAlign = "right";
+    g.fillText("GAZİANTEP · TR", w - 74, 82);
+    // bloklar
+    YETENEK_GRUPLARI.forEach(([grup, vurgu, cipler], s) => {
+      const x0 = 60 + PCB_SUTUN * s + 10;
+      g.strokeStyle = "rgba(241,245,240,.75)";
+      g.lineWidth = 3;
+      g.setLineDash([14, 8]);
+      g.strokeRect(x0, 150, PCB_SUTUN - 20, 770);
+      g.setLineDash([]);
       g.fillStyle = vurgu;
-      g.fillRect(cx - sutunW / 2 + 22, 150, sutunW - 44, 10);
-      g.fillStyle = "#1f2937";
-      g.font = "800 36px system-ui, sans-serif";
-      g.fillText(grup, cx, 208);
-      rozetler.forEach(([ad, renk], i) => {
-        const y = 250 + i * 118, bw = sutunW - 56, bh = 88;
-        // asılı rozet: gölge, renkli gövde, kanca deliği
-        g.fillStyle = "rgba(40, 25, 10, .28)";
-        g.beginPath(); g.roundRect(cx - bw / 2 + 6, y + 8, bw, bh, 16); g.fill();
+      g.fillRect(x0 + 14, 166, 16, 34);
+      g.fillStyle = "#f1f5f0";
+      g.textAlign = "left";
+      g.font = "800 32px ui-monospace, Menlo, Consolas, monospace";
+      g.fillText(grup, x0 + 42, 196);
+      g.font = "600 18px ui-monospace, Menlo, Consolas, monospace";
+      g.textAlign = "right";
+      g.fillText(`U${s + 1}0x`, x0 + PCB_SUTUN - 34, 194);
+      cipler.forEach(([ad, renk], i) => {
+        const [x, y] = cipKonum(s, i);
+        // bacaklar
+        g.fillStyle = "#c9ced6";
+        for (let p = 0; p < 7; p++) {
+          const px = x + 18 + p * ((CIP_W - 36) / 6) - 4;
+          g.fillRect(px, y - 9, 8, 10);
+          g.fillRect(px, y + CIP_H - 1, 8, 10);
+        }
+        g.fillRect(x + CIP_W - 1, y + CIP_H / 2 - 18, 12, 8);
+        g.fillRect(x + CIP_W - 1, y + CIP_H / 2 - 4, 12, 8);
+        g.fillRect(x + CIP_W - 1, y + CIP_H / 2 + 10, 12, 8);
+        // gövde: mat siyah epoksi, üstte ince marka şeridi
+        g.fillStyle = "rgba(0,0,0,.35)";
+        g.fillRect(x + 5, y + 6, CIP_W, CIP_H);
+        g.fillStyle = "#17191c";
+        g.fillRect(x, y, CIP_W, CIP_H);
+        g.fillStyle = "rgba(255,255,255,.06)";
+        g.fillRect(x, y, CIP_W, CIP_H / 2);
         g.fillStyle = renk;
-        g.beginPath(); g.roundRect(cx - bw / 2, y, bw, bh, 16); g.fill();
-        g.fillStyle = "rgba(255,255,255,.14)";
-        g.beginPath(); g.roundRect(cx - bw / 2, y, bw, bh / 2, [16, 16, 0, 0]); g.fill();
-        g.fillStyle = "#cbd5e1";
-        g.beginPath(); g.arc(cx, y - 10, 7, 0, Math.PI * 2); g.fill();
-        g.fillStyle = "#fff";
-        g.font = `700 ${ad.length > 11 ? 30 : 36}px system-ui, sans-serif`;
-        g.fillText(ad, cx, y + bh / 2 + 12);
+        g.fillRect(x, y, 10, CIP_H);
+        // pin-1 noktası
+        g.fillStyle = "#4b5058";
+        g.beginPath(); g.arc(x + 24, y + 16, 5, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#e8eaed";
+        g.textAlign = "center";
+        g.font = `700 ${ad.length > 11 ? 26 : 32}px system-ui, sans-serif`;
+        g.fillText(ad, x + CIP_W / 2 + 6, y + CIP_H / 2 + 11);
+        // serigrafi referansı
+        g.fillStyle = "rgba(241,245,240,.7)";
+        g.font = "600 15px ui-monospace, Menlo, Consolas, monospace";
+        g.textAlign = "left";
+        g.fillText(`U${s + 1}${i}`, x - 2, y - 14);
       });
     });
+    // alt kenarda altın konnektör dişleri
+    for (let i = 0; i < 22; i++) {
+      g.fillStyle = "#d9b45a";
+      g.fillRect(w / 2 - 286 + i * 26, 972, 16, 36);
+    }
   });
   panoDoku.anisotropy = 8;
-  const panoMat = new THREE.MeshStandardMaterial({ map: panoDoku, roughness: 0.8 });
-  pano.add(mesh(new THREE.BoxGeometry(PANO_W, PANO_H, 0.012), [mat(0xb89870), mat(0xb89870), mat(0xb89870), mat(0xb89870), panoMat, mat(0xb89870)], 0, 0, 0.025));
-  // ince koyu ahşap çerçeve ve duvardan ayıran takozlar
-  const panoCerceve = mat(0x5b4330, { roughness: 0.6 });
-  for (const [w, h, x, y] of [[PANO_W + 0.04, 0.02, 0, PANO_H / 2 + 0.01], [PANO_W + 0.04, 0.02, 0, -PANO_H / 2 - 0.01], [0.02, PANO_H, PANO_W / 2 + 0.01, 0], [0.02, PANO_H, -PANO_W / 2 - 0.01, 0]]) {
-    pano.add(mesh(kutu(w, h, 0.03, 0.004), panoCerceve, x, y, 0.022));
+  // gece ışıması: yollar ve LED yerleri ayrı bir tuvalde; gündüz kapalı
+  const panoIsiDoku = tuvalDokusu(PCB_W, PCB_H, (g, w, h) => {
+    g.fillStyle = "#000";
+    g.fillRect(0, 0, w, h);
+    pcbYollar(g, "#1f8f55", 5);
+    pcbYollar(g, "#ffd27a", 2);
+  });
+  const panoMat = new THREE.MeshStandardMaterial({ map: panoDoku, roughness: 0.55, metalness: 0.05, emissiveMap: panoIsiDoku, emissive: 0xffffff, emissiveIntensity: 0 });
+  pano.add(mesh(new THREE.BoxGeometry(PANO_W, PANO_H, 0.006), [mat(0x0a3d27), mat(0x0a3d27), mat(0x0a3d27), mat(0x0a3d27), panoMat, mat(0x0a3d27)], 0, 0, 0.03));
+  // gölge kutu çerçeve: koyu ceviz, kartla arasında pirinç ara parçalar
+  const panoCerceve = mat(0x2a2320, { roughness: 0.5 });
+  const CER = 0.035;
+  for (const [w, h, x, y] of [[PANO_W + CER * 2, CER, 0, PANO_H / 2 + CER / 2], [PANO_W + CER * 2, CER, 0, -PANO_H / 2 - CER / 2], [CER, PANO_H, PANO_W / 2 + CER / 2, 0], [CER, PANO_H, -PANO_W / 2 - CER / 2, 0]]) {
+    pano.add(mesh(kutu(w, h, 0.05, 0.006), panoCerceve, x, y, 0.025));
   }
-  // her rozetin üstünde metal kanca
-  const kancaMat = mat(0xb8bec8, { metalness: 0.9, roughness: 0.3 });
-  YETENEK_GRUPLARI.forEach((_, s) => {
-    for (let i = 0; i < 6; i++) {
-      const x = (-0.5 + (40 + ((1560 - 80) / 4) * (s + 0.5)) / 1560) * PANO_W;
-      const y = (0.5 - (240 + i * 118) / 1008) * PANO_H;
-      const kanca = mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 0.022, 8), kancaMat, x, y, 0.042);
-      kanca.rotation.x = Math.PI / 2;
-      pano.add(kanca);
-    }
+  pano.add(mesh(new THREE.BoxGeometry(PANO_W, PANO_H, 0.004), mat(0x1b1c1f), 0, 0, 0.004));
+  const pirinc = mat(0xc9a35a, { metalness: 0.9, roughness: 0.3 });
+  for (const [x, y] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const ara = mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.024, 12), pirinc, x * (PANO_W / 2 - (34 / PCB_W) * PANO_W), y * (PANO_H / 2 - (34 / PCB_H) * PANO_H), 0.035);
+    ara.rotation.x = Math.PI / 2;
+    pano.add(ara);
+  }
+  // her bloğun durum LED'i: yavaşça nefes alır, gece belirginleşir
+  const panoLedler = YETENEK_GRUPLARI.map(([, vurgu], s) => {
+    const m = new THREE.MeshStandardMaterial({ color: vurgu, emissive: vurgu, emissiveIntensity: 0.6, roughness: 0.3 });
+    const x = (-0.5 + (60 + PCB_SUTUN * (s + 1) - 40) / PCB_W) * PANO_W;
+    const y = (0.5 - 183 / PCB_H) * PANO_H;
+    pano.add(mesh(new THREE.BoxGeometry(0.014, 0.008, 0.005), m, x, y, 0.035));
+    return m;
   });
   pano.position.set(2.2, 1.6, -0.6);
   sahne.add(pano);
@@ -1506,6 +1595,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
     bayrakMat.sheen = gece ? 0.2 : 0.45;
     bayrakMat.sheenColor.set(gece ? 0x4a0610 : 0xa0202a);
+    panoMat.emissiveIntensity = gece ? 0.55 : 0;
   }
   temaUygula();
   new MutationObserver(temaUygula).observe(kok, { attributes: true, attributeFilter: ["data-theme"] });
@@ -1831,6 +1921,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     // laboratuvar köşesi: radar taraması, kartın 1 Hz LED'i, anahtarın port LED'leri
     radarCiz(azHareket ? 0 : dt);
     if (!azHareket) c2Ciz(dt);
+    panoLedler.forEach((m, i) => { m.emissiveIntensity = azHareket ? 0.8 : 0.5 + 0.5 * Math.sin(t * 1.6 + i * 1.3) ** 2; });
     oledCiz(t, dt);
     if (!azHareket) bayrakDalga(t);
     radarLed.visible = t % 1 < 0.85;
