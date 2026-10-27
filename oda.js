@@ -1071,6 +1071,162 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }
   bayrakGrup.position.set(SOL_DUVAR_X + BAYRAK_BOSLUK + BW / 2, 1.5 + BH / 2, -0.6); // üst kenarı camın üst kenarıyla hizalı
   sahne.add(bayrakGrup);
+
+  // Sol duvar: Fatih Sultan Mehmet portresi (Gentile Bellini, 1480); oymalı varaklı çerçeve, üstte pirinç tablo lambası
+  const portre = new THREE.Group();
+  const PR_W = 0.56, PR_H = 0.75, CER_G = 0.085;
+  const PT_W = 840, PT_H = Math.round((840 * PR_H) / PR_W);
+  const portreTuval = document.createElement("canvas");
+  portreTuval.width = PT_W;
+  portreTuval.height = PT_H;
+  const pg = portreTuval.getContext("2d");
+  // gerçek resim yüklenene kadar Bellini kompozisyonunu andıran yer tutucu: kemer, korkuluk, sola dönük büst
+  function portreTaslak() {
+    const w = PT_W, h = PT_H;
+    pg.fillStyle = "#1d1a14"; pg.fillRect(0, 0, w, h);
+    const kemer = pg.createLinearGradient(0, 0, 0, h);
+    kemer.addColorStop(0, "#5c5a3e"); kemer.addColorStop(1, "#2d2c1f");
+    pg.fillStyle = kemer;
+    pg.beginPath(); pg.moveTo(90, h); pg.lineTo(90, 300); pg.arc(w / 2, 300, w / 2 - 90, Math.PI, 0); pg.lineTo(w - 90, h); pg.fill();
+    pg.strokeStyle = "#a88a45"; pg.lineWidth = 10;
+    pg.beginPath(); pg.moveTo(90, h); pg.lineTo(90, 300); pg.arc(w / 2, 300, w / 2 - 90, Math.PI, 0); pg.lineTo(w - 90, h); pg.stroke();
+    // kaftan ve kürk
+    pg.fillStyle = "#6e1f17";
+    pg.beginPath(); pg.moveTo(170, h - 160); pg.quadraticCurveTo(330, 700, 520, 720); pg.quadraticCurveTo(720, 760, 760, h - 160); pg.closePath(); pg.fill();
+    pg.fillStyle = "#3a2a1c";
+    pg.beginPath(); pg.moveTo(330, 760); pg.quadraticCurveTo(470, 700, 560, 760); pg.lineTo(540, h - 160); pg.lineTo(360, h - 160); pg.fill();
+    // yüz ve sakal (sola bakan profil)
+    pg.fillStyle = "#c69b78";
+    pg.beginPath(); pg.moveTo(470, 500); pg.quadraticCurveTo(380, 520, 372, 590); pg.lineTo(392, 610); pg.lineTo(386, 640); pg.quadraticCurveTo(420, 700, 500, 690); pg.lineTo(520, 520); pg.fill();
+    pg.fillStyle = "#4a3426";
+    pg.beginPath(); pg.moveTo(388, 640); pg.quadraticCurveTo(400, 730, 480, 740); pg.quadraticCurveTo(520, 720, 520, 640); pg.quadraticCurveTo(450, 690, 388, 640); pg.fill();
+    // kavuk: beyaz sarık, kırmızı tepelik
+    pg.fillStyle = "#a3241c";
+    pg.beginPath(); pg.ellipse(500, 380, 70, 70, 0, Math.PI, 0); pg.fill();
+    pg.fillStyle = "#ece6d6";
+    pg.beginPath(); pg.ellipse(495, 455, 150, 82, -0.05, 0, Math.PI * 2); pg.fill();
+    pg.strokeStyle = "rgba(150,140,120,.6)"; pg.lineWidth = 4;
+    for (let i = 0; i < 6; i++) { pg.beginPath(); pg.ellipse(495, 455, 150 - i * 4, 82 - i * 12, -0.05 + i * 0.07, 3.6, 5.8); pg.stroke(); }
+    // korkuluk halısı
+    pg.fillStyle = "#3d2a17"; pg.fillRect(60, h - 170, w - 120, 170);
+    pg.fillStyle = "#8b2a1c"; pg.fillRect(80, h - 150, w - 160, 120);
+    pg.strokeStyle = "#c9a227"; pg.lineWidth = 5;
+    for (let x = 100; x < w - 100; x += 44) { pg.beginPath(); pg.moveTo(x, h - 140); pg.lineTo(x + 22, h - 90); pg.lineTo(x, h - 40); pg.stroke(); }
+    // yaşlanmış vernik
+    const vernik = pg.createRadialGradient(w / 2, h * 0.45, 100, w / 2, h / 2, h * 0.75);
+    vernik.addColorStop(0, "rgba(255, 220, 150, 0)"); vernik.addColorStop(1, "rgba(30, 20, 5, .55)");
+    pg.fillStyle = vernik; pg.fillRect(0, 0, w, h);
+  }
+  portreTaslak();
+  const portreDoku = new THREE.CanvasTexture(portreTuval);
+  portreDoku.colorSpace = THREE.SRGBColorSpace;
+  portreDoku.anisotropy = 8;
+  resimYukle("assets/fatih/portre.webp").then((img) => {
+    if (!img) return;
+    pg.drawImage(img, 0, 0, PT_W, PT_H);
+    portreDoku.needsUpdate = true;
+  });
+  const tuvalMat = new THREE.MeshStandardMaterial({ map: portreDoku, roughness: 0.62 });
+  portre.add(mesh(new THREE.PlaneGeometry(PR_W, PR_H), tuvalMat, 0, 0, 0.022));
+  // çerçeve: dışta kalın oymalı varak, içte koyu kırmızı kadife pervaz ve ince altın fileto
+  const oymaDoku = tuvalDokusu(512, 64, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, "#f2d27a"); gr.addColorStop(0.45, "#c99a32"); gr.addColorStop(1, "#6e5114");
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    // akantus yaprağı benzeri tekrarlayan kabartma
+    for (let x = 0; x < w; x += 32) {
+      g.fillStyle = "rgba(90, 60, 10, .45)";
+      g.beginPath(); g.ellipse(x + 16, h / 2, 12, 22, 0.5, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "rgba(255, 240, 190, .35)";
+      g.beginPath(); g.ellipse(x + 13, h / 2 - 6, 6, 13, 0.5, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "rgba(255, 235, 170, .5)";
+      g.beginPath(); g.arc(x, h / 2, 4, 0, Math.PI * 2); g.fill();
+    }
+  });
+  // çıkarılmış kenarların yüz UV'si metre cinsinden: deseni kenar boyunca sar, enine bir kez yay
+  oymaDoku.wrapS = oymaDoku.wrapT = THREE.RepeatWrapping;
+  oymaDoku.repeat.set(2, 1 / CER_G);
+  const varakMat = new THREE.MeshStandardMaterial({ map: oymaDoku, metalness: 0.75, roughness: 0.35 });
+  const kadife = mat(0x4a0f14, { roughness: 1 });
+  const fileto = mat(0xd9b24c, { metalness: 0.9, roughness: 0.25 });
+  // dört kenar, gönye birleşimli: trapez kesitli parçalar
+  function cerceveKenar(uzun, gen, derin, z, malzeme, ic) {
+    const sekil = new THREE.Shape();
+    sekil.moveTo(-uzun / 2, 0); sekil.lineTo(uzun / 2, 0); sekil.lineTo(uzun / 2 - gen, gen); sekil.lineTo(-uzun / 2 + gen, gen); sekil.closePath();
+    const geo = new THREE.ExtrudeGeometry(sekil, { depth: derin, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.004, bevelSegments: 3 });
+    geo.translate(0, 0, z);
+    return [geo, malzeme, ic];
+  }
+  function cerceveKur(w, h, gen, derin, z, malzemeF) {
+    // alt, üst, sol, sağ: iç kenarları resme bakar
+    const parcalar = [
+      [w, 0, -h / 2, 0], [w, 0, h / 2, Math.PI],
+      [h, -w / 2, 0, -Math.PI / 2], [h, w / 2, 0, Math.PI / 2],
+    ];
+    for (const [uzun, x, y, aci] of parcalar) {
+      const [geo, m] = cerceveKenar(uzun, gen, derin, z, malzemeF(uzun));
+      const p = new THREE.Mesh(geo, m);
+      p.position.set(x, y, 0);
+      p.rotation.z = aci;
+      portre.add(p);
+    }
+  }
+  cerceveKur(PR_W + 2 * CER_G + 0.03, PR_H + 2 * CER_G + 0.03, CER_G, 0.03, 0.006, () => varakMat);
+  cerceveKur(PR_W + 0.05, PR_H + 0.05, 0.028, 0.012, 0.012, () => kadife);
+  cerceveKur(PR_W + 0.012, PR_H + 0.012, 0.008, 0.016, 0.012, () => fileto);
+  // köşe süsleri: altın rozet
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+    const r = new THREE.Group();
+    r.add(mesh(new THREE.SphereGeometry(0.02, 20, 14), fileto));
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const y = mesh(new THREE.SphereGeometry(0.011, 12, 8), fileto, Math.cos(a) * 0.024, Math.sin(a) * 0.024, -0.004);
+      y.scale.set(1, 0.5, 0.5); y.rotation.z = a;
+      r.add(y);
+    }
+    r.scale.z = 0.6;
+    r.position.set(sx * (PR_W / 2 + CER_G / 2 + 0.015), sy * (PR_H / 2 + CER_G / 2 + 0.015), 0.05);
+    portre.add(r);
+  }
+  // üstte taç süsü
+  const tac = mesh(new THREE.SphereGeometry(0.035, 24, 16), fileto, 0, PR_H / 2 + CER_G + 0.03, 0.03);
+  tac.scale.set(1.6, 0.8, 0.4);
+  portre.add(tac);
+  // pirinç tablo lambası: duvar tabanı, kavisli kol, uzun başlık; altında LED şerit ve resme inen spot
+  const pirincMat = mat(0xb08d57, { metalness: 0.9, roughness: 0.3 });
+  const LAMBA_Y = PR_H / 2 + CER_G + 0.1;
+  portre.add(mesh(kutu(0.07, 0.04, 0.012, 0.005), pirincMat, 0, LAMBA_Y + 0.02, 0.006));
+  const kolEgri = new THREE.QuadraticBezierCurve3(v3(0, LAMBA_Y + 0.02, 0.012), v3(0, LAMBA_Y + 0.07, 0.1), v3(0, LAMBA_Y + 0.01, 0.17));
+  portre.add(mesh(new THREE.TubeGeometry(kolEgri, 20, 0.006, 10), pirincMat));
+  const lambaBaslik = mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.42, 24, 1, false, 0, Math.PI), pirincMat, 0, LAMBA_Y, 0.17);
+  lambaBaslik.rotation.z = Math.PI / 2;
+  lambaBaslik.rotation.x = Math.PI;
+  portre.add(lambaBaslik);
+  for (const sx of [-1, 1]) {
+    const kapak = mesh(new THREE.CircleGeometry(0.022, 20, 0, Math.PI), pirincMat, sx * 0.21, LAMBA_Y, 0.17);
+    kapak.rotation.y = sx * Math.PI / 2;
+    kapak.rotation.z = -Math.PI / 2;
+    portre.add(kapak);
+  }
+  const portreLedMat = new THREE.MeshBasicMaterial({ color: 0xffe2a8 });
+  portre.add(mesh(new THREE.BoxGeometry(0.4, 0.003, 0.012), portreLedMat, 0, LAMBA_Y - 0.004, 0.17));
+  const portreIsik = new THREE.SpotLight(0xffd7a0, 0, 1.6, 0.75, 0.6, 1.4);
+  portreIsik.position.set(0, LAMBA_Y - 0.01, 0.17);
+  const portreHedef = new THREE.Object3D();
+  portreHedef.position.set(0, -0.1, 0);
+  portre.add(portreIsik, portreHedef);
+  portreIsik.target = portreHedef;
+  // pirinç isim plakası
+  const plakaDoku = tuvalDokusu(512, 96, (g, w, h) => {
+    g.fillStyle = "#c9a45c"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#3b2a10"; g.textAlign = "center";
+    g.font = "700 38px Georgia, 'Times New Roman', serif"; g.fillText("Fatih Sultan Mehmet", w / 2, 46);
+    g.font = "italic 24px Georgia, 'Times New Roman', serif"; g.fillText("Gentile Bellini · 1480", w / 2, 80);
+  });
+  portre.add(mesh(new THREE.BoxGeometry(0.2, 0.0375, 0.004), [pirincMat, pirincMat, pirincMat, pirincMat, new THREE.MeshStandardMaterial({ map: plakaDoku, metalness: 0.7, roughness: 0.35 }), pirincMat], 0, -PR_H / 2 - CER_G - 0.06, 0.004));
+  portre.position.set(SOL_DUVAR_X + 0.012, 1.55, 0.3);
+  portre.rotation.y = Math.PI / 2;
+  sahne.add(portre);
   // Kumaş yalnızca iki üst köşeden tutulur: üst kenar zincir eğrisi gibi sarkar, altında U biçimli
   // sarkma kıvrımları oluşur, köşelerde rozete doğru büzülen ışınsal gerilim kıvrımları, alt yarıda dikey dökümler.
   function bayrakDalga(t) {
@@ -1785,6 +1941,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     tavanMat.color.set(gece ? 0x454b5d : 0xe6e1d7);
     tavanMat.emissive.copy(tavanMat.color).multiplyScalar(gece ? 0.2 : 0.38);
     bayrakSpot.intensity = gece ? 7 : 0;
+    portreIsik.intensity = gece ? 4 : 1.2;
     spotMercekMat.emissiveIntensity = gece ? 3 : 0;
     // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
     bayrakMat.sheen = gece ? 0.2 : 0.45;
@@ -1834,6 +1991,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
     { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.54, 1.2, 0.7), hedef: v(0.56, 0.76, 0.28) }), panel: true },
     { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 0.7, 0.13, 0.12), panel: true },
+    { ad: "portre", grup: portre, baslik: "Fatih Sultan Mehmet", odak: () => onden(portre, 1.5, 0, 0.02), panel: true },
     { ad: "c2", grup: c2, baslik: "C2 harita ekranı", odak: () => onden(c2, 1.25, 0, -0.08), panel: true },
     { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.5, 0.03, 0.55), panel: true },
     { ad: "gecit", grup: gecit, baslik: "Taktik mesaj ağ geçidi", odak: () => onden(gecit, 0.7, 0.03, 0.35), panel: true },
