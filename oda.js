@@ -239,7 +239,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   const kodMonitor = new THREE.Group();
   const KOD_W = 0.3, KOD_H = 0.5;
   kodMonitor.add(mesh(kutu(KOD_W + 0.012, KOD_H + 0.012, 0.006, 0.004), camCerceve, 0, 0, -0.002));
-  kodMonitor.add(mesh(kutu(KOD_W + 0.008, KOD_H + 0.008, 0.016, 0.006), alu, 0, 0, -0.013));
+  kodMonitor.add(mesh(kutu(KOD_W + 0.018, KOD_H + 0.018, 0.016, 0.007), alu, 0, 0, -0.012));
+  kodMonitor.add(mesh(new THREE.BoxGeometry(0.01, 0.0015, 0.002), new THREE.MeshBasicMaterial({ color: 0xffffff }), 0, -KOD_H / 2 - 0.0042, 0.002));
   // arkada pivot göbeği, alüminyum boyun ve oval taban
   kodMonitor.add(mesh(kutu(0.09, 0.09, 0.024, 0.01), alu, 0, 0, -0.032));
   const kodAyak = new THREE.Group();
@@ -341,27 +342,36 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     else kodYazilan = Math.min(kodToplam, kodYazilan + Math.max(1, Math.round(adim * 38)));
     const w = KT_W, h = KT_H;
     kg.fillStyle = "#1e1e1e"; kg.fillRect(0, 0, w, h);
+    // etkinlik çubuğu: dosyalar, arama, git, hata ayıklama simgeleri
+    const AB = 48;
+    kg.fillStyle = "#2c2c2c"; kg.fillRect(0, 0, AB, h);
+    kg.fillStyle = "#e5e5e5"; kg.fillRect(0, 60, 3, 40);
+    for (let i = 0; i < 4; i++) {
+      kg.strokeStyle = i === 0 ? "#e5e5e5" : "#858585";
+      kg.lineWidth = 2.5;
+      kg.strokeRect(14, 68 + i * 56, 20, 24);
+    }
     // sekme çubuğu
-    kg.fillStyle = "#252526"; kg.fillRect(0, 0, w, 52);
-    kg.fillStyle = "#1e1e1e"; kg.fillRect(0, 0, 200, 52);
-    kg.fillStyle = "#38bdf8"; kg.fillRect(0, 0, 200, 3);
+    kg.fillStyle = "#252526"; kg.fillRect(AB, 0, w - AB, 52);
+    kg.fillStyle = "#1e1e1e"; kg.fillRect(AB, 0, 196, 52);
+    kg.fillStyle = "#38bdf8"; kg.fillRect(AB, 0, 196, 3);
     kg.font = "500 22px ui-monospace, Menlo, Consolas, monospace";
     kg.textAlign = "left";
-    kg.fillStyle = "#00add8"; kg.fillText("Go", 18, 34);
-    kg.fillStyle = "#e5e5e5"; kg.fillText("kalman.go", 58, 34);
-    kg.fillStyle = "#8a8a8a"; kg.fillText("olcum.go", 222, 34);
+    kg.fillStyle = "#00add8"; kg.fillText("Go", AB + 14, 34);
+    kg.fillStyle = "#e5e5e5"; kg.fillText("kalman.go", AB + 52, 34);
+    kg.fillStyle = "#8a8a8a"; kg.fillText("olcum.go", AB + 214, 34);
     // satırlar
     kg.font = "500 21px ui-monospace, Menlo, Consolas, monospace";
     let kalan = kodYazilan, y = 92, imlec = null;
     for (let i = 0; i < KOD.length; i++) {
       kg.fillStyle = "#5a5a5a";
       kg.textAlign = "right";
-      kg.fillText(String(i + 1), 46, y);
+      kg.fillText(String(i + 1), AB + 40, y);
       kg.textAlign = "left";
       const satir = KOD[i].replace(/\t/g, "    ");
       const n = Math.min(satir.length, Math.max(0, kalan));
-      kodSatir(satir.slice(0, n), 64, y);
-      if (imlec === null && kalan <= satir.length) imlec = [64 + kg.measureText(satir.slice(0, n)).width, y];
+      kodSatir(satir.slice(0, n), AB + 56, y);
+      if (imlec === null && kalan <= satir.length) imlec = [AB + 56 + kg.measureText(satir.slice(0, n)).width, y];
       kalan -= satir.length + 1;
       y += 29;
     }
@@ -377,23 +387,51 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   if (azHareket) kodYazilan = kodToplam;
   kodCiz(1);
 
-  // Klavye ve fare
+  // Masa matı: klavye ile fareyi tek parça koyu keçe üstünde toplar
+  const ped = mesh(kutu(0.86, 0.003, 0.28, 0.02), mat(0x24272d, { roughness: 1 }), 0.07, MASA_Y + 0.0015, 0.14);
+  sahne.add(ped);
+
+  // Klavye: uzay grisi alüminyum gövde, alçak profilli tuşlar, gece tuş aralarından sızan beyaz arka ışık
   const klavye = new THREE.Group();
-  klavye.add(mesh(kutu(0.44, 0.018, 0.14, 0.006), mat(0x1c1f26, { roughness: 0.5 })));
-  const tusMat = mat(0x2c313b, { roughness: 0.6 });
-  const tusGeo = kutu(0.022, 0.01, 0.022, 0.003);
+  klavye.add(mesh(kutu(0.44, 0.014, 0.135, 0.007), alu, 0, 0.007, 0));
+  klavye.add(mesh(new THREE.BoxGeometry(0.425, 0.002, 0.12), mat(0x111317, { roughness: 0.8 }), 0, 0.0142, 0));
+  const klavyeIsikMat = new THREE.MeshStandardMaterial({ color: 0x111317, emissive: 0xdfe8ff, emissiveIntensity: 0 });
+  klavye.add(mesh(new THREE.BoxGeometry(0.42, 0.001, 0.115), klavyeIsikMat, 0, 0.0155, 0));
+  const tusMat = mat(0x24272e, { roughness: 0.45 });
+  const tusUstMat = mat(0x2e323a, { roughness: 0.4 });
+  const tusGeo = kutu(0.021, 0.008, 0.021, 0.004);
+  const tusUstGeo = kutu(0.017, 0.0015, 0.017, 0.003);
+  const vurguMat = mat(0xd9a441, { roughness: 0.4, metalness: 0.3 });
   for (let r = 0; r < 5; r++) for (let c = 0; c < 17; c++) {
     if (r === 4 && c > 4 && c < 12) continue;
-    klavye.add(mesh(tusGeo, tusMat, -0.2 + c * 0.025, 0.012, -0.05 + r * 0.025));
+    const x = -0.2 + c * 0.025, z = -0.05 + r * 0.025;
+    // Esc ve Enter altın vurgulu
+    const ozel = (r === 0 && c === 0) || (r === 2 && c === 16);
+    klavye.add(mesh(tusGeo, ozel ? vurguMat : tusMat, x, 0.02, z));
+    if (!ozel) klavye.add(mesh(tusUstGeo, tusUstMat, x, 0.0245, z));
   }
-  klavye.add(mesh(kutu(0.17, 0.01, 0.022, 0.003), tusMat, 0, 0.012, 0.05));
-  klavye.position.set(-0.02, MASA_Y + 0.01, 0.13);
+  klavye.add(mesh(kutu(0.17, 0.008, 0.021, 0.004), tusMat, 0, 0.02, 0.05));
+  klavye.position.set(-0.02, MASA_Y + 0.003, 0.13);
+  klavye.rotation.x = 0.04;
   sahne.add(klavye);
-  const fare = mesh(new THREE.SphereGeometry(0.03, 20, 12), mat(0x1c1f26, { roughness: 0.4 }), 0.33, MASA_Y + 0.01, 0.15);
-  fare.scale.set(0.9, 0.45, 1.4);
+
+  // Fare: ergonomik gövde, sol/sağ tuş ayrımı, kaydırma tekerleği ve altında ince ışık çizgisi
+  const fare = new THREE.Group();
+  const fareGovde = mesh(new THREE.SphereGeometry(0.03, 32, 20), mat(0x1b1d22, { roughness: 0.35, metalness: 0.2 }));
+  fareGovde.scale.set(0.95, 0.5, 1.5);
+  fare.add(fareGovde);
+  fare.add(mesh(new THREE.BoxGeometry(0.0012, 0.004, 0.026), mat(0x050506), 0, 0.0145, -0.018));
+  const teker = mesh(new THREE.CylinderGeometry(0.0055, 0.0055, 0.004, 16), alu, 0, 0.0145, -0.02);
+  teker.rotation.z = Math.PI / 2;
+  fare.add(teker);
+  const fareIsikMat = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x38bdf8, emissiveIntensity: 0.4 });
+  const fareIsik = mesh(new THREE.TorusGeometry(0.028, 0.0012, 6, 40), fareIsikMat, 0, -0.004, 0);
+  fareIsik.rotation.x = Math.PI / 2;
+  fareIsik.scale.set(1, 1.5, 1);
+  fare.add(fareIsik);
+  fare.position.set(0.33, MASA_Y + 0.016, 0.15);
+  fare.rotation.y = -0.12;
   sahne.add(fare);
-  const ped = mesh(kutu(0.26, 0.004, 0.22, 0.004), mat(0x2a9d8f, { roughness: 1 }), 0.33, MASA_Y + 0.002, 0.14);
-  sahne.add(ped);
 
   // Lamba
   const lamba = new THREE.Group();
@@ -1753,6 +1791,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     bayrakMat.sheenColor.set(gece ? 0x4a0610 : 0xa0202a);
     seritMat.emissiveIntensity = gece ? 1.6 : 0.5;
     arkaIsikMat.opacity = gece ? 0.55 : 0.08;
+    klavyeIsikMat.emissiveIntensity = gece ? 0.9 : 0;
+    fareIsikMat.emissiveIntensity = gece ? 1.4 : 0.3;
   }
   temaUygula();
   new MutationObserver(temaUygula).observe(kok, { attributes: true, attributeFilter: ["data-theme"] });
