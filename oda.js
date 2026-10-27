@@ -12,6 +12,7 @@
  *     Telemetri kutusu (Nucleo kartı + sensörler) → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
  * Pencerenin solunda, altın rozetlere asılı Türk bayrağı.
+ * Arka duvarda, diplomanın sağında C2 operasyon ekranı → C2 Map Display.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -951,47 +952,349 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   bayrakSpot.shadow.radius = 4;
   sahne.add(bayrakSpot);
 
-  // Kitaplık rafı
-  const raf = new THREE.Group();
-  raf.add(mesh(kutu(0.9, 0.03, 0.22, 0.006), ahsap, 0, 0, 0));
-  raf.add(mesh(kutu(0.9, 0.03, 0.22, 0.006), ahsap, 0, 0.34, 0));
-  for (const x of [-0.3, 0.3]) raf.add(mesh(kutu(0.03, 0.06, 0.12, 0.004), ayakMat, x, -0.04, -0.05));
-  const KITAPLAR = [
-    ["C#", "#6b2fa0"], ["React", "#1f7a8c"], ["TypeScript", "#2f5fb3"], ["PostgreSQL", "#33658a"], ["Node.js", "#3c873a"],
-    ["Docker", "#1d63ed"], ["Next.js", "#222"], ["Three.js", "#444"], [".NET", "#512bd4"], ["Git", "#e44c30"],
+  // ---- Arka duvar, sağ: C2 operasyon ekranı (C2 Map Display) ----
+  // Duvara asılı ince çerçeveli büyük ekran; canlı çizilen çevrimdışı harita, izler, yasak bölge ve alarm
+  const c2 = new THREE.Group();
+  const C2_W = 1.12, C2_H = 0.67;
+  c2.add(mesh(kutu(C2_W + 0.03, C2_H + 0.03, 0.035, 0.008), mat(0x111317, { roughness: 0.35, metalness: 0.5 }), 0, 0, 0.0175));
+  c2.add(mesh(kutu(0.3, 0.2, 0.02, 0.004), mat(0x1b1d22, { metalness: 0.6, roughness: 0.4 }), 0, 0, 0.01)); // duvar askısı
+  const CW = 1280, CH = 764;
+  const c2Tuval = document.createElement("canvas");
+  c2Tuval.width = CW;
+  c2Tuval.height = CH;
+  const cg = c2Tuval.getContext("2d");
+  const c2Doku = new THREE.CanvasTexture(c2Tuval);
+  c2Doku.colorSpace = THREE.SRGBColorSpace;
+  c2Doku.anisotropy = 8;
+  const c2Ekran = new THREE.Mesh(new THREE.PlaneGeometry(C2_W, C2_H), new THREE.MeshBasicMaterial({ map: c2Doku, toneMapped: false }));
+  c2Ekran.position.z = 0.0355;
+  c2.add(c2Ekran);
+  // ekranın duvara ve masaya vuran soğuk mavi ışığı
+  const c2Isik = new THREE.PointLight(0x5aa9ff, 0.25, 1.6, 2);
+  c2Isik.position.set(0, 0, 0.35);
+  c2.add(c2Isik);
+  c2.position.set(0.92, 1.62, -0.595); // eski kitap rafının yeri, diplomanın sağı
+  sahne.add(c2);
+
+  // harita alanı solda, bilgi paneli ve olay listesi sağda
+  const MW = 960, UST = 34, ALT = 24;
+  const ozluRastgele = (n) => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
+  const c2Taban = document.createElement("canvas");
+  c2Taban.width = CW;
+  c2Taban.height = CH;
+  {
+    const g = c2Taban.getContext("2d");
+    g.fillStyle = "#13283d"; // deniz
+    g.fillRect(0, 0, MW, CH);
+    // kara: doğuda girintili kıyı, batıda iki ada (Ege kıyısını andırır)
+    const kara = (pts) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.fill(); g.stroke(); };
+    g.fillStyle = "#2a3a35";
+    g.strokeStyle = "#4d6b62";
+    g.lineWidth = 1.5;
+    const kiyi = [[MW, 0]];
+    for (let y = 0; y <= CH; y += 18) {
+      const x = 330 + Math.sin(y * 0.012) * 70 + Math.sin(y * 0.041 + 1) * 28 + (ozluRastgele(y) - 0.5) * 18 - (y > 330 && y < 420 ? 120 : 0);
+      kiyi.push([x, y]);
+    }
+    kiyi.push([MW, CH]);
+    kara(kiyi);
+    for (const [cx, cy, r] of [[150, 300, 70], [120, 560, 55]]) {
+      const ada = [];
+      for (let a = 0; a < Math.PI * 2; a += 0.25) ada.push([cx + Math.cos(a) * r * (0.75 + ozluRastgele(a * 9 + cx) * 0.4), cy + Math.sin(a) * r * 0.7 * (0.75 + ozluRastgele(a * 7 + cy) * 0.4)]);
+      kara(ada);
+    }
+    // enlem/boylam ızgarası
+    g.strokeStyle = "rgba(140, 180, 210, .08)";
+    g.lineWidth = 1;
+    for (let x = 0; x < MW; x += 120) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, CH); g.stroke(); }
+    for (let y = 0; y < CH; y += 120) { g.beginPath(); g.moveTo(0, y); g.lineTo(MW, y); g.stroke(); }
+    // şehirler
+    g.font = "500 15px system-ui, sans-serif";
+    g.fillStyle = "rgba(220, 230, 235, .75)";
+    for (const [ad, x, y] of [["İzmir", 470, 400], ["Manisa", 620, 250], ["Aliağa", 430, 150], ["Torbalı", 560, 560], ["Kuşadası", 470, 690], ["Akhisar", 760, 120], ["Turgutlu", 760, 330], ["Ödemiş", 800, 560]]) {
+      g.beginPath(); g.arc(x, y, 3, 0, Math.PI * 2); g.fill();
+      g.fillText(ad, x + 8, y + 5);
+    }
+    // radar ve menzil halkaları
+    g.strokeStyle = "rgba(90, 200, 140, .35)";
+    for (const r of [90, 180, 270]) { g.beginPath(); g.arc(470, 400, r, 0, Math.PI * 2); g.stroke(); }
+    g.fillStyle = "rgba(90, 200, 140, .7)";
+    g.font = "600 12px monospace";
+    [10, 20, 30].forEach((km, i) => g.fillText(km + " km", 476, 400 - (i + 1) * 90 + 14));
+    g.strokeRect(463, 393, 14, 14);
+    g.fillText("RADAR", 450, 424);
+    // ölçek çubuğu
+    g.strokeStyle = g.fillStyle = "rgba(220, 230, 235, .8)";
+    g.beginPath(); g.moveTo(20, CH - ALT - 18); g.lineTo(20, CH - ALT - 12); g.lineTo(140, CH - ALT - 12); g.lineTo(140, CH - ALT - 18); g.stroke();
+    g.font = "500 13px system-ui, sans-serif";
+    g.fillText("20 km", 60, CH - ALT - 20);
+    // sağ panel çerçevesi
+    g.fillStyle = "#0d1722";
+    g.fillRect(MW, 0, CW - MW, CH);
+    g.fillStyle = "#162231";
+    g.fillRect(MW + 12, UST + 10, CW - MW - 24, 250);
+    g.fillRect(MW + 12, UST + 272, CW - MW - 24, CH - UST - ALT - 284);
+    // üst araç çubuğu ve alt durum çubuğu
+    g.fillStyle = "#1a2433";
+    g.fillRect(0, 0, CW, UST);
+    g.fillRect(0, CH - ALT, CW, ALT);
+    g.font = "500 14px system-ui, sans-serif";
+    let x = 10;
+    for (const [ad, aktif] of [["Kaydır", 1], ["Mesafe / Kerteriz"], ["Yasak bölge çiz"], ["İz çizgileri"], ["Etiketler"], ["● Kayıt"], ["4×"], ["Canlıya dön"]]) {
+      const w = g.measureText(ad).width + 18;
+      g.fillStyle = aktif ? "#1f6fb2" : "#25324a";
+      g.fillRect(x, 6, w, 22);
+      g.fillStyle = "#dbe5f0";
+      g.fillText(ad, x + 9, 22);
+      x += w + 6;
+    }
+  }
+  const bolgeler = [
+    { ad: "Bölge-1", pts: [[540, 230], [640, 190], [690, 300], [585, 345]] },
+    { ad: "Bölge-2", pts: [[330, 560], [410, 520], [455, 610], [375, 650]] },
   ];
-  let kx = -0.4;
-  KITAPLAR.forEach(([ad, renk], i) => {
-    const kal = 0.035 + ((i * 7) % 3) * 0.008;
-    const boy = 0.2 + ((i * 5) % 4) * 0.02;
-    const sirt = tuvalDokusu(64, 320, (g, w, h) => {
-      g.fillStyle = renk;
-      g.fillRect(0, 0, w, h);
-      g.fillStyle = "rgba(255,255,255,.18)";
-      g.fillRect(0, 18, w, 6);
-      g.fillRect(0, h - 24, w, 6);
-      g.save();
-      g.translate(w / 2 + 9, h / 2);
-      g.rotate(-Math.PI / 2);
-      g.fillStyle = "#fff";
-      g.font = `700 ${ad.length > 8 ? 24 : 30}px system-ui, sans-serif`;
-      g.textAlign = "center";
-      g.fillText(ad, 0, 0);
-      g.restore();
+  const icinde = ([px, py], pts) => {
+    let ic = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const [xi, yi] = pts[i], [xj, yj] = pts[j];
+      if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) ic = !ic;
+    }
+    return ic;
+  };
+  // kimlik: 0 dost, 1 düşman, 2 bilinmeyen; R- radar izleri, L- veri bağı izleri
+  const c2Izler = [
+    ["L-1005", 1, 700, 140, -9, 11], ["L-1004", 1, 300, 470, 8, 12], ["L-1000", 0, 610, 360, 6, -8], ["L-1001", 0, 560, 640, 3, -12],
+    ["L-1007", 0, 260, 330, 10, 4], ["R-214", 2, 700, 420, -12, -4], ["R-149", 2, 640, 520, -9, 7], ["R-53", 2, 380, 250, 11, 6],
+    ["R-22", 2, 420, 330, 12, -3], ["R-9", 2, 560, 470, -6, -10],
+  ].map(([ad, kimlik, x, y, vx, vy]) => ({ ad, kimlik, x, y, vx, vy, iz: [], bolge: null }));
+  const KIMLIK = [["Dost", "#38bdf8"], ["Düşman", "#f43f5e"], ["Bilinmeyen", "#facc15"]];
+  const olaylar = [];
+  let alarm = null, c2Saat = 13 * 3600 + 55 * 60 + 30, c2Bekle = 0, c2Yanip = 0, seciliIz = c2Izler[0];
+  const saatYaz = (s) => [s / 3600, (s / 60) % 60, s % 60].map((n) => String(Math.floor(n)).padStart(2, "0")).join(":");
+  function sembol(g, iz) {
+    const [, renk] = KIMLIK[iz.kimlik];
+    g.strokeStyle = renk;
+    g.lineWidth = 2.5;
+    g.beginPath();
+    if (iz.kimlik === 0) g.arc(iz.x, iz.y, 9, 0, Math.PI * 2);
+    else if (iz.kimlik === 1) { g.moveTo(iz.x, iz.y - 11); g.lineTo(iz.x + 11, iz.y); g.lineTo(iz.x, iz.y + 11); g.lineTo(iz.x - 11, iz.y); g.closePath(); }
+    else for (const [dx, dy] of [[0, -5], [5, 0], [0, 5], [-5, 0]]) { g.moveTo(iz.x + dx + 5, iz.y + dy); g.arc(iz.x + dx, iz.y + dy, 5, 0, Math.PI * 2); }
+    g.stroke();
+  }
+  function c2Ciz(dt) {
+    c2Bekle -= dt;
+    if (c2Bekle > 0) return;
+    const adim = 0.12 - c2Bekle; // ~8 kare/sn yeterli; dokuyu her karede yüklemeyelim
+    c2Bekle = 0.12;
+    c2Saat += adim * 4; // kayıttan 4× tekrar
+    c2Yanip += adim;
+    for (const iz of c2Izler) {
+      iz.x += iz.vx * adim;
+      iz.y += iz.vy * adim;
+      if (iz.x < 40 || iz.x > MW - 40) iz.vx = -iz.vx;
+      if (iz.y < UST + 40 || iz.y > CH - ALT - 40) iz.vy = -iz.vy;
+      iz.iz.push([iz.x, iz.y]);
+      if (iz.iz.length > 40) iz.iz.shift();
+      const yeni = bolgeler.find((b) => icinde([iz.x, iz.y], b.pts))?.ad ?? null;
+      if (yeni !== iz.bolge) {
+        const zaman = saatYaz(c2Saat);
+        if (yeni && iz.kimlik === 1) {
+          alarm = { zaman, metin: `${iz.ad} (Düşman) yasak bölgeye girdi: ${yeni}`, sure: 6 };
+          olaylar.unshift([zaman, "ALARM", `${iz.ad} (Düşman) yasak bölgeye girdi: ${yeni}`]);
+          seciliIz = iz;
+        } else if (yeni) olaylar.unshift([zaman, "UYARI", `${iz.ad} (${KIMLIK[iz.kimlik][0]}) yasak bölge içinde: ${yeni}`]);
+        else olaylar.unshift([zaman, "BİLGİ", `${iz.ad} yasak bölgeden çıktı: ${iz.bolge}`]);
+        if (olaylar.length > 9) olaylar.pop();
+        iz.bolge = yeni;
+      }
+    }
+    if (alarm && (alarm.sure -= adim) <= 0) alarm = null;
+
+    cg.drawImage(c2Taban, 0, 0);
+    // yasak bölgeler: içinde düşman varsa yanıp söner
+    for (const b of bolgeler) {
+      const ihlal = c2Izler.some((iz) => iz.bolge === b.ad && iz.kimlik === 1);
+      cg.fillStyle = ihlal && Math.sin(c2Yanip * 9) > 0 ? "rgba(244, 63, 94, .45)" : "rgba(244, 63, 94, .22)";
+      cg.strokeStyle = "#f43f5e";
+      cg.lineWidth = 2;
+      cg.beginPath();
+      b.pts.forEach(([x, y], i) => (i ? cg.lineTo(x, y) : cg.moveTo(x, y)));
+      cg.closePath();
+      cg.fill();
+      cg.stroke();
+      cg.fillStyle = "#fecdd3";
+      cg.font = "700 14px system-ui, sans-serif";
+      cg.fillText(b.ad, b.pts[0][0] + 10, b.pts[0][1] + 40);
+    }
+    // izler: solan iz çizgisi, 60 sn hız vektörü, sembol ve etiket
+    cg.save();
+    cg.beginPath();
+    cg.rect(0, UST, MW, CH - UST - ALT);
+    cg.clip();
+    for (const iz of c2Izler) {
+      const renk = KIMLIK[iz.kimlik][1];
+      iz.iz.forEach(([x, y], i) => {
+        cg.globalAlpha = (i / iz.iz.length) * 0.6;
+        cg.fillStyle = renk;
+        cg.fillRect(x - 1.5, y - 1.5, 3, 3);
+      });
+      cg.globalAlpha = 1;
+      cg.strokeStyle = renk;
+      cg.lineWidth = 1.5;
+      cg.beginPath();
+      cg.moveTo(iz.x, iz.y);
+      cg.lineTo(iz.x + iz.vx * 5, iz.y + iz.vy * 5);
+      cg.stroke();
+      sembol(cg, iz);
+      const hiz = Math.round(Math.hypot(iz.vx, iz.vy) * 22), rota = Math.round((Math.atan2(iz.vx, -iz.vy) * 180 / Math.PI + 360) % 360);
+      cg.fillStyle = "rgba(235, 240, 245, .9)";
+      cg.font = "600 13px monospace";
+      cg.fillText(`${iz.ad}  ${hiz}kt ${String(rota).padStart(3, "0")}°`, iz.x + 14, iz.y - 8);
+      if (iz === seciliIz) {
+        cg.strokeStyle = "#e2e8f0";
+        cg.lineWidth = 1.5;
+        cg.strokeRect(iz.x - 16, iz.y - 16, 32, 32);
+      }
+    }
+    cg.restore();
+    // alarm bandı
+    if (alarm) {
+      cg.fillStyle = Math.sin(c2Yanip * 6) > -0.3 ? "#b91c1c" : "#7f1d1d";
+      cg.fillRect(30, UST + 14, MW - 60, 38);
+      cg.fillStyle = "#fff";
+      cg.font = "700 17px monospace";
+      cg.fillText(`⚠ ALARM  ${alarm.zaman}  ${alarm.metin}`, 46, UST + 39);
+    }
+    // bilgi paneli
+    const px = MW + 26;
+    cg.fillStyle = "#162231";
+    cg.fillRect(MW + 12, UST + 10, CW - MW - 24, 250);
+    cg.fillStyle = "#e2e8f0";
+    cg.font = "700 19px system-ui, sans-serif";
+    cg.fillText(`Hedef ${seciliIz.ad}`, px, UST + 42);
+    cg.font = "500 15px monospace";
+    const [kimlikAd, kimlikRenk] = KIMLIK[seciliIz.kimlik];
+    const satirlar = [
+      ["Kimlik", kimlikAd, kimlikRenk],
+      ["Konum", `${(38.9 - seciliIz.y / 900).toFixed(4)}° K`],
+      ["", `${(26.6 + seciliIz.x / 700).toFixed(4)}° D`],
+      ["Hız", `${Math.round(Math.hypot(seciliIz.vx, seciliIz.vy) * 22)} kt`],
+      ["Rota", `${Math.round((Math.atan2(seciliIz.vx, -seciliIz.vy) * 180 / Math.PI + 360) % 360)}°`],
+      ["Radardan", `${(Math.hypot(seciliIz.x - 470, seciliIz.y - 400) / 9).toFixed(1)} km`],
+      ["Bölge", seciliIz.bolge ?? "-"],
+      ["Güncelleme", saatYaz(c2Saat)],
+    ];
+    satirlar.forEach(([a, d, renk], i) => {
+      cg.fillStyle = "rgba(148, 163, 184, .9)";
+      cg.fillText(a, px, UST + 72 + i * 23);
+      cg.fillStyle = renk ?? "#e2e8f0";
+      cg.fillText(d, px + 110, UST + 72 + i * 23);
     });
-    const malz = [mat(renk), mat(renk), mat(0xf3ead8), mat(0xf3ead8), mat(0xffffff, { map: sirt }), mat(renk)];
-    const kitap = new THREE.Mesh(new THREE.BoxGeometry(kal, boy, 0.16), malz);
-    kitap.castShadow = kitap.receiveShadow = true;
-    kitap.position.set(kx + kal / 2, 0.015 + boy / 2, 0.02);
-    if (i === 7) kitap.rotation.z = 0.18;
-    raf.add(kitap);
-    kx += kal + 0.004;
+    // olay listesi
+    cg.fillStyle = "#162231";
+    cg.fillRect(MW + 12, UST + 272, CW - MW - 24, CH - UST - ALT - 284);
+    cg.fillStyle = "#e2e8f0";
+    cg.font = "700 18px system-ui, sans-serif";
+    cg.fillText("Olay listesi", px, UST + 302);
+    cg.font = "500 13px monospace";
+    olaylar.forEach(([zaman, tur, metin], i) => {
+      cg.fillStyle = tur === "ALARM" ? "#fb7185" : tur === "UYARI" ? "#fde047" : "#cbd5e1";
+      const y = UST + 332 + i * 40;
+      cg.fillText(`${zaman} ${tur}`, px, y);
+      cg.fillText(metin.length > 30 ? metin.slice(0, 29) + "…" : metin, px, y + 17);
+    });
+    // durum çubuğu
+    cg.fillStyle = "#1a2433";
+    cg.fillRect(0, CH - ALT, CW, ALT);
+    cg.fillStyle = "rgba(203, 213, 225, .85)";
+    cg.font = "500 13px monospace";
+    cg.textAlign = "right";
+    cg.fillText(`TEKRAR · ${c2Izler.length} hedef · RDR1 1501 pkt, 0 kayıp · TRK1 40 pkt · ${saatYaz(c2Saat)}`, CW - 14, CH - 7);
+    cg.textAlign = "left";
+    c2Doku.needsUpdate = true;
+  }
+  c2Ciz(1);
+
+  // Yetenek panosu: arka duvarda, operasyon ekranının sağında delikli huş pano; gruplara ayrılmış renkli teknoloji rozetleri
+  const pano = new THREE.Group();
+  const PANO_W = 1.05, PANO_H = 0.68;
+  const YETENEK_GRUPLARI = [
+    ["FRONTEND", "#38bdf8", [["React", "#149eca"], ["Next.js", "#111"], ["TypeScript", "#3178c6"], ["Tailwind", "#0e9fb5"], ["Three.js", "#333"], ["Phaser", "#7c3aed"]]],
+    ["BACKEND", "#34d399", [["C# / .NET", "#512bd4"], ["Node.js", "#3c873a"], ["NestJS", "#e0234e"], ["PostgreSQL", "#33658a"], ["Redis", "#d82c20"], ["Claude API", "#c96442"]]],
+    ["SİSTEM", "#f59e0b", [["C / C++17", "#00599c"], ["Go", "#0088a9"], ["Java 21", "#b07219"], ["STM32", "#03234b"], ["FreeRTOS", "#2e7d32"], ["Qt 6", "#2f9e44"]]],
+    ["ARAÇLAR", "#f472b6", [["Git", "#e44c30"], ["GitHub Actions", "#2088ff"], ["Docker", "#1d63ed"], ["Jest / Vitest", "#99425b"], ["xUnit", "#5c2d91"], ["Capacitor", "#119eff"]]],
+  ];
+  const panoDoku = tuvalDokusu(1560, 1008, (g, w, h) => {
+    // huş kontrplak: sıcak açık zemin, hafif damar
+    g.fillStyle = "#d9c3a0";
+    g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 70; i++) {
+      g.strokeStyle = `rgba(150, 110, 70, ${0.04 + ((i * 37) % 10) / 200})`;
+      g.lineWidth = 1 + (i % 3);
+      g.beginPath();
+      const y0 = (i * 97) % h;
+      g.moveTo(0, y0);
+      g.bezierCurveTo(w * 0.3, y0 + 14, w * 0.6, y0 - 12, w, y0 + 6);
+      g.stroke();
+    }
+    // delik ızgarası
+    g.fillStyle = "rgba(70, 50, 30, .55)";
+    for (let y = 24; y < h; y += 36) for (let x = 24; x < w; x += 36) { g.beginPath(); g.arc(x, y, 4.5, 0, Math.PI * 2); g.fill(); }
+    // başlık şeridi
+    g.fillStyle = "#1f2937";
+    g.fillRect(w / 2 - 260, 34, 520, 74);
+    g.fillStyle = "#f8fafc";
+    g.font = "800 46px system-ui, sans-serif";
+    g.textAlign = "center";
+    g.fillText("YETENEKLER", w / 2, 88);
+    // dört sütun: grup başlığı ve rozetler
+    const sutunW = (w - 80) / 4;
+    YETENEK_GRUPLARI.forEach(([grup, vurgu, rozetler], s) => {
+      const cx = 40 + sutunW * s + sutunW / 2;
+      g.fillStyle = vurgu;
+      g.fillRect(cx - sutunW / 2 + 22, 150, sutunW - 44, 10);
+      g.fillStyle = "#1f2937";
+      g.font = "800 36px system-ui, sans-serif";
+      g.fillText(grup, cx, 208);
+      rozetler.forEach(([ad, renk], i) => {
+        const y = 250 + i * 118, bw = sutunW - 56, bh = 88;
+        // asılı rozet: gölge, renkli gövde, kanca deliği
+        g.fillStyle = "rgba(40, 25, 10, .28)";
+        g.beginPath(); g.roundRect(cx - bw / 2 + 6, y + 8, bw, bh, 16); g.fill();
+        g.fillStyle = renk;
+        g.beginPath(); g.roundRect(cx - bw / 2, y, bw, bh, 16); g.fill();
+        g.fillStyle = "rgba(255,255,255,.14)";
+        g.beginPath(); g.roundRect(cx - bw / 2, y, bw, bh / 2, [16, 16, 0, 0]); g.fill();
+        g.fillStyle = "#cbd5e1";
+        g.beginPath(); g.arc(cx, y - 10, 7, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#fff";
+        g.font = `700 ${ad.length > 11 ? 30 : 36}px system-ui, sans-serif`;
+        g.fillText(ad, cx, y + bh / 2 + 12);
+      });
+    });
   });
-  // üst rafta küçük süsler: kupa ödül, saksı
-  raf.add(mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.06, 16), lambaMat, 0.32, 0.375, 0));
-  raf.add(mesh(new THREE.SphereGeometry(0.035, 16, 12), lambaMat, 0.32, 0.43, 0));
-  raf.position.set(0.85, 1.4, -0.48);
-  sahne.add(raf);
+  panoDoku.anisotropy = 8;
+  const panoMat = new THREE.MeshStandardMaterial({ map: panoDoku, roughness: 0.8 });
+  pano.add(mesh(new THREE.BoxGeometry(PANO_W, PANO_H, 0.012), [mat(0xb89870), mat(0xb89870), mat(0xb89870), mat(0xb89870), panoMat, mat(0xb89870)], 0, 0, 0.025));
+  // ince koyu ahşap çerçeve ve duvardan ayıran takozlar
+  const panoCerceve = mat(0x5b4330, { roughness: 0.6 });
+  for (const [w, h, x, y] of [[PANO_W + 0.04, 0.02, 0, PANO_H / 2 + 0.01], [PANO_W + 0.04, 0.02, 0, -PANO_H / 2 - 0.01], [0.02, PANO_H, PANO_W / 2 + 0.01, 0], [0.02, PANO_H, -PANO_W / 2 - 0.01, 0]]) {
+    pano.add(mesh(kutu(w, h, 0.03, 0.004), panoCerceve, x, y, 0.022));
+  }
+  // her rozetin üstünde metal kanca
+  const kancaMat = mat(0xb8bec8, { metalness: 0.9, roughness: 0.3 });
+  YETENEK_GRUPLARI.forEach((_, s) => {
+    for (let i = 0; i < 6; i++) {
+      const x = (-0.5 + (40 + ((1560 - 80) / 4) * (s + 0.5)) / 1560) * PANO_W;
+      const y = (0.5 - (240 + i * 118) / 1008) * PANO_H;
+      const kanca = mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 0.022, 8), kancaMat, x, y, 0.042);
+      kanca.rotation.x = Math.PI / 2;
+      pano.add(kanca);
+    }
+  });
+  pano.position.set(2.2, 1.6, -0.6);
+  sahne.add(pano);
+
 
   // Diploma çerçevesi
   const diploma = new THREE.Group();
@@ -1231,12 +1534,13 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   etkilesimler.push(
     { ad: "monitor", grup: monitor, baslik: "Projeler", odak: () => ekranaBak(monitor, ekran, EKRAN_W, EKRAN_H, kamera.aspect < 1 ? 1.06 : 1.28), yuzey: ekran, w: EKRAN_W, h: EKRAN_H },
     { ad: "telefon", grup: stand, baslik: "Telefonda oyna", odak: () => ekranaBak(telefon, telEkran, TEL_W, TEL_H, kamera.aspect < 1 ? 1.45 : 1.25), yuzey: telEkran, w: TEL_W, h: TEL_H },
-    { ad: "raf", grup: raf, baslik: "Yetenekler", odak: () => ({ kamera: v(0.55, 1.5, 0.55), hedef: v(0.85, 1.5, -0.45) }), panel: true },
+    { ad: "raf", grup: pano, baslik: "Yetenekler", odak: () => onden(pano, 1.4, 0, -0.08), panel: true },
     { ad: "diploma", grup: diploma, baslik: "Hakkımda", odak: () => ({ kamera: v(-0.05, 1.6, 0.35), hedef: v(-0.2, 1.6, -0.58) }), panel: true },
     { ad: "pencere", grup: pencere, baslik: "Gaziantep", odak: () => ({ kamera: v(-0.75, 1.5, 0.6), hedef: v(-1.05, 1.45, -0.6) }), panel: true },
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
     { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.3, 1.2, 0.72), hedef: v(0.32, 0.76, 0.3) }), panel: true },
     { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 0.7, 0.13, 0.12), panel: true },
+    { ad: "c2", grup: c2, baslik: "C2 harita ekranı", odak: () => onden(c2, 1.25, 0, -0.08), panel: true },
     { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.5, 0.03, 0.55), panel: true },
     { ad: "gecit", grup: gecit, baslik: "Taktik mesaj ağ geçidi", odak: () => onden(gecit, 0.7, 0.03, 0.35), panel: true },
     { ad: "fidan", grup: fidan, baslik: "Çınar · dil modeli", odak: () => ({ kamera: v(0.62, 1.12, 0.3), hedef: v(0.78, 0.93, -0.25) }), panel: true },
@@ -1526,6 +1830,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     }
     // laboratuvar köşesi: radar taraması, kartın 1 Hz LED'i, anahtarın port LED'leri
     radarCiz(azHareket ? 0 : dt);
+    if (!azHareket) c2Ciz(dt);
     oledCiz(t, dt);
     if (!azHareket) bayrakDalga(t);
     radarLed.visible = t % 1 < 0.85;

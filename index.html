@@ -116,11 +116,13 @@
     <aside id="oda-panel" class="oda-panel" hidden>
       <section data-oda-panel="raf">
         <p class="op-ust" data-i18n="nav.skills">Yetenekler</p>
-        <h3 data-i18n="oda.raf.b">Raftaki kitaplar</h3>
+        <h3 data-i18n="oda.raf.b">Yetenek panosu</h3>
         <h4>Backend</h4>
         <ul class="op-cipler"><li>C# / ASP.NET Core</li><li>Entity Framework Core</li><li>Node.js / NestJS</li><li>Fastify</li><li>REST API</li><li>SignalR / Socket.IO</li><li>PostgreSQL</li><li>Prisma / Drizzle</li><li>Redis / BullMQ</li><li>Claude API</li><li>Python / PyTorch</li></ul>
         <h4>Frontend</h4>
         <ul class="op-cipler"><li>TypeScript</li><li>React / Next.js</li><li>Tailwind CSS</li><li>Three.js</li><li>Phaser</li><li>HTML / CSS</li></ul>
+        <h4 data-i18n="sk.embedded">Gömülü ve Sistem</h4>
+        <ul class="op-cipler"><li>C / C++17</li><li>Go</li><li>Java 21 / JavaFX</li><li>STM32 / FreeRTOS</li><li>Qt 6</li><li>TCP / UDP</li><li>Renode</li></ul>
         <h4 data-i18n="oda.mobil">Mobil</h4>
         <ul class="op-cipler"><li>Capacitor</li><li>Android</li></ul>
         <h4 data-i18n="sk.tools">Araçlar</h4>
@@ -179,6 +181,21 @@
         <ul class="op-cipler"><li>C++17</li><li data-i18n="oda.rad.kalman">Kalman filtresi</li><li>Qt 6</li><li>UDP</li><li>CMake</li><li>GoogleTest</li></ul>
         <div class="op-btnler">
           <a class="oda-btn oda-btn-metin op-ana" href="https://github.com/mustafagulturk/radar-target-tracker" target="_blank" rel="noopener" data-i18n="oda.kodgit">Kodu incele ↗</a>
+        </div>
+      </section>
+      <section data-oda-panel="c2">
+        <p class="op-ust" data-i18n="oda.c2.ust">Sistem projesi · Java 21</p>
+        <h3 data-i18n="oda.c2.b">C2 Harita Ekranı</h3>
+        <p data-i18n="oda.c2.p1">Radar simülatöründen UDP ile gelen ham ölçümleri kendi Kalman izleyicisiyle izlere dönüştüren ve çevrimdışı bir harita üzerinde gösteren JavaFX komuta kontrol operatör ekranı. Duvardaki ekran onun kayıttan tekrar görüntüsünü canlandırıyor.</p>
+        <p data-i18n="oda.c2.p2">Dost, düşman ve bilinmeyen hedefler APP-6 tarzı sembollerle çiziliyor; bir düşman yasak bölgeye girince alarm bandı açılıyor ve olay listesine kayıt düşüyor. Radar Target Tracker ile birlikte küçük bir sensör → komuta kontrol zinciri oluşturuyor.</p>
+        <ul class="op-bilgi">
+          <li><span data-i18n="oda.c2.b1">Test</span><b data-i18n="oda.c2.v1">140+ JUnit 5 testi</b></li>
+          <li><span data-i18n="oda.c2.b2">Veri</span><b data-i18n="oda.c2.v2">UDP 5005 radar, 5006 veri bağı</b></li>
+          <li><span>CI</span><b>Linux · Windows · macOS</b></li>
+        </ul>
+        <ul class="op-cipler"><li>Java 21</li><li>JavaFX</li><li>UDP</li><li>Kalman</li><li>OpenStreetMap</li><li>JUnit 5</li><li>Gradle</li></ul>
+        <div class="op-btnler">
+          <a class="oda-btn oda-btn-metin op-ana" href="https://github.com/mustafagulturk/c2-map-display" target="_blank" rel="noopener" data-i18n="oda.kodgit">Kodu incele ↗</a>
         </div>
       </section>
       <section data-oda-panel="telemetri">
@@ -331,6 +348,11 @@
       <div class="timeline stagger">
         <div class="tl-item">
           <span class="tl-date">2026</span>
+          <h4 data-i18n="c2.tlt">C2 Harita Ekranı · Java ve JavaFX</h4>
+          <p data-i18n="c2.tlp">Java 21 ve JavaFX ile radar verisini UDP'den alıp Kalman filtresiyle izleyen, çevrimdışı harita üzerinde yasak bölge alarmı ve kayıt/tekrar oynatma sunan bir komuta kontrol ekranı geliştirdim.</p>
+        </div>
+        <div class="tl-item">
+          <span class="tl-date">2026</span>
           <h4 data-i18n="rd.tlt">Radar Target Tracker · Kalman ile Hedef Takibi</h4>
           <p data-i18n="rd.tlp">C++17, Qt ve Kalman filtresiyle UDP üzerinden gelen radar ölçümlerinden çoklu hedef izleyen, sanitizer'lı CI ile test edilen bir simülatör geliştirdim.</p>
         </div>
@@ -403,7 +425,7 @@
         <div class="skill-group spot">
           <div class="skill-icon">⚙</div>
           <h4 data-i18n="sk.embedded">Gömülü ve Sistem</h4>
-          <ul><li>C / C++17</li><li>Go</li><li>STM32 / FreeRTOS</li><li>Qt 6</li><li>TCP / UDP</li><li>Renode</li><li>GoogleTest / Unity</li></ul>
+          <ul><li>C / C++17</li><li>Go</li><li>Java 21 / JavaFX</li><li>STM32 / FreeRTOS</li><li>Qt 6</li><li>TCP / UDP</li><li>Renode</li><li>GoogleTest / Unity</li></ul>
         </div>
         <div class="skill-group spot">
           <div class="skill-icon">⌘</div>
@@ -444,6 +466,29 @@
       </article>
 
       <article class="featured featured-ters spot">
+        <button type="button" class="featured-media" data-proje="c2" data-onizle="video" aria-label="C2 Harita Ekranı demo videosunu aç">
+          <video poster="assets/c2/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/c2/demo.mp4" type="video/mp4"><source src="assets/c2/demo.webm" type="video/webm"></video>
+          <span class="play" aria-hidden="true">▶</span>
+          <span class="live-badge"><i></i> <span data-i18n="c2.live">Kayıttan tekrar</span></span>
+        </button>
+        <div class="featured-body">
+          <p class="mono" data-i18n="c2.kicker">Sistem projesi · Java 21</p>
+          <h4 data-i18n="c2.title">C2 Harita Ekranı · Komuta Kontrol Operatör Ekranı</h4>
+          <p data-i18n="c2.desc">Radar simülatöründen UDP ile gelen ham ölçümleri kendi Kalman izleyicisiyle izlere dönüştüren ve çevrimdışı bir harita üzerinde gösteren JavaFX operatör ekranı. Radar Target Tracker ile birlikte küçük bir sensör → komuta kontrol zinciri gibi çalışır.</p>
+          <ul class="featured-points">
+            <li data-i18n="c2.f1">Problem: ağ trafiği hiç beklemeden, sahte alarmlar arasından gerçek hedefleri çıkarıp internetsiz bir haritada akıcı göstermek</li>
+            <li data-i18n="c2.f2">Yaklaşım: alıcılar ayrı thread'lerde, arayüz yalnızca değişmez anlık görüntüyü okur; APP-6 tarzı dost/düşman/bilinmeyen sembolleri, yasak bölge alarmı ve olay günlüğü</li>
+            <li data-i18n="c2.f3">Kalite: 140+ JUnit 5 testi, -Werror ile derleme; ham veri kaydedilip birebir tekrar oynatılabiliyor, CI Linux, Windows ve macOS'ta</li>
+          </ul>
+          <ul class="tags"><li>Java 21</li><li>JavaFX</li><li>UDP</li><li>Kalman</li><li>OpenStreetMap</li><li>JUnit 5</li><li>Gradle</li></ul>
+          <div class="featured-actions">
+            <button type="button" class="btn btn-primary" data-proje="c2" data-onizle="video" data-i18n="qr.preview">Önizle</button>
+            <a class="btn" href="https://github.com/mustafagulturk/c2-map-display" target="_blank" rel="noopener" data-i18n="qr.code">Kodu incele</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="featured spot">
         <button type="button" class="featured-media" data-proje="telemetri" data-onizle="video" aria-label="Gömülü telemetri demo videosunu aç">
           <video poster="assets/telemetri/poster.webp" muted loop playsinline preload="none" aria-hidden="true"><source src="assets/telemetri/demo.mp4" type="video/mp4"><source src="assets/telemetri/demo.webm" type="video/webm"></video>
           <span class="play" aria-hidden="true">▶</span>
@@ -466,7 +511,7 @@
         </div>
       </article>
 
-      <article class="featured spot">
+      <article class="featured featured-ters spot">
         <div class="featured-kod" role="img" aria-label="Kodlanmış bir konum raporu çerçevesi">
 <pre><b>$ tmcli encode posrep</b>
 c35a 22 80 000a 0014 0001 0d  475e1c635a8bae7440ea82a870  b2b4
@@ -705,6 +750,7 @@ SYNC │  │  src  dst  seq  len  yük (13 bayt)               CRC
     <div class="preview-pane" data-panel="video">
       <video id="onizleme-video" controls muted loop playsinline preload="none"></video>
       <p class="preview-cap" data-cap="radar" data-i18n="rd.cap.video">10 saniyelik kayıt: 30 RPM dönen tarama, 11 hedef ve tur başına ~20 sahte alarm. Sağda iz tablosu, altta canlı hat istatistikleri.</p>
+      <p class="preview-cap" data-cap="c2" data-i18n="c2.cap.video">Kayıttan 4× hızda tekrar: radar izleri (R-…, sarı = bilinmeyen) ve veri bağından gelen kimlikli izler (L-…). Bir hedef Bölge-1'e girince alarm bandı açılır ve olay listesine kayıt düşer.</p>
       <p class="preview-cap" data-cap="telemetri" data-i18n="tm.cap.video">Renode'da 120 m'lik uçuş profili: IMU kopunca mod DEGRADED'a, basınç sensörü kopunca FAILSAFE'e geçer; sensörler geri gelince NORMAL'e döner.</p>
       <p class="preview-cap" data-cap="kadro" data-i18n="kd.cap.video">Tanıtım sayfasından panele geçiş, kanban üzerinde aday taşıma, gereksinim bazında CV analizi, CV içinde arama, analitik ve kariyer sayfasından başvuru.</p>
       <p class="preview-cap" data-cap="depom" data-i18n="dp.cap.video">Sağ üstte başka bir personelin yaptığı çıkış anında bildirim olarak düşer. Ardından komut paleti, kritik stoktan otomatik sipariş, barkod okutarak sayım ve etiket yazdırma.</p>
@@ -732,9 +778,9 @@ SYNC │  │  src  dst  seq  len  yük (13 bayt)               CRC
   <button id="yukari" class="to-top" aria-label="Yukarı çık">↑</button>
   <div id="bildirim" class="toast" role="status"></div>
 
-  <script src="i18n.js?v=20261027c"></script>
-  <script src="script.js?v=20261026a"></script>
+  <script src="i18n.js?v=20261027d"></script>
+  <script src="script.js?v=20261027d"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
-  <script type="module" src="oda-arayuz.js?v=20261027c"></script>
+  <script type="module" src="oda-arayuz.js?v=20261027d"></script>
 </body>
 </html>
