@@ -202,7 +202,6 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   // Monitör
   const monitor = new THREE.Group();
   const EKRAN_W = 0.64, EKRAN_H = 0.4;
-  const kasa = mat(0x15171c, { roughness: 0.35, metalness: 0.3 });
   // kavisli ekran: düz geometriyi önünde duran dikey bir eksen etrafında büker, kenarlar izleyene doğru gelir
   const KAVIS_R = 1.5;
   function buk(geo) {
@@ -215,10 +214,20 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     return geo;
   }
   const EKRAN_SEHIM = KAVIS_R * (1 - Math.cos(EKRAN_W / 2 / KAVIS_R));
-  monitor.add(mesh(buk(new THREE.BoxGeometry(EKRAN_W + 0.03, EKRAN_H + 0.03, 0.022, 48, 1, 1).translate(0, 0, -0.011)), kasa));
-  monitor.add(mesh(kutu(0.3, 0.2, 0.05, 0.02), kasa, 0, -0.02, -0.045));
-  monitor.add(mesh(kutu(0.05, 0.22, 0.03, 0.01), kasa, 0, -0.27, -0.06));
-  monitor.add(mesh(kutu(0.26, 0.012, 0.17, 0.006), kasa, 0, -0.375, -0.03));
+  // premium görünüm: ince parlak cam çerçeve, uzay grisi alüminyum arka kabuk ve ayak
+  const camCerceve = mat(0x07080a, { roughness: 0.12, metalness: 0.2 });
+  const alu = mat(0x5b616b, { metalness: 0.85, roughness: 0.28 });
+  monitor.add(mesh(buk(new THREE.BoxGeometry(EKRAN_W + 0.014, EKRAN_H + 0.014, 0.006, 48, 1, 1).translate(0, 0, -0.002)), camCerceve));
+  monitor.add(mesh(buk(new THREE.BoxGeometry(EKRAN_W + 0.01, EKRAN_H + 0.01, 0.016, 48, 1, 1).translate(0, 0, -0.013)), alu));
+  monitor.add(mesh(kutu(0.28, 0.18, 0.03, 0.014), alu, 0, -0.01, -0.034));
+  const boyun = mesh(kutu(0.07, 0.33, 0.012, 0.005), alu, 0, -0.215, -0.07);
+  boyun.rotation.x = -0.14;
+  monitor.add(boyun);
+  const taban = mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.007, 48), alu, 0, -0.3765, -0.05);
+  taban.scale.z = 0.6;
+  monitor.add(taban);
+  // alt çenede küçük beyaz güç ışığı
+  monitor.add(mesh(new THREE.BoxGeometry(0.012, 0.0015, 0.002), new THREE.MeshBasicMaterial({ color: 0xffffff }), 0, -EKRAN_H / 2 - 0.0045, 0.002));
   const ekranMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
   const ekran = new THREE.Mesh(buk(new THREE.PlaneGeometry(EKRAN_W, EKRAN_H, 48, 1)), ekranMat);
   ekran.position.z = 0.0015;
@@ -229,13 +238,16 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   // İkinci monitör: sağda dikey duran kod ekranı; Kalman izleyicisi satır satır yazılıyor
   const kodMonitor = new THREE.Group();
   const KOD_W = 0.3, KOD_H = 0.5;
-  kodMonitor.add(mesh(kutu(KOD_W + 0.024, KOD_H + 0.024, 0.022, 0.01), kasa, 0, 0, -0.011));
-  // ince alt çene ve arkada pivot göbeği
-  kodMonitor.add(mesh(kutu(0.07, 0.07, 0.03, 0.01), kasa, 0, 0, -0.035));
+  kodMonitor.add(mesh(kutu(KOD_W + 0.012, KOD_H + 0.012, 0.006, 0.004), camCerceve, 0, 0, -0.002));
+  kodMonitor.add(mesh(kutu(KOD_W + 0.008, KOD_H + 0.008, 0.016, 0.006), alu, 0, 0, -0.013));
+  // arkada pivot göbeği, alüminyum boyun ve oval taban
+  kodMonitor.add(mesh(kutu(0.09, 0.09, 0.024, 0.01), alu, 0, 0, -0.032));
   const kodAyak = new THREE.Group();
-  kodAyak.add(mesh(kutu(0.034, 0.3, 0.024, 0.008), kasa, 0, 0.15, 0));
-  kodAyak.add(mesh(kutu(0.15, 0.01, 0.11, 0.005), kasa, 0, 0.005, 0.015));
-  kodAyak.position.set(0, -0.33, -0.05);
+  kodAyak.add(mesh(kutu(0.045, 0.3, 0.01, 0.004), alu, 0, 0.15, 0));
+  const kodTaban = mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.006, 40), alu, 0, 0.003, 0.02);
+  kodTaban.scale.z = 0.65;
+  kodAyak.add(kodTaban);
+  kodAyak.position.set(0, -0.33, -0.046);
   kodMonitor.add(kodAyak);
   const KT_W = 640, KT_H = Math.round((640 * KOD_H) / KOD_W);
   const kodTuval = document.createElement("canvas");
@@ -251,6 +263,18 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   kodMonitor.position.set(0.56, MASA_Y + 0.33, -0.24);
   kodMonitor.rotation.y = -0.38;
   sahne.add(kodMonitor);
+  // monitörlerin arkasından duvara vuran yumuşak ortam ışığı; gece belirgin, gündüz neredeyse yok
+  const arkaIsikDoku = tuvalDokusu(512, 256, (g, w, h) => {
+    const gr = g.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w / 2);
+    gr.addColorStop(0, "rgba(140, 110, 255, 0.9)");
+    gr.addColorStop(0.45, "rgba(90, 120, 255, 0.35)");
+    gr.addColorStop(1, "rgba(60, 90, 255, 0)");
+    g.fillStyle = gr;
+    g.fillRect(0, 0, w, h);
+  });
+  const arkaIsikMat = new THREE.MeshBasicMaterial({ map: arkaIsikDoku, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5 });
+  const arkaIsik = mesh(new THREE.PlaneGeometry(1.5, 0.6), arkaIsikMat, 0.22, MASA_Y + 0.4, -0.596);
+  sahne.add(arkaIsik);
 
   // basit sözdizimi renkleri: anahtar kelime, tür, sayı, yorum, metin
   const KOD = [
@@ -1728,6 +1752,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     bayrakMat.sheen = gece ? 0.2 : 0.45;
     bayrakMat.sheenColor.set(gece ? 0x4a0610 : 0xa0202a);
     seritMat.emissiveIntensity = gece ? 1.6 : 0.5;
+    arkaIsikMat.opacity = gece ? 0.55 : 0.08;
   }
   temaUygula();
   new MutationObserver(temaUygula).observe(kok, { attributes: true, attributeFilter: ["data-theme"] });
