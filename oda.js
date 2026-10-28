@@ -13,6 +13,7 @@
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
  * Pencerenin solunda, altın rozetlere asılı Türk bayrağı.
  * Arka duvarda, diplomanın sağında C2 operasyon ekranı → C2 Map Display.
+ * 29-30 Ekim'de (ya da ?bayram=1 ile): flama dizisi, sol duvarda 29 Ekim afişi, masa bayrağı, pencerede havai fişek.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -71,6 +72,260 @@ function resimYukle(src) {
 const yumusak = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 // ---------- Sahne ----------
+
+// ---------- 29 Ekim süsleri ----------
+// index.html'deki küçük betik 29-30 Ekim'de <html>'e "bayram" sınıfını ekler; süsler yalnızca o zaman kurulur.
+
+const bayram = kok.classList.contains("bayram");
+const cumhuriyetYili = Number(kok.dataset.cumhuriyetYili) || new Date().getFullYear() - 1923;
+
+/** Ay-yıldızı resmî oranlarla çizer: (x, y) bayrağın sol üst köşesi, h bayrak yüksekliği. */
+function ayYildizCiz(g, x, y, h, renk = "#fff") {
+  const s = h / 800;
+  g.save();
+  g.translate(x, y);
+  g.scale(s, s);
+  g.fillStyle = renk;
+  // hilal: dış dairenin içinde kalıp iç dairenin dışında kalan bölge (zemin rengi gerekmez)
+  g.save();
+  g.beginPath(); g.arc(425, 400, 200, 0, Math.PI * 2); g.clip();
+  g.beginPath(); g.rect(0, 0, 800, 800); g.arc(475, 400, 160, 0, Math.PI * 2); g.fill("evenodd");
+  g.restore();
+  g.beginPath();
+  [[583.334, 400], [764.235, 458.779], [652.431, 304.894], [652.431, 495.106], [764.235, 341.221]].forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py)));
+  g.closePath();
+  g.fill();
+  g.restore();
+}
+
+/**
+ * Odaya bayram süslerini ekler: iki duvar boyunca ay-yıldızlı flama dizisi, sol duvarda 29 Ekim afişi,
+ * masada masa bayrağı ve pencerede gece havai fişek. Döngüden ve tema değişiminden çağrılacak işlevleri döndürür.
+ */
+function bayramSusleri(sahne, { SOL_DUVAR_X, TAVAN_Y, MASA_Y, pencere, PW, PH }) {
+  // Flama dizisi: köşeden geçen tek ip, çivilerin arasında zincir eğrisi gibi sarkar
+  const flamaDoku = tuvalDokusu(128, 160, (g, w, h) => {
+    g.fillStyle = "#d70a18";
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(w, 0); g.lineTo(w / 2, h); g.closePath(); g.fill();
+    g.fillStyle = "rgba(0,0,0,.18)";
+    g.fillRect(0, 0, w, 10); // ipe katlanan kenar
+    ayYildizCiz(g, 8, 18, 72);
+  });
+  const flamaMat = new THREE.MeshStandardMaterial({ map: flamaDoku, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85 });
+  const flamaGeo = new THREE.PlaneGeometry(0.12, 0.15);
+  flamaGeo.translate(0, -0.075, 0);
+  const ipMat = mat(0xf2ede2, { roughness: 0.9 });
+  const civiMat = mat(0xc9a227, { metalness: 0.9, roughness: 0.3 });
+  const IP_Y = TAVAN_Y - 0.26, SARKMA = 0.14, DUVAR = 0.035;
+  const kose = v3(SOL_DUVAR_X + DUVAR, IP_Y, -0.6 + DUVAR);
+  const civiler = [v3(SOL_DUVAR_X + DUVAR, IP_Y, 2.6), v3(SOL_DUVAR_X + DUVAR, IP_Y, 1.0), kose];
+  for (const x of [-1.95, -0.35, 1.25, 2.85]) civiler.push(v3(x, IP_Y, -0.6 + DUVAR));
+  const flamalar = [];
+  for (let i = 0; i < civiler.length - 1; i++) {
+    const a = civiler[i], b = civiler[i + 1];
+    const nokta = (u) => a.clone().lerp(b, u).setY(IP_Y - SARKMA * 4 * u * (1 - u));
+    sahne.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(Array.from({ length: 17 }, (_, k) => nokta(k / 16))), 32, 0.003, 6), ipMat));
+    const yon = Math.atan2(-(b.z - a.z), b.x - a.x);
+    const adet = Math.max(1, Math.round(a.distanceTo(b) / 0.17));
+    for (let k = 0; k < adet; k++) {
+      const u = (k + 0.5) / adet;
+      const f = mesh(flamaGeo, flamaMat);
+      f.position.copy(nokta(u));
+      f.rotation.y = yon;
+      f.userData = { faz: Math.random() * 6.28, yon };
+      flamalar.push(f);
+      sahne.add(f);
+    }
+    sahne.add(mesh(new THREE.SphereGeometry(0.008, 10, 8), civiMat, a.x, a.y, a.z));
+  }
+  const son = civiler[civiler.length - 1];
+  sahne.add(mesh(new THREE.SphereGeometry(0.008, 10, 8), civiMat, son.x, son.y, son.z));
+
+  // Sol duvar: 29 Ekim afişi. Altın çubuğa asılı kumaş, iki ucunda püskül.
+  const AW = 1.5, AH = 0.95;
+  const afisDoku = tuvalDokusu(1500, 950, (g, w, h) => {
+    const gr = g.createLinearGradient(0, 0, 0, h);
+    gr.addColorStop(0, "#c0081a");
+    gr.addColorStop(1, "#8e0412");
+    g.fillStyle = gr;
+    g.fillRect(0, 0, w, h);
+    g.strokeStyle = "#d9b44a";
+    g.lineWidth = 6;
+    g.strokeRect(34, 34, w - 68, h - 68);
+    g.lineWidth = 2;
+    g.strokeRect(48, 48, w - 96, h - 96);
+    // solda büyük ay-yıldız, sağda yazılar
+    ayYildizCiz(g, -40, 215, 520);
+    g.textAlign = "center";
+    const ox = 930;
+    g.fillStyle = "#f3d27a";
+    g.font = "600 46px Georgia, 'Times New Roman', serif";
+    g.fillText("29 EKİM 1923", ox, 175);
+    g.fillStyle = "#fff";
+    g.font = "800 120px system-ui, sans-serif";
+    g.fillText("CUMHURİYET", ox, 330);
+    g.font = "800 84px system-ui, sans-serif";
+    g.fillText(`${cumhuriyetYili} YAŞINDA`, ox, 440);
+    g.fillStyle = "#d9b44a";
+    g.fillRect(ox - 170, 492, 340, 4);
+    g.fillStyle = "rgba(255,255,255,.95)";
+    g.font = "italic 400 44px Georgia, 'Times New Roman', serif";
+    g.fillText("“Cumhuriyet, fikri hür, vicdanı hür,", ox, 600);
+    g.fillText("irfanı hür nesiller ister.”", ox, 662);
+    g.fillStyle = "#f3d27a";
+    g.font = "600 34px Georgia, 'Times New Roman', serif";
+    g.fillText("Mustafa Kemal Atatürk", ox, 760);
+    // dokuma
+    g.globalAlpha = 0.06;
+    g.fillStyle = "#000";
+    for (let y = 0; y < h; y += 3) g.fillRect(0, y, w, 1);
+    g.globalAlpha = 1;
+  });
+  afisDoku.anisotropy = 8;
+  const afisGeo = new THREE.PlaneGeometry(AW, AH, 60, 30);
+  // kumaş: altın çubuktan düz iner, enine yumuşak dalgalar, alt kenar hafifçe öne kıvrılır
+  const ap = afisGeo.attributes.position;
+  for (let i = 0; i < ap.count; i++) {
+    const x = ap.getX(i), d = (AH / 2 - ap.getY(i)) / AH;
+    ap.setZ(i, 0.01 + d * (0.008 * Math.cos((x / AW) * Math.PI * 9) + 0.004 * Math.sin((x / AW) * Math.PI * 4)) + d ** 4 * 0.015);
+  }
+  afisGeo.computeVertexNormals();
+  const afisMat = new THREE.MeshStandardMaterial({ map: afisDoku, emissiveMap: afisDoku, emissive: 0xffffff, emissiveIntensity: 0, roughness: 0.9 });
+  const afis = new THREE.Group();
+  const kumas = mesh(afisGeo, afisMat);
+  kumas.castShadow = false;
+  afis.add(kumas);
+  const altin = mat(0xc9a227, { metalness: 0.9, roughness: 0.28 });
+  const cubuk = mesh(new THREE.CylinderGeometry(0.011, 0.011, AW + 0.12, 16), altin, 0, AH / 2 + 0.005, 0.03);
+  cubuk.rotation.z = Math.PI / 2;
+  afis.add(cubuk);
+  for (const sx of [-1, 1]) {
+    afis.add(mesh(new THREE.SphereGeometry(0.02, 16, 12), altin, sx * (AW / 2 + 0.07), AH / 2 + 0.005, 0.03));
+    afis.add(mesh(new THREE.CylinderGeometry(0.0016, 0.0016, 0.12, 6), altin, sx * (AW / 2 + 0.03), AH / 2 - 0.06, 0.035));
+    afis.add(mesh(new THREE.CylinderGeometry(0.005, 0.014, 0.07, 14, 1, true), mat(0x8a6a12, { metalness: 0.8, roughness: 0.4 }), sx * (AW / 2 + 0.03), AH / 2 - 0.15, 0.035));
+  }
+  // iki kordon çubuğu duvardaki çiviye bağlar
+  const kordonGeo = new THREE.CylinderGeometry(0.0018, 0.0018, 0.2, 6);
+  for (const sx of [-1, 1]) {
+    const k = mesh(kordonGeo, altin, sx * AW * 0.18, AH / 2 + 0.085, 0.02);
+    k.rotation.z = sx * 0.95;
+    afis.add(k);
+  }
+  afis.add(mesh(new THREE.SphereGeometry(0.009, 10, 8), altin, 0, AH / 2 + 0.145, 0.01));
+  afis.position.set(SOL_DUVAR_X, 1.42, 0.4);
+  afis.rotation.y = Math.PI / 2;
+  sahne.add(afis);
+  // gece afişi aydınlatan, tavana gömülü sıcak spot
+  const afisSpot = new THREE.SpotLight(0xffd59a, 0, 4, 0.75, 0.7, 1.4);
+  afisSpot.position.set(SOL_DUVAR_X + 1.3, TAVAN_Y - 0.02, 0.4);
+  afisSpot.target.position.set(SOL_DUVAR_X, 1.4, 0.4);
+  sahne.add(afisSpot, afisSpot.target);
+
+  // Masa bayrağı: krom direk, yuvarlak ahşap taban, uçta altın topuz; kumaş hafifçe dalgalanır
+  const masaBayrak = new THREE.Group();
+  masaBayrak.add(mesh(new THREE.CylinderGeometry(0.042, 0.048, 0.022, 32), mat(0x3a2418, { roughness: 0.5 }), 0, 0.011, 0));
+  masaBayrak.add(mesh(new THREE.CylinderGeometry(0.0028, 0.0028, 0.34, 10), mat(0xd8dde4, { metalness: 0.95, roughness: 0.2 }), 0, 0.19, 0));
+  masaBayrak.add(mesh(new THREE.SphereGeometry(0.008, 14, 10), altin, 0, 0.365, 0));
+  const MBW = 0.18, MBH = 0.12;
+  const masaBayrakDoku = tuvalDokusu(540, 360, (g, w, h) => {
+    g.fillStyle = "#e30a17";
+    g.fillRect(0, 0, w, h);
+    ayYildizCiz(g, 0, 0, h);
+  });
+  const mbGeo = new THREE.PlaneGeometry(MBW, MBH, 24, 8);
+  mbGeo.translate(MBW / 2 + 0.003, 0, 0);
+  const mbIlk = mbGeo.attributes.position.array.slice();
+  const mb = mesh(mbGeo, new THREE.MeshStandardMaterial({ map: masaBayrakDoku, side: THREE.DoubleSide, roughness: 0.8 }), 0, 0.345 - MBH / 2, 0);
+  masaBayrak.add(mb);
+  masaBayrak.position.set(-0.9, MASA_Y, -0.2);
+  masaBayrak.rotation.y = -0.55;
+  sahne.add(masaBayrak);
+
+  // Pencerede havai fişek: camın önünde, ışığı toplanarak eklenen ince bir katman (yalnızca gece)
+  const fc = document.createElement("canvas");
+  fc.width = 256;
+  fc.height = 304;
+  const fg = fc.getContext("2d");
+  const fisekDoku = new THREE.CanvasTexture(fc);
+  fisekDoku.colorSpace = THREE.SRGBColorSpace;
+  const fisekMat = new THREE.MeshBasicMaterial({ map: fisekDoku, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  const fisek = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), fisekMat);
+  fisek.position.z = -0.005;
+  pencere.add(fisek);
+  // hilal biçimli patlama için noktalar
+  const hilal = [];
+  for (let i = 0; i < 46; i++) {
+    const a = (i / 46) * Math.PI * 2;
+    const x = Math.cos(a), y = Math.sin(a);
+    if (Math.hypot(x - 0.25, y) > 0.8) hilal.push([x, y]);
+  }
+  const roketler = [], kivilcimlar = [];
+  let sonraki = 0.4, fisekZaman = 0, cizimBirikim = 0;
+  function patlat(r) {
+    const renk = Math.random() < 0.6 ? [255, 60, 60] : [255, 245, 235];
+    const hilalMi = Math.random() < 0.3;
+    const nokta = hilalMi ? hilal : Array.from({ length: 42 }, (_, i) => [Math.cos((i / 42) * 6.283), Math.sin((i / 42) * 6.283)]);
+    const hiz = 34 + Math.random() * 18;
+    for (const [x, y] of nokta) {
+      const k = hilalMi ? 1 : 0.75 + Math.random() * 0.5;
+      kivilcimlar.push({ x: r.x, y: r.y, vx: x * hiz * k, vy: y * hiz * k, omur: 1.3 + Math.random() * 0.5, yas: 0, renk });
+    }
+  }
+  function fisekCiz(dt) {
+    fisekZaman += dt;
+    if (fisekZaman > sonraki) {
+      roketler.push({ x: 50 + Math.random() * 156, y: 304, vy: -(150 + Math.random() * 40), hedef: 60 + Math.random() * 90 });
+      sonraki = fisekZaman + 0.7 + Math.random() * 1.3;
+    }
+    for (const r of roketler) r.y += r.vy * dt;
+    for (let i = roketler.length - 1; i >= 0; i--) if (roketler[i].y < roketler[i].hedef) patlat(roketler.splice(i, 1)[0]);
+    for (const k of kivilcimlar) {
+      k.yas += dt;
+      k.vy += 22 * dt;
+      k.vx *= 1 - 1.2 * dt;
+      k.vy *= 1 - 1.2 * dt;
+      k.x += k.vx * dt;
+      k.y += k.vy * dt;
+    }
+    for (let i = kivilcimlar.length - 1; i >= 0; i--) if (kivilcimlar[i].yas > kivilcimlar[i].omur) kivilcimlar.splice(i, 1);
+    // tuval ~30 fps yenilenir
+    cizimBirikim += dt;
+    if (cizimBirikim < 1 / 30) return;
+    cizimBirikim = 0;
+    fg.globalCompositeOperation = "source-over";
+    fg.fillStyle = "rgba(0,0,0,.28)"; // iz bırakarak söner
+    fg.fillRect(0, 0, fc.width, fc.height);
+    fg.globalCompositeOperation = "lighter";
+    fg.fillStyle = "rgba(255,210,150,.9)";
+    for (const r of roketler) fg.fillRect(r.x - 1, r.y, 2, 5);
+    for (const k of kivilcimlar) {
+      const s = 1 - k.yas / k.omur;
+      fg.fillStyle = `rgba(${k.renk[0]},${k.renk[1]},${k.renk[2]},${s})`;
+      fg.fillRect(k.x - 1.2, k.y - 1.2, 2.4, 2.4);
+    }
+    fisekDoku.needsUpdate = true;
+  }
+
+  return {
+    kare(t, dt, azHareket) {
+      if (fisek.visible && !azHareket) fisekCiz(dt);
+      if (azHareket) return;
+      for (const f of flamalar) f.rotation.x = Math.sin(t * 1.3 + f.userData.faz) * 0.12;
+      const p = mbGeo.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        const x = mbIlk[i * 3], u = x / MBW;
+        p.array[i * 3 + 2] = Math.sin(x * 38 - t * 3.2) * 0.008 * u;
+      }
+      p.needsUpdate = true;
+      mbGeo.computeVertexNormals();
+    },
+    tema(gece) {
+      fisek.visible = gece;
+      afisSpot.intensity = gece ? 6 : 0;
+      afisMat.emissiveIntensity = gece ? 0.06 : 0;
+    },
+  };
+}
 
 export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, onCikis }) {
   if (!webglVar()) return null;
@@ -1154,6 +1409,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   bayrakSpot.shadow.radius = 4;
   sahne.add(bayrakSpot);
 
+  const bayramSus = bayram ? bayramSusleri(sahne, { SOL_DUVAR_X, TAVAN_Y, MASA_Y, pencere, PW, PH }) : null;
+
   // ---- Arka duvar, sağ: C2 operasyon ekranı (C2 Map Display) ----
   // Duvara asılı ince çerçeveli büyük ekran; canlı çizilen çevrimdışı harita, izler, yasak bölge ve alarm
   const c2 = new THREE.Group();
@@ -1632,10 +1889,19 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   function masaustuDokusu(gece) {
     return tuvalDokusu(1280, 800, (g, w, h) => {
       const gr = g.createLinearGradient(0, 0, w, h);
-      gr.addColorStop(0, gece ? "#1b1f3a" : "#5b8def");
-      gr.addColorStop(1, gece ? "#4a1d5e" : "#a77bf3");
+      gr.addColorStop(0, bayram ? (gece ? "#3a0610" : "#a50d1c") : gece ? "#1b1f3a" : "#5b8def");
+      gr.addColorStop(1, bayram ? (gece ? "#7a0a18" : "#e0313f") : gece ? "#4a1d5e" : "#a77bf3");
       g.fillStyle = gr;
       g.fillRect(0, 0, w, h);
+      if (bayram) {
+        // bayram duvar kâğıdı: sağ üstte soluk büyük ay-yıldız, başlığın üstünde kutlama satırı
+        g.globalAlpha = 0.16;
+        ayYildizCiz(g, 640, 30, 560);
+        g.globalAlpha = 1;
+        g.fillStyle = "#f3d27a";
+        g.font = "700 26px system-ui, sans-serif";
+        g.fillText(`29 EKİM  ·  CUMHURİYETİMİZİN ${cumhuriyetYili}. YILI KUTLU OLSUN`, 74, 108);
+      }
       g.fillStyle = "rgba(0,0,0,.35)";
       g.fillRect(0, 0, w, 40);
       g.fillStyle = "#fff";
@@ -1755,6 +2021,25 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       sur(w * 0.18, h * 0.72, 40, 90);
       sur(w * 0.46, h * 0.68, 46, 110);
       sur(w * 0.74, h * 0.72, 40, 86);
+      if (bayram) {
+        // bayramda kalenin sol burcunda dalgalanan Türk bayrağı (orta burç pencere kayıtının arkasında kalır)
+        const dx = w * 0.18 + 20, dy = h * 0.72 - 99;
+        g.fillStyle = gece ? "#9aa0b8" : "#e8e2d6";
+        g.fillRect(dx - 1.5, dy - 56, 3, 56);
+        g.save();
+        g.translate(dx + 1.5, dy - 54);
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.bezierCurveTo(20, -6, 38, 6, 60, -2);
+        g.lineTo(60, 38);
+        g.bezierCurveTo(38, 46, 20, 34, 0, 40);
+        g.closePath();
+        g.fillStyle = gece ? "#b3121f" : "#e30a17";
+        g.fill();
+        g.clip();
+        ayYildizCiz(g, 4, 3, 36, gece ? "#e8e0e0" : "#fff");
+        g.restore();
+      }
       // şehir ışıkları
       if (gece) {
         for (let i = 0; i < 70; i++) {
@@ -1791,6 +2076,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     bayrakMat.sheenColor.set(gece ? 0x4a0610 : 0xa0202a);
     seritMat.emissiveIntensity = gece ? 1.6 : 0.5;
     arkaIsikMat.opacity = gece ? 0.55 : 0.08;
+    bayramSus?.tema(gece);
     klavyeIsikMat.emissiveIntensity = gece ? 0.9 : 0;
     fareIsikMat.emissiveIntensity = gece ? 1.4 : 0.3;
   }
@@ -2129,6 +2415,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     panoLedler.forEach((m, i) => { m.emissiveIntensity = azHareket || Math.sin(t * (3 + (i % 5)) + i * 2.3) > -0.4 ? 1.6 : 0.15; });
     oledCiz(t, dt);
     if (!azHareket) bayrakDalga(t);
+    bayramSus?.kare(t, dt, azHareket);
     radarLed.visible = t % 1 < 0.85;
     const ledAcik = t % 1 < 0.5;
     kartLedMat.color.setHex(ledAcik ? 0x2bff6a : 0x0b2a14);
