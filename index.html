@@ -30,6 +30,22 @@
     try {
       if (localStorage.getItem("gorunum") !== "klasik") document.documentElement.classList.add("oda-modu");
     } catch (e) { document.documentElement.classList.add("oda-modu"); }
+    // 29 Ekim Cumhuriyet Bayramı: süsler yalnızca 29-30 Ekim'de görünür, 31'inde kendiliğinden kalkar.
+    // Önizleme: ?bayram=1 (her gün açar), ?bayram=0 (bayramda kapatır)
+    (() => {
+      const p = new URLSearchParams(location.search).get("bayram");
+      const d = new Date();
+      if (p === "1" || (p !== "0" && d.getMonth() === 9 && (d.getDate() === 29 || d.getDate() === 30))) {
+        document.documentElement.classList.add("bayram");
+        document.documentElement.dataset.cumhuriyetYili = d.getFullYear() - 1923;
+        // Bayram süsleri ayrı dosyalarda; diğer günlerde hiç indirilmez
+        const l = document.createElement("link");
+        l.rel = "stylesheet"; l.href = "bayram.css?v=20261028a"; l.setAttribute("blocking", "render");
+        const s = document.createElement("script");
+        s.src = "bayram.js?v=20261028a";
+        document.head.append(l, s);
+      }
+    })();
   </script>
 </head>
 <body>
@@ -781,6 +797,6 @@ SYNC │  │  src  dst  seq  len  yük (13 bayt)               CRC
   <script src="i18n.js?v=20261027f"></script>
   <script src="script.js?v=20261027d"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js" } }</script>
-  <script type="module" src="oda-arayuz.js?v=20261027l"></script>
+  <script type="module" src="oda-arayuz.js?v=20261028a"></script>
 </body>
 </html>
