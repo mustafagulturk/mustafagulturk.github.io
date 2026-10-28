@@ -13,7 +13,7 @@
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
  * Pencerenin solunda, altın rozetlere asılı Türk bayrağı.
  * Arka duvarda, diplomanın sağında C2 operasyon ekranı → C2 Map Display.
- * 29-30 Ekim'de (ya da ?bayram=1 ile): flama dizisi, sol duvarda 29 Ekim afişi, masa bayrağı, pencerede havai fişek.
+ * 28-30 Ekim'de (ya da ?bayram=1 ile): flama dizisi, sol duvarda 29 Ekim afişi, masa bayrağı, pencerede havai fişek.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
 import * as THREE from "three";
@@ -74,7 +74,7 @@ const yumusak = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 
 // ---------- Sahne ----------
 
 // ---------- 29 Ekim süsleri ----------
-// index.html'deki küçük betik 29-30 Ekim'de <html>'e "bayram" sınıfını ekler; süsler yalnızca o zaman kurulur.
+// index.html'deki küçük betik 28-30 Ekim'de <html>'e "bayram" sınıfını ekler; süsler yalnızca o zaman kurulur.
 
 const bayram = kok.classList.contains("bayram");
 const cumhuriyetYili = Number(kok.dataset.cumhuriyetYili) || new Date().getFullYear() - 1923;
