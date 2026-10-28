@@ -30,12 +30,12 @@
     try {
       if (localStorage.getItem("gorunum") !== "klasik") document.documentElement.classList.add("oda-modu");
     } catch (e) { document.documentElement.classList.add("oda-modu"); }
-    // 29 Ekim Cumhuriyet Bayramı: süsler yalnızca 29-30 Ekim'de görünür, 31'inde kendiliğinden kalkar.
+    // 29 Ekim Cumhuriyet Bayramı: süsler yalnızca 28-30 Ekim'de görünür, 31'inde kendiliğinden kalkar.
     // Önizleme: ?bayram=1 (her gün açar), ?bayram=0 (bayramda kapatır)
     (() => {
       const p = new URLSearchParams(location.search).get("bayram");
       const d = new Date();
-      if (p === "1" || (p !== "0" && d.getMonth() === 9 && (d.getDate() === 29 || d.getDate() === 30))) {
+      if (p === "1" || (p !== "0" && d.getMonth() === 9 && d.getDate() >= 28 && d.getDate() <= 30)) {
         document.documentElement.classList.add("bayram");
         document.documentElement.dataset.cumhuriyetYili = d.getFullYear() - 1923;
         // Bayram süsleri ayrı dosyalarda; diğer günlerde hiç indirilmez
