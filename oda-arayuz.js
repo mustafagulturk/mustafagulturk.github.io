@@ -3,7 +3,6 @@
  * WebGL yoksa ya da ziyaretçi "Klasik görünüm"ü seçtiyse normal site gösterilir.
  */
 import { odaBaslat } from "./oda.js?v=20261029a";
-import { muzikCal, muzikDurdur } from "./stadyum.js?v=20261029a";
 
 const kok = document.documentElement;
 const $ = (s) => document.querySelector(s);
@@ -46,7 +45,6 @@ async function odayaGec() {
 }
 
 function katmanlariGizle() {
-  muzikDurdur();
   for (const el of [monitor, telefon, panel]) {
     el.classList.remove("acik");
     el.hidden = true;
@@ -149,9 +147,7 @@ function odakta(ad, dikdortgen) {
     else anaEkran();
     goster(telefon);
     telefonNot.hidden = false;
-  } else if (ad === "galeri") {
-    muzikCal();
-  } else {
+  } else if (ad !== "galeri") {
     panel.querySelectorAll("[data-oda-panel]").forEach((s) => s.classList.toggle("aktif", s.dataset.odaPanel === ad));
     goster(panel);
   }
