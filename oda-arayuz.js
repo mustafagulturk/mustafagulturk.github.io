@@ -147,7 +147,7 @@ function odakta(ad, dikdortgen) {
     else anaEkran();
     goster(telefon);
     telefonNot.hidden = false;
-  } else {
+  } else if (ad !== "galeri") {
     panel.querySelectorAll("[data-oda-panel]").forEach((s) => s.classList.toggle("aktif", s.dataset.odaPanel === ad));
     goster(panel);
   }
@@ -172,7 +172,7 @@ async function kur() {
     return;
   }
   // Nesne başlıklarını dile göre çevir
-  const BASLIK_EN = { monitor: "Projects", telefon: "Play games", raf: "Skills", diploma: "About me", pencere: "Gaziantep", zarf: "Contact", defter: "CV", fidan: "Çınar · language model", radar: "Radar · target tracking", c2: "C2 map display", telemetri: "Embedded telemetry board", gecit: "Tactical message gateway" };
+  const BASLIK_EN = { monitor: "Projects", telefon: "Play games", raf: "Skills", diploma: "About me", pencere: "Gaziantep", zarf: "Contact", defter: "CV", fidan: "Çınar · language model", radar: "Radar · target tracking", c2: "C2 map display", telemetri: "Embedded telemetry board", gecit: "Tactical message gateway", galeri: "Ronaldo posters" };
   for (const e of oda.etkilesimler) e.baslikCeviri = () => (kok.lang === "en" ? BASLIK_EN[e.ad] : e.baslik);
   yukleniyor.classList.add("bitti");
 }

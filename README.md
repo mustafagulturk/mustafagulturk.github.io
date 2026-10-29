@@ -20,7 +20,7 @@ Kişisel portfolyo sitem. Projelerimi, yeteneklerimi ve iletişim bilgilerimi i�
 - **GitHub API entegrasyonu**: Son güncellenen repolar dil, yıldız ve tarih bilgisiyle canlı olarak listelenir.
 - **Açık / koyu tema**: View Transitions API ile butondan yayılan dairesel geçiş ve animasyonlu güneş/ay ikonu var. Sistem tercihine uyar ve seçim hatırlanır.
 - **Etkileşimli arka plan**: Hero bölümünde fareye tepki veren, birbirine bağlanan parçacıklar (Canvas API) var. Ekran dışındayken animasyon durur.
-- **3D çalışma odası**: Site Three.js ile kurulmuş bir çalışma odasında açılır. Masadaki nesnelere tıklayınca kamera yaklaşır: monitörde projeler, telefonda oyun seçme ekranı (Ocakbaşı dikey, Okey Salonu seçilince telefon yan dönüp yatay oynanır), saksıdaki çınar fidanında deneysel Çınar dil modeli, rafta yetenekler, diplomada hakkımda, zarfta iletişim, defterde CV. Masa L şeklinde: sol kanattaki laboratuvar köşesinde radar konsolu (taraması dönen PPI ekranı), Nucleo kartı (1 Hz yanıp sönen LED) ve ağ anahtarı (arada bozuk paketi kırmızıyla gösteren port LED'leri) sistem projelerini açar. Kamera yerinde durur, bakış fareyi takip eder. Pencereden Gaziantep Kalesi görünür; temaya göre gece ya da gündüz olur. WebGL yoksa normal siteye düşer, "Klasik görünüm" butonuyla da normal siteye geçilebilir (tercih hatırlanır).
+- **3D çalışma odası**: Site Three.js ile kurulmuş bir çalışma odasında açılır. Masadaki nesnelere tıklayınca kamera yaklaşır: monitörde projeler, telefonda oyun seçme ekranı (Ocakbaşı dikey, Okey Salonu seçilince telefon yan dönüp yatay oynanır), saksıdaki çınar fidanında deneysel Çınar dil modeli, rafta yetenekler, diplomada hakkımda, zarfta iletişim, defterde CV. Masa L şeklinde: sol kanattaki laboratuvar köşesinde radar konsolu (taraması dönen PPI ekranı), Nucleo kartı (1 Hz yanıp sönen LED) ve ağ anahtarı (arada bozuk paketi kırmızıyla gösteren port LED'leri) sistem projelerini açar. Kamera yerinde durur, bakış fareyi takip eder. C2 ekranının sağındaki duvarda altı çerçeveli Ronaldo poster duvarı var; tıklayınca kamera yaklaşır. Pencereden Gaziantep Kalesi görünür; temaya göre gece ya da gündüz olur. WebGL yoksa normal siteye düşer, "Klasik görünüm" butonuyla da normal siteye geçilebilir (tercih hatırlanır).
 - **Klasik görünümde 3D yörünge**: Klasik sayfanın başında, etrafında proje ekranlarının döndüğü parlayan bir çekirdek var (`yorunge.js`). Masaüstünde başlık ekrana sabitlenir; kaydırdıkça yörünge döner ve her proje sırayla öne gelir, sağ altta adı ve önizleme butonu görünür. Sonra kamera yıldız alanında aşağı süzülür.
 - **Efektler**: Proje kartlarında 3D eğim, kartların sırayla belirmesi, sayaç animasyonu ve buton parlaması.
 - **Daktilo efekti** ve ekrana giren bölümler için yumuşak animasyonlar.
@@ -53,3 +53,18 @@ python3 -m http.server 8000   # http://localhost:8000
 | Başlığın ne kadar kaydırma boyunca sabit kalacağı | `style.css` → `.yorunge-pin .hero-pin` yüksekliği |
 
 **Örnek: monitöre yeni bir proje eklemek.** `index.html` içinde `#oda-monitor` altındaki `om-kart` bloklarından birini kopyalayıp görseli, başlığı ve linkleri değiştirmek yeterli. Metni `data-i18n` ile verirsen İngilizcesini `i18n.js`'e eklemeyi unutma.
+
+## Poster duvarındaki fotoğraflar
+
+Odadaki Ronaldo posterlerinde kullanılan fotoğraflar Wikimedia Commons'tan alındı ve özgür lisanslıdır (`assets/posterler/`). Posterler bu fotoğraflar üzerinde renk, kırpma ve yazı düzenlemesiyle yapıldı; CC BY-SA lisanslı fotoğraflardan türeyen posterler de aynı lisansla paylaşılır.
+
+| Poster | Fotoğrafçı | Lisans |
+|---|---|---|
+| CR7 · Madrid 2009 (sepya) | KANO PHOTO | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/) |
+| Final Kyiv 2018 | Антон Зайцев (Anton Zaytsev) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
+| CR7 · gol sevinci | Alejandro Ramos | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/) |
+| Bernabéu | Jan SOLO | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/) |
+| "In my mind I'm always the best" | Tsutomu Takasu | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) |
+| Disiplin · Old Trafford 2009 | Sdo216 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
+
+Kaynak: [Wikimedia Commons · Cristiano Ronaldo](https://commons.wikimedia.org/wiki/Category:Cristiano_Ronaldo)
