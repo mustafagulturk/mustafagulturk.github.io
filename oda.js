@@ -2679,11 +2679,11 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     surukGeriDon();
     fareYumusak.lerp(odaktaki ? new THREE.Vector2() : fareKonum, 0.05);
     // genel görünüşte baş hareketi, insan başı gibi: ortada sakin, kenara gittikçe açılan dönüş.
-    // Sola ~63° (yan duvar ve bayrak görünür), sağa ~32° (poster duvarı görünür). Gözler boyun ekseninin önünde olduğundan
+    // Sola ~63° (yan duvar ve bayrak görünür), sağa ~27° (poster duvarı görünür). Gözler boyun ekseninin önünde olduğundan
     // dönerken bakış noktası boyun etrafında hafifçe yay çizer; baş dönüş yönüne biraz da yatar.
     const fx = fareYumusak.x, fy = fareYumusak.y;
     const k = Math.min(1, Math.abs(fx) / 0.8), kd = k * k * (3 - 2 * k); // ekranın %10'u kenarda tam dönüş
-    const yaw = -Math.sign(fx) * kd * (fx < 0 ? 1.1 : 0.56);
+    const yaw = -Math.sign(fx) * kd * (fx < 0 ? 1.1 : 0.48);
     const pitch = -fy * (fy < 0 ? 0.22 : 0.14); // yukarı (tavana) biraz daha fazla
     bakis.subVectors(kameraDurum.hedef, kameraDurum.konum);
     bakisSag.set(-bakis.z, 0, bakis.x).normalize();
