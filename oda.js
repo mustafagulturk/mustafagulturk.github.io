@@ -11,7 +11,7 @@
  *     Radar tableti → Radar Target Tracker
  *     Telemetri kutusu (Nucleo kartı + sensörler) → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
- * Pencerenin solunda, altın rozetlere asılı Türk bayrağı. Sol duvarın ucunda Gültürk kasabı köşesi (tabela, bıçaklar, önlük, eldiven).
+ * Pencerenin solunda, altın rozetlere asılı Türk bayrağı. Sol duvarda Gültürk kasabı köşesi (altın çerçeveli pano, Şam çeliği bıçaklar).
  * Arka duvarda, diplomanın sağında C2 operasyon ekranı → C2 Map Display.
  * 28-30 Ekim'de (ya da ?bayram=1 ile): flama dizisi, sol duvarda 29 Ekim afişi, masa bayrağı, pencerede havai fişek.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
@@ -1410,234 +1410,133 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   sahne.add(bayrakSpot);
 
   // ---- Sol duvar, bakış sola dönünce görünen yer: Gültürk kasabı köşesi ----
-  // Üstte ahşap tabela, altında mıknatıslı ceviz çıtada satır, bıçaklar ve masat;
-  // askılarda adı işlenmiş çizgili kasap önlüğü ve çelik örgü kasap eldiveni.
+  // Altın çerçeveli ceviz pano: üstte sıcak LED şerit, ortada parlak siyah mıknatıslı çıtada
+  // Şam çeliği desenli satır, kasap, doğrama ve sıyırma bıçakları ile masat; altta altın oyma GÜLTÜRK · KASAP.
   // Grup duvara yaslı, ön yüzü odaya (+x) bakar; yerel +x duvar boyunca pencereye doğru.
   const kasap = new THREE.Group();
-  const celik = mat(0xd3d7dc, { metalness: 0.95, roughness: 0.22 });
-  const kasapPirinc = mat(0xb8913a, { metalness: 0.9, roughness: 0.3 });
-  const sapMat = mat(0x2a1a12, { roughness: 0.55 });
 
-  const cevizDoku = tuvalDokusu(512, 64, (g, w, h) => {
-    g.fillStyle = "#5a3a22"; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 40; i++) {
-      g.strokeStyle = `rgba(${i % 3 ? "30,16,8" : "140,96,60"},${0.15 + (i % 5) * 0.04})`;
-      g.lineWidth = 1 + (i % 3);
+  // Şam çeliği: kıvrılan katman çizgileri, açık ve koyu çelik tonları
+  const damaskDoku = tuvalDokusu(512, 512, (g, w, h) => {
+    g.fillStyle = "#c3c9d0"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 70; i++) {
+      const y0 = (i / 70) * h * 1.2 - h * 0.1;
+      g.strokeStyle = i % 2 ? "rgba(70,76,86,.55)" : "rgba(236,240,244,.7)";
+      g.lineWidth = 2 + (i % 3);
       g.beginPath();
-      const y0 = (i / 40) * h;
-      g.moveTo(0, y0);
-      for (let x = 0; x <= w; x += 32) g.lineTo(x, y0 + Math.sin(x * 0.02 + i) * 2.5);
+      for (let x = 0; x <= w; x += 8) {
+        const y = y0 + Math.sin(x * 0.024 + i * 0.6) * 14 + Math.sin(x * 0.061 + i * 1.3) * 6;
+        x ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
       g.stroke();
     }
   });
+  damaskDoku.wrapS = damaskDoku.wrapT = THREE.RepeatWrapping;
+  damaskDoku.repeat.set(7, 7);
+  const damask = new THREE.MeshStandardMaterial({ map: damaskDoku, metalness: 0.85, roughness: 0.24 }); // tam metal gece çok kararıyor
+  const parlakCelik = mat(0xeef1f4, { metalness: 1, roughness: 0.07 });
+  const kasapAltin = mat(0xd4af37, { metalness: 1, roughness: 0.17 });
+  const abanozDoku = tuvalDokusu(64, 256, (g, w, h) => {
+    g.fillStyle = "#16100c"; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 2) { g.fillStyle = `rgba(${x % 6 ? "70,48,32" : "0,0,0"},${0.08 + ((x * 7) % 5) * 0.03})`; g.fillRect(x, 0, 1, h); }
+  });
+  const abanoz = new THREE.MeshPhysicalMaterial({ map: abanozDoku, roughness: 0.35, clearcoat: 0.8, clearcoatRoughness: 0.15 });
 
-  // tabela: koyu ahşap zemin, oyma gibi altın yazı
-  const TABELA_W = 0.5, TABELA_H = 0.13;
-  const tabelaDoku = tuvalDokusu(1000, 260, (g, w, h) => {
-    const z = g.createLinearGradient(0, 0, 0, h);
-    z.addColorStop(0, "#4a2f1c"); z.addColorStop(1, "#33200f");
-    g.fillStyle = z; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 30; i++) {
-      g.strokeStyle = `rgba(20,10,4,${0.12 + (i % 4) * 0.04})`; g.lineWidth = 2;
-      g.beginPath(); const y0 = (i / 30) * h; g.moveTo(0, y0);
-      for (let x = 0; x <= w; x += 40) g.lineTo(x, y0 + Math.sin(x * 0.015 + i * 1.7) * 4);
+  const cevizDoku = tuvalDokusu(1024, 820, (g, w, h) => {
+    g.fillStyle = "#4b2e1a"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 120; i++) {
+      g.strokeStyle = `rgba(${i % 3 ? "26,14,6" : "128,86,52"},${0.12 + (i % 5) * 0.035})`;
+      g.lineWidth = 1 + (i % 4);
+      g.beginPath();
+      const y0 = (i / 120) * h;
+      for (let x = 0; x <= w; x += 24) {
+        const y = y0 + Math.sin(x * 0.006 + i * 0.4) * 9 + Math.sin(x * 0.03 + i) * 2;
+        x ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
       g.stroke();
     }
-    g.strokeStyle = "#c9a24a"; g.lineWidth = 5; g.strokeRect(18, 18, w - 36, h - 36);
+    // altta altın oyma isim; harflerin içi gölgeli, kenarı parlak
+    const yy = h * 0.9;
     g.textAlign = "center";
-    g.fillStyle = "rgba(0,0,0,.45)"; g.font = "900 120px Georgia, 'Times New Roman', serif";
-    g.fillText("GÜLTÜRK", w / 2 + 3, 150 + 3);
-    const a = g.createLinearGradient(0, 50, 0, 160);
-    a.addColorStop(0, "#f4dc95"); a.addColorStop(1, "#b8862e");
-    g.fillStyle = a; g.fillText("GÜLTÜRK", w / 2, 150);
-    g.font = "700 38px Georgia, 'Times New Roman', serif"; g.fillStyle = "#e2c47a";
-    g.fillText("— K A S A P —", w / 2, 212);
+    g.font = "900 96px Georgia, 'Times New Roman', serif";
+    g.fillStyle = "rgba(0,0,0,.55)"; g.fillText("GÜLTÜRK", w / 2 + 3, yy + 3);
+    const a = g.createLinearGradient(0, yy - 80, 0, yy);
+    a.addColorStop(0, "#fff0b8"); a.addColorStop(0.45, "#e0b54a"); a.addColorStop(1, "#9c6f1e");
+    g.fillStyle = a; g.fillText("GÜLTÜRK", w / 2, yy);
+    g.font = "600 30px Georgia, 'Times New Roman', serif"; g.fillStyle = "#e6c46e";
+    g.fillText("K A S A P", w / 2, yy + 46);
+    g.fillStyle = "#c9a24a";
+    for (const sx of [-1, 1]) g.fillRect(w / 2 + sx * 120 - (sx < 0 ? 140 : 0), yy + 35, 140, 3);
   });
-  kasap.add(mesh(kutu(TABELA_W + 0.02, TABELA_H + 0.02, 0.02, 0.006), mat(0x24160b, { roughness: 0.6 }), 0, 0.4, 0.01));
-  kasap.add(mesh(new THREE.PlaneGeometry(TABELA_W, TABELA_H), new THREE.MeshStandardMaterial({ map: tabelaDoku, roughness: 0.5, metalness: 0.15 }), 0, 0.4, 0.0205));
 
-  // mıknatıslı ceviz çıta
-  const CY = 0.24;
-  kasap.add(mesh(kutu(0.56, 0.05, 0.022, 0.006), new THREE.MeshStandardMaterial({ map: cevizDoku, roughness: 0.5 }), 0, CY, 0.011));
+  // pano: ceviz yüzey, kenarlarda ince altın çerçeve
+  const PANO_W = 0.68, PANO_H = 0.54, PANO_Y = 0.21;
+  kasap.add(mesh(kutu(PANO_W, PANO_H, 0.025, 0.006), new THREE.MeshStandardMaterial({ map: cevizDoku, roughness: 0.45 }), 0, PANO_Y, 0.0125));
+  for (const [w, h, x, y] of [[PANO_W + 0.008, 0.008, 0, PANO_Y + PANO_H / 2], [PANO_W + 0.008, 0.008, 0, PANO_Y - PANO_H / 2], [0.008, PANO_H, -PANO_W / 2, PANO_Y], [0.008, PANO_H, PANO_W / 2, PANO_Y]]) {
+    kasap.add(mesh(kutu(w, h, 0.03, 0.003), kasapAltin, x, y, 0.015));
+  }
+  // üstte ceviz saçak, altında sıcak LED şerit
+  kasap.add(mesh(kutu(PANO_W - 0.02, 0.012, 0.03, 0.003), kasapAltin, 0, PANO_Y + PANO_H / 2 - 0.02, 0.04));
+  const kasapLedMat = new THREE.MeshStandardMaterial({ color: 0xffe2b0, emissive: 0xffc77a, emissiveIntensity: 0 });
+  kasap.add(mesh(new THREE.BoxGeometry(PANO_W - 0.05, 0.003, 0.004), kasapLedMat, 0, PANO_Y + PANO_H / 2 - 0.027, 0.05));
 
-  /** Ağzı aşağı bakan bıçak: yerel y=0 çıtanın hizası, sap yukarıda; şekil yayı(W, L) yolunu çizer. */
+  // parlak siyah mıknatıslı çıta
+  const CY = 0.32;
+  kasap.add(mesh(kutu(0.6, 0.032, 0.012, 0.004), mat(0x0c0c0e, { metalness: 0.6, roughness: 0.15 }), 0, CY, 0.031));
+
+  /** Ağzı aşağı bakan bıçak: yerel y=0 çıtanın hizası, sap yukarıda; ciz(şekil, W, L) ağız çizgisini çizer. */
   function bicak(x, W, L, sapL, ciz, delik = false) {
     const g = new THREE.Group();
     const sekil = new THREE.Shape();
     ciz(sekil, W, L);
     if (delik) {
       const d = new THREE.Path();
-      d.absarc(W * 0.78, -0.022, 0.009, 0, Math.PI * 2, true);
+      d.absarc(W * 0.78, -0.024, 0.009, 0, Math.PI * 2, true);
       sekil.holes.push(d);
+      const halka = mesh(new THREE.TorusGeometry(0.0095, 0.0015, 8, 24), kasapAltin, W * 0.78 - W / 2, 0.012 - 0.024, 0.0016);
+      g.add(halka);
     }
-    const ag = new THREE.ExtrudeGeometry(sekil, { depth: 0.0025, bevelEnabled: false, curveSegments: 16 });
-    const agiz = mesh(ag, celik, -W / 2, 0.012, 0);
-    g.add(agiz);
-    g.add(mesh(kutu(W * 0.6 + 0.006, 0.014, 0.012, 0.003), celik, W * 0.0, 0.019, 0.002)); // topuz
-    g.add(mesh(kutu(Math.min(W * 0.55, 0.024) + 0.004, sapL, 0.016, 0.006), sapMat, 0, 0.026 + sapL / 2, 0.002));
-    for (const k of [0.3, 0.7]) {
-      const p = mesh(new THREE.CylinderGeometry(0.0028, 0.0028, 0.018, 10), kasapPirinc, 0, 0.026 + sapL * k, 0.002);
+    const ag = new THREE.ExtrudeGeometry(sekil, { depth: 0.0016, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0012, bevelSegments: 2, curveSegments: 20 });
+    g.add(mesh(ag, damask, -W / 2, 0.012, 0));
+    const sapW = Math.min(W * 0.55, 0.024) + 0.004;
+    g.add(mesh(kutu(sapW + 0.004, 0.012, 0.014, 0.003), kasapAltin, 0, 0.018, 0.0016)); // topuz
+    g.add(mesh(kutu(sapW, sapL, 0.016, 0.006), abanoz, 0, 0.024 + sapL / 2, 0.0016));
+    g.add(mesh(kutu(sapW + 0.002, 0.008, 0.017, 0.003), kasapAltin, 0, 0.024 + sapL, 0.0016)); // uç başlığı
+    for (const k of [0.22, 0.5, 0.78]) {
+      const p = mesh(new THREE.CylinderGeometry(0.0026, 0.0026, 0.018, 12), kasapAltin, 0, 0.024 + sapL * k, 0.0016);
       p.rotation.x = Math.PI / 2;
       g.add(p);
     }
-    g.position.set(x, CY + 0.004, 0.0235);
+    g.position.set(x, CY + 0.006, 0.038);
     kasap.add(g);
   }
-  const satirCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.lineTo(W, -L); s.lineTo(0.004, -L); s.lineTo(0, -L + 0.004); s.closePath(); };
-  const kasapCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.lineTo(W, -L * 0.5); s.quadraticCurveTo(W * 1.05, -L * 0.9, W * 0.15, -L); s.quadraticCurveTo(0, -L * 0.8, 0, -L * 0.6); s.closePath(); };
+  const satirCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.lineTo(W, -L); s.quadraticCurveTo(W * 0.5, -L - 0.006, 0, -L + 0.004); s.closePath(); };
+  const kasapCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.lineTo(W, -L * 0.45); s.bezierCurveTo(W * 1.25, -L * 0.75, W * 0.9, -L * 0.97, W * 0.1, -L); s.quadraticCurveTo(-W * 0.05, -L * 0.85, 0, -L * 0.62); s.closePath(); };
   const sefCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.lineTo(W, -L * 0.62); s.quadraticCurveTo(W * 0.96, -L * 0.95, 0, -L); s.closePath(); };
-  const siyirmaCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.quadraticCurveTo(W * 0.7, -L * 0.35, W * 0.55, -L * 0.75); s.lineTo(0, -L); s.closePath(); };
-  bicak(-0.2, 0.1, 0.16, 0.11, satirCiz, true); // satır
-  bicak(-0.075, 0.048, 0.25, 0.115, kasapCiz); // kasap bıçağı
-  bicak(0.035, 0.04, 0.2, 0.105, sefCiz); // doğrama bıçağı
-  bicak(0.12, 0.02, 0.15, 0.1, siyirmaCiz); // sıyırma bıçağı
-  // masat: yivli çelik çubuk, halkalı koruma ve asma halkası
+  const siyirmaCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.quadraticCurveTo(W * 0.65, -L * 0.3, W * 0.55, -L * 0.72); s.lineTo(0, -L); s.closePath(); };
+  bicak(-0.235, 0.105, 0.16, 0.105, satirCiz, true); // satır
+  bicak(-0.1, 0.05, 0.24, 0.11, kasapCiz); // kasap bıçağı
+  bicak(0.015, 0.042, 0.2, 0.105, sefCiz); // doğrama bıçağı
+  bicak(0.115, 0.022, 0.16, 0.1, siyirmaCiz); // sıyırma bıçağı
+  // masat: parlak çelik çubuk, altın koruma halkası, abanoz sap ve altın asma halkası
   const masat = new THREE.Group();
-  masat.add(mesh(new THREE.CylinderGeometry(0.0055, 0.0045, 0.24, 14), celik, 0, -0.1, 0));
-  masat.add(mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.006, 20), celik, 0, 0.022, 0));
-  masat.add(mesh(new THREE.CylinderGeometry(0.011, 0.012, 0.1, 16), sapMat, 0, 0.075, 0));
-  const masatHalka = mesh(new THREE.TorusGeometry(0.01, 0.0022, 8, 20), celik, 0, 0.135, 0);
-  masat.add(masatHalka);
-  masat.position.set(0.205, CY, 0.032);
+  masat.add(mesh(new THREE.CylinderGeometry(0.0055, 0.0042, 0.22, 16), parlakCelik, 0, -0.095, 0));
+  masat.add(mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.006, 24), kasapAltin, 0, 0.018, 0));
+  masat.add(mesh(new THREE.CylinderGeometry(0.0105, 0.0115, 0.1, 18), abanoz, 0, 0.071, 0));
+  masat.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.008, 18), kasapAltin, 0, 0.124, 0));
+  masat.add(mesh(new THREE.TorusGeometry(0.009, 0.0018, 8, 20), kasapAltin, 0, 0.137, 0));
+  masat.position.set(0.22, CY, 0.047);
   kasap.add(masat);
 
-  /** Duvara vidalı pirinç askı topuzu. */
-  function aski(x, y) {
-    const a = mesh(new THREE.CylinderGeometry(0.006, 0.008, 0.035, 14), kasapPirinc, x, y, 0.0175);
-    a.rotation.x = Math.PI / 2;
-    kasap.add(a, mesh(new THREE.SphereGeometry(0.009, 14, 10), kasapPirinc, x, y, 0.036));
-    kasap.add(mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.004, 18).rotateX(Math.PI / 2), kasapPirinc, x, y, 0.002));
-  }
-
-  // kasap önlüğü: lacivert-beyaz çizgili, göğsünde işlenmiş "GÜLTÜRK"; boyun askısı topuza takılı
-  const OW = 0.26, OH = 0.36;
-  const onlukDoku = tuvalDokusu(520, 720, (g, w, h) => {
-    g.fillStyle = "#f3f1ec"; g.fillRect(0, 0, w, h);
-    for (let x = 0; x < w; x += 26) { g.fillStyle = "#23345a"; g.fillRect(x, 0, 13, h); }
-    // dokuma ve kırışık gölgeler
-    for (let y = 0; y < h; y += 3) { g.fillStyle = `rgba(0,0,0,${0.03 + (y % 9 === 0 ? 0.03 : 0)})`; g.fillRect(0, y, w, 1); }
-    for (const [x, a] of [[0.3, 0.12], [0.62, 0.09], [0.82, 0.1]]) {
-      const k = g.createLinearGradient(w * (x - 0.07), 0, w * (x + 0.07), 0);
-      k.addColorStop(0, "rgba(0,0,0,0)"); k.addColorStop(0.5, `rgba(0,0,0,${a})`); k.addColorStop(1, "rgba(0,0,0,0)");
-      g.fillStyle = k; g.fillRect(0, h * 0.25, w, h);
-    }
-    // göğüs yaması: beyaz zemin, kırmızı işleme
-    g.fillStyle = "#fbfaf6"; g.fillRect(w * 0.18, h * 0.13, w * 0.64, h * 0.2);
-    g.strokeStyle = "#b3182a"; g.lineWidth = 4; g.setLineDash([10, 6]);
-    g.strokeRect(w * 0.2, h * 0.145, w * 0.6, h * 0.17); g.setLineDash([]);
-    g.fillStyle = "#b3182a"; g.textAlign = "center";
-    g.font = "900 68px Georgia, 'Times New Roman', serif"; g.fillText("GÜLTÜRK", w / 2, h * 0.245);
-    g.font = "700 26px Georgia, 'Times New Roman', serif"; g.fillText("KASAP", w / 2, h * 0.295);
-    // cep
-    g.fillStyle = "rgba(0,0,0,.12)"; g.fillRect(w * 0.28, h * 0.6, w * 0.44, h * 0.006);
-    g.fillRect(w * 0.28, h * 0.6, 2, h * 0.16); g.fillRect(w * 0.72, h * 0.6, 2, h * 0.16); g.fillRect(w * 0.28, h * 0.76, w * 0.44, 2);
-  });
-  const onlukSekil = new THREE.Shape();
-  onlukSekil.moveTo(-OW * 0.3, 0);
-  onlukSekil.lineTo(OW * 0.3, 0);
-  onlukSekil.quadraticCurveTo(OW * 0.32, -OH * 0.22, OW * 0.5, -OH * 0.3);
-  onlukSekil.lineTo(OW * 0.5, -OH * 0.97);
-  onlukSekil.quadraticCurveTo(OW * 0.5, -OH, OW * 0.46, -OH);
-  onlukSekil.lineTo(-OW * 0.46, -OH);
-  onlukSekil.quadraticCurveTo(-OW * 0.5, -OH, -OW * 0.5, -OH * 0.97);
-  onlukSekil.lineTo(-OW * 0.5, -OH * 0.3);
-  onlukSekil.quadraticCurveTo(-OW * 0.32, -OH * 0.22, -OW * 0.3, 0);
-  const onlukGeo = new THREE.ShapeGeometry(onlukSekil, 12);
-  // UV: şeklin sınırlarını 0-1 aralığına yay; kumaş alta doğru duvardan hafifçe açılır
-  const op = onlukGeo.attributes.position, ouv = onlukGeo.attributes.uv;
-  for (let i = 0; i < op.count; i++) {
-    const x = op.getX(i), y = op.getY(i);
-    ouv.setXY(i, x / OW + 0.5, 1 + y / OH);
-    op.setZ(i, 0.012 + (-y / OH) * 0.018 + Math.sin((x / OW) * 9) * 0.002);
-  }
-  onlukGeo.computeVertexNormals();
-  const ONLUK_X = -0.15, ONLUK_Y = 0.0;
-  const onluk = mesh(onlukGeo, new THREE.MeshStandardMaterial({ map: onlukDoku, roughness: 0.9, side: THREE.DoubleSide }), ONLUK_X, ONLUK_Y, 0);
-  kasap.add(onluk);
-  aski(ONLUK_X, ONLUK_Y + 0.07);
-  // boyun askısı: topuzdan önlüğün iki üst köşesine inen kumaş bant; bel bağları yanlardan sarkar
-  const bantMat = mat(0x1f2b45, { roughness: 0.85 });
-  for (const sx of [-1, 1]) {
-    const dx = sx * OW * 0.28, uz = Math.hypot(dx, 0.07);
-    const b = mesh(new THREE.BoxGeometry(0.012, uz, 0.003), bantMat, ONLUK_X + dx / 2, ONLUK_Y + 0.035, 0.016);
-    b.rotation.z = Math.atan2(dx, 0.07);
-    kasap.add(b);
-    const bel = mesh(new THREE.BoxGeometry(0.012, 0.2, 0.003), bantMat, ONLUK_X + sx * (OW / 2 + 0.004), ONLUK_Y - OH * 0.3 - 0.1, 0.02);
-    bel.rotation.z = sx * 0.06;
-    kasap.add(bel);
-  }
-
-  // çelik örgü kasap eldiveni: masatHalka dokusu saydamlıkla örülür, bileğinden askıya asılı, parmaklar aşağı
-  const ORGU = 16; // halka aralığı, piksel
-  const orguHalkalar = (g, w, h, ciz) => {
-    for (let y = 0, sira = 0; y <= h + ORGU; y += ORGU * 0.8, sira++) for (let x = (sira % 2) * (ORGU / 2); x <= w + ORGU; x += ORGU) ciz(x, y);
-  };
-  const orguDoku = tuvalDokusu(256, 256, (g, w, h) => {
-    g.fillStyle = "#7d858f"; g.fillRect(0, 0, w, h);
-    orguHalkalar(g, w, h, (x, y) => {
-      g.strokeStyle = "#3e444c"; g.lineWidth = 3; g.beginPath(); g.arc(x, y, ORGU * 0.42, 0, Math.PI * 2); g.stroke();
-      g.strokeStyle = "#eef2f6"; g.lineWidth = 1.6; g.beginPath(); g.arc(x, y, ORGU * 0.42, Math.PI * 1.1, Math.PI * 1.7); g.stroke();
-    });
-  });
-  // saydamlık: örgü dolu, yalnızca halkaların ortası boş
-  const orguDelik = tuvalDokusu(256, 256, (g, w, h) => {
-    g.fillStyle = "#fff"; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#000";
-    orguHalkalar(g, w, h, (x, y) => { g.beginPath(); g.arc(x, y, ORGU * 0.2, 0, Math.PI * 2); g.fill(); });
-  });
-  orguDelik.colorSpace = THREE.NoColorSpace;
-  orguDelik.wrapS = orguDelik.wrapT = THREE.RepeatWrapping;
-  orguDoku.wrapS = orguDoku.wrapT = THREE.RepeatWrapping;
-  orguDoku.repeat.set(6, 6);
-  orguDelik.repeat.set(6, 6);
-  const eldivenSekil = new THREE.Shape();
-  {
-    // parmaklar yukarı çizilir, sonra ters çevrilir
-    eldivenSekil.moveTo(-0.034, 0);
-    eldivenSekil.lineTo(0.034, 0);
-    eldivenSekil.lineTo(0.036, 0.06);
-    eldivenSekil.quadraticCurveTo(0.05, 0.07, 0.066, 0.105); // başparmak
-    eldivenSekil.quadraticCurveTo(0.072, 0.12, 0.062, 0.124);
-    eldivenSekil.quadraticCurveTo(0.052, 0.12, 0.042, 0.1);
-    const parmaklar = [[0.042, 0.021, 0.062], [0.0205, 0.0, 0.078], [-0.0005, -0.021, 0.072], [-0.0215, -0.042, 0.056]];
-    for (const [x1, x2, boy] of parmaklar) {
-      const ust = 0.128 + boy, r = (x1 - x2) / 2;
-      eldivenSekil.lineTo(x1, ust - r);
-      eldivenSekil.quadraticCurveTo(x1, ust, (x1 + x2) / 2, ust);
-      eldivenSekil.quadraticCurveTo(x2, ust, x2, ust - r);
-      eldivenSekil.lineTo(x2 - 0.0005, 0.13);
-    }
-    eldivenSekil.lineTo(-0.042, 0.065);
-    eldivenSekil.lineTo(-0.034, 0);
-  }
-  const eldivenGeo = new THREE.ShapeGeometry(eldivenSekil, 10);
-  const eldMat = new THREE.MeshStandardMaterial({ map: orguDoku, alphaMap: orguDelik, alphaTest: 0.5, metalness: 0.85, roughness: 0.35, side: THREE.DoubleSide });
-  const ep = eldivenGeo.attributes.position, euv = eldivenGeo.attributes.uv;
-  for (let i = 0; i < ep.count; i++) {
-    euv.setXY(i, ep.getX(i) * 5.5, ep.getY(i) * 5.5);
-    ep.setZ(i, 0.014 + Math.cos(ep.getX(i) * 30) * 0.003);
-  }
-  eldivenGeo.computeVertexNormals();
-  const ELD_X = 0.15, ELD_Y = 0.0;
-  const eldiven = mesh(eldivenGeo, eldMat, ELD_X, ELD_Y, 0);
-  eldiven.rotation.z = Math.PI;
-  eldiven.scale.setScalar(1.35);
-  kasap.add(eldiven);
-  // bilekteki kırmızı kayış ve askıya giden masatHalka
-  kasap.add(mesh(kutu(0.1, 0.02, 0.006, 0.002), mat(0xa3162a, { roughness: 0.6 }), ELD_X, ELD_Y - 0.014, 0.018));
-  kasap.add(mesh(new THREE.TorusGeometry(0.014, 0.002, 8, 20), celik, ELD_X, ELD_Y + 0.02, 0.02));
-  aski(ELD_X, ELD_Y + 0.035);
-
   // bakış sola dönünce görünen alanın ortası; bayram günlerinde orası 29 Ekim afişinin, köşe afişin soluna kayar
-  const KASAP_Z = bayram ? 1.6 : 0.32;
+  const KASAP_Z = bayram ? 1.6 : 0.6;
   kasap.scale.setScalar(1.35); // duvar kameradan uzak: yakın nesnelerle aynı iri görünsün
-  kasap.position.set(SOL_DUVAR_X, 1.38, KASAP_Z);
+  kasap.position.set(SOL_DUVAR_X, 1.25, KASAP_Z);
   kasap.rotation.y = Math.PI / 2;
   sahne.add(kasap);
 
-  // köşeyi tavandan aydınlatan ılık spot: bıçaklar ve önlük duvara gölge düşürür
+  // köşeyi tavandan aydınlatan ılık spot: bıçaklar duvara gölge düşürür
   const kasapHedef = new THREE.Object3D();
-  kasapHedef.position.set(SOL_DUVAR_X, 1.36, KASAP_Z);
+  kasapHedef.position.set(SOL_DUVAR_X, 1.6, KASAP_Z);
   sahne.add(kasapHedef);
   const kasapSpotGovde = mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.05, 24), mat(0x1d1f26, { metalness: 0.5, roughness: 0.4 }), SOL_DUVAR_X + 0.9, TAVAN_Y - 0.025, KASAP_Z);
   sahne.add(kasapSpotGovde);
@@ -2317,6 +2216,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     bayrakSpot.intensity = gece ? 7 : 0;
     kasapSpot.intensity = gece ? 5 : 1.8;
     kasapMercekMat.emissiveIntensity = gece ? 2.5 : 0.4;
+    kasapLedMat.emissiveIntensity = gece ? 2.4 : 0.8;
     spotMercekMat.emissiveIntensity = gece ? 3 : 0;
     // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
     bayrakMat.sheen = gece ? 0.2 : 0.45;
