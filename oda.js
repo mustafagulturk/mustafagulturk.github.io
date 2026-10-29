@@ -1799,7 +1799,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       },
     },
     {
-      // orta üst (büyük): Kyiv 2018 finali. Renkli, sert kontrastlı portre; üstte altın FINAL, altta dev KYIV ve çerçeve içi 2018
+      // orta üst (büyük): 2018 finali. Renkli, sert kontrastlı portre; üstte altın FINAL, altta altın 2018
       ad: "kyiv", w: 0.42, h: 0.5, x: 0, y: 0.305, odak: [0.5, 0.12],
       kunye: "Foto: Антон Зайцев · CC BY-SA 3.0",
       ciz(g, w, h, foto) {
@@ -1822,12 +1822,9 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
         g.fillStyle = altin; g.font = `800 ${w * 0.07}px ${AGIR}`; g.textAlign = "center"; g.letterSpacing = `${w * 0.06}px`;
         g.fillText("FINAL", w / 2 + w * 0.03, h * 0.095); g.letterSpacing = "0px";
         g.fillStyle = "#e3b04b"; g.fillRect(w * 0.12, h * 0.078, w * 0.2, h * 0.003); g.fillRect(w * 0.68, h * 0.078, w * 0.2, h * 0.003);
-        // dev KYIV: alttan taşan, beyaz; arkasında kırmızı gölge kayması
-        sikiYazi(g, "KYIV", w / 2 + w * 0.012, h * 0.905, w * 0.46, { renk: "#c8102e", hiza: "center", daralt: 0.82 });
-        sikiYazi(g, "KYIV", w / 2, h * 0.9, w * 0.46, { renk: "#ffffff", hiza: "center", daralt: 0.82 });
-        // 2018: KYIV'in üstünde, altın konturlu
+        // altta altın 2018
         g.save(); g.shadowColor = "rgba(0,0,0,.85)"; g.shadowBlur = w * 0.03;
-        sikiYazi(g, "2018", w / 2, h * 0.63, w * 0.13, { renk: altin, hiza: "center", daralt: 0.9 });
+        sikiYazi(g, "2018", w / 2, h * 0.9, w * 0.2, { renk: altin, hiza: "center", daralt: 0.9 });
         g.restore();
         g.fillStyle = "rgba(255,255,255,.85)"; g.font = `700 ${w * 0.026}px ${AGIR}`; g.textAlign = "center";
         g.letterSpacing = `${w * 0.014}px`; g.fillText("26 MAYIS 2018 · 13. KUPA · NO 7", w / 2, h * 0.955); g.letterSpacing = "0px";
