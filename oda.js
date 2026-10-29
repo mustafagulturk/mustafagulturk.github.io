@@ -11,7 +11,7 @@
  *     Radar tableti → Radar Target Tracker
  *     Telemetri kutusu (Nucleo kartı + sensörler) → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
- * Pencerenin solunda, altın rozetlere asılı Türk bayrağı.
+ * Pencerenin solunda, altın rozetlere asılı Türk bayrağı. Sol duvarda Gültürk kasabı köşesi (altın çerçeveli pano, Şam çeliği bıçaklar).
  * Arka duvarda, diplomanın sağında C2 operasyon ekranı → C2 Map Display.
  * 28-30 Ekim'de (ya da ?bayram=1 ile): flama dizisi, sol duvarda 29 Ekim afişi, masa bayrağı, pencerede havai fişek.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
@@ -1409,6 +1409,150 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   bayrakSpot.shadow.radius = 4;
   sahne.add(bayrakSpot);
 
+  // ---- Sol duvar, bakış sola dönünce görünen yer: Gültürk kasabı köşesi ----
+  // Altın çerçeveli ceviz pano: üstte sıcak LED şerit, ortada parlak siyah mıknatıslı çıtada
+  // Şam çeliği desenli satır, kasap, doğrama ve sıyırma bıçakları ile masat; altta altın oyma GÜLTÜRK · KASAP.
+  // Grup duvara yaslı, ön yüzü odaya (+x) bakar; yerel +x duvar boyunca pencereye doğru.
+  const kasap = new THREE.Group();
+
+  // Şam çeliği: kıvrılan katman çizgileri, açık ve koyu çelik tonları
+  const damaskDoku = tuvalDokusu(512, 512, (g, w, h) => {
+    g.fillStyle = "#c3c9d0"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 70; i++) {
+      const y0 = (i / 70) * h * 1.2 - h * 0.1;
+      g.strokeStyle = i % 2 ? "rgba(70,76,86,.55)" : "rgba(236,240,244,.7)";
+      g.lineWidth = 2 + (i % 3);
+      g.beginPath();
+      for (let x = 0; x <= w; x += 8) {
+        const y = y0 + Math.sin(x * 0.024 + i * 0.6) * 14 + Math.sin(x * 0.061 + i * 1.3) * 6;
+        x ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.stroke();
+    }
+  });
+  damaskDoku.wrapS = damaskDoku.wrapT = THREE.RepeatWrapping;
+  damaskDoku.repeat.set(7, 7);
+  const damask = new THREE.MeshStandardMaterial({ map: damaskDoku, metalness: 0.85, roughness: 0.24 }); // tam metal gece çok kararıyor
+  const parlakCelik = mat(0xeef1f4, { metalness: 1, roughness: 0.07 });
+  const kasapAltin = mat(0xd4af37, { metalness: 1, roughness: 0.17 });
+  const abanozDoku = tuvalDokusu(64, 256, (g, w, h) => {
+    g.fillStyle = "#16100c"; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 2) { g.fillStyle = `rgba(${x % 6 ? "70,48,32" : "0,0,0"},${0.08 + ((x * 7) % 5) * 0.03})`; g.fillRect(x, 0, 1, h); }
+  });
+  const abanoz = new THREE.MeshPhysicalMaterial({ map: abanozDoku, roughness: 0.35, clearcoat: 0.8, clearcoatRoughness: 0.15 });
+
+  const cevizDoku = tuvalDokusu(1024, 820, (g, w, h) => {
+    g.fillStyle = "#4b2e1a"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 120; i++) {
+      g.strokeStyle = `rgba(${i % 3 ? "26,14,6" : "128,86,52"},${0.12 + (i % 5) * 0.035})`;
+      g.lineWidth = 1 + (i % 4);
+      g.beginPath();
+      const y0 = (i / 120) * h;
+      for (let x = 0; x <= w; x += 24) {
+        const y = y0 + Math.sin(x * 0.006 + i * 0.4) * 9 + Math.sin(x * 0.03 + i) * 2;
+        x ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.stroke();
+    }
+    // altta altın oyma isim; harflerin içi gölgeli, kenarı parlak
+    const yy = h * 0.9;
+    g.textAlign = "center";
+    g.font = "900 96px Georgia, 'Times New Roman', serif";
+    g.fillStyle = "rgba(0,0,0,.55)"; g.fillText("GÜLTÜRK", w / 2 + 3, yy + 3);
+    const a = g.createLinearGradient(0, yy - 80, 0, yy);
+    a.addColorStop(0, "#fff0b8"); a.addColorStop(0.45, "#e0b54a"); a.addColorStop(1, "#9c6f1e");
+    g.fillStyle = a; g.fillText("GÜLTÜRK", w / 2, yy);
+    g.font = "600 30px Georgia, 'Times New Roman', serif"; g.fillStyle = "#e6c46e";
+    g.fillText("K A S A P", w / 2, yy + 46);
+    g.fillStyle = "#c9a24a";
+    for (const sx of [-1, 1]) g.fillRect(w / 2 + sx * 120 - (sx < 0 ? 140 : 0), yy + 35, 140, 3);
+  });
+
+  // pano: ceviz yüzey, kenarlarda ince altın çerçeve
+  const PANO_W = 0.68, PANO_H = 0.54, PANO_Y = 0.21;
+  kasap.add(mesh(kutu(PANO_W, PANO_H, 0.025, 0.006), new THREE.MeshStandardMaterial({ map: cevizDoku, roughness: 0.45 }), 0, PANO_Y, 0.0125));
+  for (const [w, h, x, y] of [[PANO_W + 0.008, 0.008, 0, PANO_Y + PANO_H / 2], [PANO_W + 0.008, 0.008, 0, PANO_Y - PANO_H / 2], [0.008, PANO_H, -PANO_W / 2, PANO_Y], [0.008, PANO_H, PANO_W / 2, PANO_Y]]) {
+    kasap.add(mesh(kutu(w, h, 0.03, 0.003), kasapAltin, x, y, 0.015));
+  }
+  // üstte ceviz saçak, altında sıcak LED şerit
+  kasap.add(mesh(kutu(PANO_W - 0.02, 0.012, 0.03, 0.003), kasapAltin, 0, PANO_Y + PANO_H / 2 - 0.02, 0.04));
+  const kasapLedMat = new THREE.MeshStandardMaterial({ color: 0xffe2b0, emissive: 0xffc77a, emissiveIntensity: 0 });
+  kasap.add(mesh(new THREE.BoxGeometry(PANO_W - 0.05, 0.003, 0.004), kasapLedMat, 0, PANO_Y + PANO_H / 2 - 0.027, 0.05));
+
+  // parlak siyah mıknatıslı çıta
+  const CY = 0.32;
+  kasap.add(mesh(kutu(0.6, 0.032, 0.012, 0.004), mat(0x0c0c0e, { metalness: 0.6, roughness: 0.15 }), 0, CY, 0.031));
+
+  /** Ağzı aşağı bakan bıçak: yerel y=0 çıtanın hizası, sap yukarıda; ciz(şekil, W, L) ağız çizgisini çizer. */
+  function bicak(x, W, L, sapL, ciz, delik = false) {
+    const g = new THREE.Group();
+    const sekil = new THREE.Shape();
+    ciz(sekil, W, L);
+    if (delik) {
+      const d = new THREE.Path();
+      d.absarc(W * 0.78, -0.024, 0.009, 0, Math.PI * 2, true);
+      sekil.holes.push(d);
+      const halka = mesh(new THREE.TorusGeometry(0.0095, 0.0015, 8, 24), kasapAltin, W * 0.78 - W / 2, 0.012 - 0.024, 0.0016);
+      g.add(halka);
+    }
+    const ag = new THREE.ExtrudeGeometry(sekil, { depth: 0.0016, bevelEnabled: true, bevelThickness: 0.0006, bevelSize: 0.0012, bevelSegments: 2, curveSegments: 20 });
+    g.add(mesh(ag, damask, -W / 2, 0.012, 0));
+    const sapW = Math.min(W * 0.55, 0.024) + 0.004;
+    g.add(mesh(kutu(sapW + 0.004, 0.012, 0.014, 0.003), kasapAltin, 0, 0.018, 0.0016)); // topuz
+    g.add(mesh(kutu(sapW, sapL, 0.016, 0.006), abanoz, 0, 0.024 + sapL / 2, 0.0016));
+    g.add(mesh(kutu(sapW + 0.002, 0.008, 0.017, 0.003), kasapAltin, 0, 0.024 + sapL, 0.0016)); // uç başlığı
+    for (const k of [0.22, 0.5, 0.78]) {
+      const p = mesh(new THREE.CylinderGeometry(0.0026, 0.0026, 0.018, 12), kasapAltin, 0, 0.024 + sapL * k, 0.0016);
+      p.rotation.x = Math.PI / 2;
+      g.add(p);
+    }
+    g.position.set(x, CY + 0.006, 0.038);
+    kasap.add(g);
+  }
+  const satirCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.lineTo(W, -L); s.quadraticCurveTo(W * 0.5, -L - 0.006, 0, -L + 0.004); s.closePath(); };
+  const kasapCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.lineTo(W, -L * 0.45); s.bezierCurveTo(W * 1.25, -L * 0.75, W * 0.9, -L * 0.97, W * 0.1, -L); s.quadraticCurveTo(-W * 0.05, -L * 0.85, 0, -L * 0.62); s.closePath(); };
+  const sefCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.lineTo(W, -L * 0.62); s.quadraticCurveTo(W * 0.96, -L * 0.95, 0, -L); s.closePath(); };
+  const siyirmaCiz = (s, W, L) => { s.moveTo(0, 0); s.lineTo(W, 0); s.quadraticCurveTo(W * 0.65, -L * 0.3, W * 0.55, -L * 0.72); s.lineTo(0, -L); s.closePath(); };
+  bicak(-0.235, 0.105, 0.16, 0.105, satirCiz, true); // satır
+  bicak(-0.1, 0.05, 0.24, 0.11, kasapCiz); // kasap bıçağı
+  bicak(0.015, 0.042, 0.2, 0.105, sefCiz); // doğrama bıçağı
+  bicak(0.115, 0.022, 0.16, 0.1, siyirmaCiz); // sıyırma bıçağı
+  // masat: parlak çelik çubuk, altın koruma halkası, abanoz sap ve altın asma halkası
+  const masat = new THREE.Group();
+  masat.add(mesh(new THREE.CylinderGeometry(0.0055, 0.0042, 0.22, 16), parlakCelik, 0, -0.095, 0));
+  masat.add(mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.006, 24), kasapAltin, 0, 0.018, 0));
+  masat.add(mesh(new THREE.CylinderGeometry(0.0105, 0.0115, 0.1, 18), abanoz, 0, 0.071, 0));
+  masat.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.008, 18), kasapAltin, 0, 0.124, 0));
+  masat.add(mesh(new THREE.TorusGeometry(0.009, 0.0018, 8, 20), kasapAltin, 0, 0.137, 0));
+  masat.position.set(0.22, CY, 0.047);
+  kasap.add(masat);
+
+  // bakış sola dönünce görünen alanın ortası; bayram günlerinde orası 29 Ekim afişinin, köşe afişin soluna kayar
+  const KASAP_Z = bayram ? 1.6 : 0.6;
+  kasap.scale.setScalar(1.35); // duvar kameradan uzak: yakın nesnelerle aynı iri görünsün
+  kasap.position.set(SOL_DUVAR_X, 1.25, KASAP_Z);
+  kasap.rotation.y = Math.PI / 2;
+  sahne.add(kasap);
+
+  // köşeyi tavandan aydınlatan ılık spot: bıçaklar duvara gölge düşürür
+  const kasapHedef = new THREE.Object3D();
+  kasapHedef.position.set(SOL_DUVAR_X, 1.6, KASAP_Z);
+  sahne.add(kasapHedef);
+  const kasapSpotGovde = mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.05, 24), mat(0x1d1f26, { metalness: 0.5, roughness: 0.4 }), SOL_DUVAR_X + 0.9, TAVAN_Y - 0.025, KASAP_Z);
+  sahne.add(kasapSpotGovde);
+  const kasapMercekMat = new THREE.MeshStandardMaterial({ color: 0xffeab0, emissive: 0xffc77a, emissiveIntensity: 0 });
+  const kasapMercek = mesh(new THREE.CircleGeometry(0.03, 24), kasapMercekMat, SOL_DUVAR_X + 0.9, TAVAN_Y - 0.051, KASAP_Z);
+  kasapMercek.rotation.x = Math.PI / 2;
+  sahne.add(kasapMercek);
+  const kasapSpot = new THREE.SpotLight(0xffd9a0, 0, 3.2, 0.55, 0.6, 1.4);
+  kasapSpot.position.set(SOL_DUVAR_X + 0.9, TAVAN_Y - 0.06, KASAP_Z);
+  kasapSpot.target = kasapHedef;
+  kasapSpot.castShadow = true;
+  kasapSpot.shadow.mapSize.set(1024, 1024);
+  kasapSpot.shadow.bias = -0.0004;
+  kasapSpot.shadow.radius = 4;
+  sahne.add(kasapSpot);
+
   const bayramSus = bayram ? bayramSusleri(sahne, { SOL_DUVAR_X, TAVAN_Y, MASA_Y, pencere, PW, PH }) : null;
 
   // ---- Arka duvar, sağ: C2 operasyon ekranı (C2 Map Display) ----
@@ -2070,6 +2214,9 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     tavanMat.color.set(gece ? 0x454b5d : 0xe6e1d7);
     tavanMat.emissive.copy(tavanMat.color).multiplyScalar(gece ? 0.2 : 0.38);
     bayrakSpot.intensity = gece ? 7 : 0;
+    kasapSpot.intensity = gece ? 5 : 1.8;
+    kasapMercekMat.emissiveIntensity = gece ? 2.5 : 0.4;
+    kasapLedMat.emissiveIntensity = gece ? 2.4 : 0.8;
     spotMercekMat.emissiveIntensity = gece ? 3 : 0;
     // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
     bayrakMat.sheen = gece ? 0.2 : 0.45;
