@@ -1722,6 +1722,21 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     g.fillStyle = k; g.fillRect(0, 0, w, h);
   }
 
+  /** Fotoğrafa kontrast ve doygunluk verir; renkli, çarpıcı baskılar için. */
+  function canlandir(g, x, y, w, h, kontrast = 1.25, doygunluk = 1.3, isitma = 0) {
+    x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+    const v = g.getImageData(x, y, w, h), d = v.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const l = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11;
+      for (let k = 0; k < 3; k++) {
+        let c = l + (d[i + k] - l) * doygunluk;
+        c = (c - 128) * kontrast + 128 + (k === 0 ? isitma : k === 2 ? -isitma : 0);
+        d[i + k] = c < 0 ? 0 : c > 255 ? 255 : c;
+      }
+    }
+    g.putImageData(v, x, y);
+  }
+
   /** Dar, sıkışık başlık yazısı: yatayda daraltılmış kalın font. */
   function sikiYazi(g, metin, x, y, boy, { renk = "#fff", hiza = "left", daralt = 0.78, kontur = 0 } = {}) {
     g.save(); g.translate(x, y); g.scale(daralt, 1);
@@ -1784,77 +1799,98 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
       },
     },
     {
-      // orta üst (büyük): Kyiv 2018 finali. Gece mavisi çift ton, üstte dev FINAL, altta şehir ve tarih
-      ad: "kyiv", w: 0.42, h: 0.5, x: 0, y: 0.305, odak: [0.5, 0.15],
+      // orta üst (büyük): Kyiv 2018 finali. Renkli, sert kontrastlı portre; üstte altın FINAL, altta dev KYIV ve çerçeve içi 2018
+      ad: "kyiv", w: 0.42, h: 0.5, x: 0, y: 0.305, odak: [0.5, 0.12],
       kunye: "Foto: Антон Зайцев · CC BY-SA 3.0",
       ciz(g, w, h, foto) {
-        fotoAlani(g, 0, 0, w, h, foto, this.odak, "#1b2347");
-        if (foto) cifttonla(g, 0, 0, w, h, [8, 12, 38], [214, 226, 255], 0.85);
-        const alt = g.createLinearGradient(0, h * 0.55, 0, h);
-        alt.addColorStop(0, "rgba(6,9,28,0)"); alt.addColorStop(1, "rgba(6,9,28,.92)");
-        g.fillStyle = alt; g.fillRect(0, h * 0.55, w, h * 0.45);
-        // fotoğrafın arkasından geçiyormuş gibi saydam dev yazı
-        g.globalAlpha = 0.9;
-        sikiYazi(g, "FINAL", w / 2, h * 0.17, w * 0.34, { renk: "#ffffff", hiza: "center", daralt: 0.9, kontur: w * 0.006 });
-        g.globalAlpha = 1;
-        sikiYazi(g, "KYIV 2018", w / 2, h * 0.86, w * 0.16, { renk: "#ffffff", hiza: "center", daralt: 0.8 });
-        g.fillStyle = "#ffd36b"; g.fillRect(w * 0.42, h * 0.885, w * 0.16, h * 0.005);
-        g.fillStyle = "rgba(255,255,255,.75)"; g.font = `600 ${w * 0.03}px ${AGIR}`; g.textAlign = "center";
-        g.letterSpacing = `${w * 0.012}px`; g.fillText("26 · 05 · 2018   13. KUPA", w / 2, h * 0.925); g.letterSpacing = "0px";
-        g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = w * 0.003; g.strokeRect(w * 0.035, h * 0.03, w * 0.93, h * 0.94);
-        gren(g, w, h, 0.08, 0.5);
+        g.fillStyle = "#05070f"; g.fillRect(0, 0, w, h);
+        fotoAlani(g, 0, h * 0.08, w, h * 0.92, foto, this.odak, "#1b2347");
+        if (foto) canlandir(g, 0, h * 0.08, w, h * 0.92, 1.35, 1.15, -6);
+        // sahne ışığı: sol üstten süzülen soğuk huzme, kenarlarda derin karanlık
+        const huzme = g.createLinearGradient(0, 0, w * 0.8, h * 0.6);
+        huzme.addColorStop(0, "rgba(140,180,255,.35)"); huzme.addColorStop(0.5, "rgba(140,180,255,0)");
+        g.globalCompositeOperation = "screen"; g.fillStyle = huzme; g.fillRect(0, 0, w, h); g.globalCompositeOperation = "source-over";
+        const ust = g.createLinearGradient(0, 0, 0, h * 0.3);
+        ust.addColorStop(0, "#05070f"); ust.addColorStop(1, "rgba(5,7,15,0)");
+        g.fillStyle = ust; g.fillRect(0, 0, w, h * 0.3);
+        const alt = g.createLinearGradient(0, h * 0.5, 0, h);
+        alt.addColorStop(0, "rgba(5,7,15,0)"); alt.addColorStop(0.55, "rgba(5,7,15,.85)"); alt.addColorStop(1, "#05070f");
+        g.fillStyle = alt; g.fillRect(0, h * 0.5, w, h * 0.5);
+        // altın FINAL ve yanlarında ince çizgiler
+        const altin = g.createLinearGradient(0, h * 0.04, 0, h * 0.11);
+        altin.addColorStop(0, "#fff1c1"); altin.addColorStop(0.5, "#e3b04b"); altin.addColorStop(1, "#a87420");
+        g.fillStyle = altin; g.font = `800 ${w * 0.07}px ${AGIR}`; g.textAlign = "center"; g.letterSpacing = `${w * 0.06}px`;
+        g.fillText("FINAL", w / 2 + w * 0.03, h * 0.095); g.letterSpacing = "0px";
+        g.fillStyle = "#e3b04b"; g.fillRect(w * 0.12, h * 0.078, w * 0.2, h * 0.003); g.fillRect(w * 0.68, h * 0.078, w * 0.2, h * 0.003);
+        // dev KYIV: alttan taşan, beyaz; arkasında kırmızı gölge kayması
+        sikiYazi(g, "KYIV", w / 2 + w * 0.012, h * 0.905, w * 0.46, { renk: "#c8102e", hiza: "center", daralt: 0.82 });
+        sikiYazi(g, "KYIV", w / 2, h * 0.9, w * 0.46, { renk: "#ffffff", hiza: "center", daralt: 0.82 });
+        // 2018: KYIV'in üstünde, altın konturlu
+        g.save(); g.shadowColor = "rgba(0,0,0,.85)"; g.shadowBlur = w * 0.03;
+        sikiYazi(g, "2018", w / 2, h * 0.63, w * 0.13, { renk: altin, hiza: "center", daralt: 0.9 });
+        g.restore();
+        g.fillStyle = "rgba(255,255,255,.85)"; g.font = `700 ${w * 0.026}px ${AGIR}`; g.textAlign = "center";
+        g.letterSpacing = `${w * 0.014}px`; g.fillText("26 MAYIS 2018 · 13. KUPA · NO 7", w / 2, h * 0.955); g.letterSpacing = "0px";
+        gren(g, w, h, 0.07, 0.45);
         kunye(g, w, h, this.kunye);
       },
     },
     {
-      // orta alt (yatay): solda söz, sağda kırmızı tonlu portre; aralarında yumuşak geçiş
-      ad: "soz", w: 0.42, h: 0.32, x: 0, y: -0.165, odak: [0.5, 0.35],
+      // orta alt (yatay): renkli, karanlıktan çıkan portre sağda; solda büyük, sıkışık söz, "THE BEST" kırmızı
+      ad: "soz", w: 0.42, h: 0.32, x: 0, y: -0.165, odak: [0.45, 0.3],
       kunye: "Foto: Tsutomu Takasu · CC BY 2.0",
       ciz(g, w, h, foto) {
-        g.fillStyle = "#0e0e11"; g.fillRect(0, 0, w, h);
-        fotoAlani(g, w * 0.48, 0, w * 0.52, h, foto, this.odak, "#4a0d14");
-        if (foto) cifttonla(g, w * 0.48, 0, w * 0.52, h, [14, 4, 6], [255, 120, 110], 0.7);
-        const gec = g.createLinearGradient(w * 0.46, 0, w * 0.68, 0);
-        gec.addColorStop(0, "#0e0e11"); gec.addColorStop(1, "rgba(14,14,17,0)");
-        g.fillStyle = gec; g.fillRect(w * 0.46, 0, w * 0.22, h);
-        g.fillStyle = "#d21f2b"; g.fillRect(w * 0.07, h * 0.16, w * 0.06, h * 0.012);
-        g.fillStyle = "#f3efe4"; g.textAlign = "left"; g.font = `italic 700 ${w * 0.058}px ${SERIF}`;
-        ["“In my mind", "I'm always", "the best.”"].forEach((s, i) => g.fillText(s, w * 0.07, h * (0.33 + i * 0.17)));
-        g.fillStyle = "rgba(243,239,228,.7)"; g.font = `700 ${w * 0.026}px ${AGIR}`; g.letterSpacing = `${w * 0.006}px`;
-        g.fillText("CRISTIANO RONALDO", w * 0.07, h * 0.86);
-        g.letterSpacing = "0px";
-        gren(g, w, h, 0.06, 0.4);
+        g.fillStyle = "#07080b"; g.fillRect(0, 0, w, h);
+        fotoAlani(g, w * 0.4, 0, w * 0.6, h, foto, this.odak, "#4a0d14");
+        if (foto) canlandir(g, w * 0.4, 0, w * 0.6, h, 1.4, 1.35, 8);
+        const gec = g.createLinearGradient(w * 0.4, 0, w * 0.66, 0);
+        gec.addColorStop(0, "#07080b"); gec.addColorStop(1, "rgba(7,8,11,0)");
+        g.fillStyle = gec; g.fillRect(w * 0.4, 0, w * 0.26, h);
+        // kırmızı kenar ışığı
+        const kenar = g.createRadialGradient(w * 1.02, h * 0.5, 0, w * 1.02, h * 0.5, w * 0.5);
+        kenar.addColorStop(0, "rgba(220,30,45,.45)"); kenar.addColorStop(1, "rgba(220,30,45,0)");
+        g.globalCompositeOperation = "screen"; g.fillStyle = kenar; g.fillRect(0, 0, w, h); g.globalCompositeOperation = "source-over";
+        g.fillStyle = "rgba(255,255,255,.55)"; g.font = `italic ${w * 0.05}px ${SERIF}`; g.textAlign = "left";
+        g.fillText("“", w * 0.055, h * 0.2);
+        sikiYazi(g, "IN MY MIND", w * 0.06, h * 0.36, w * 0.095, { renk: "#f3efe4", daralt: 0.72 });
+        sikiYazi(g, "I'M ALWAYS", w * 0.06, h * 0.52, w * 0.095, { renk: "#f3efe4", daralt: 0.72 });
+        sikiYazi(g, "THE BEST", w * 0.06, h * 0.74, w * 0.14, { renk: "#e0182d", daralt: 0.72 });
+        g.fillStyle = "#e0182d"; g.fillRect(w * 0.06, h * 0.8, w * 0.05, h * 0.01);
+        g.fillStyle = "rgba(243,239,228,.75)"; g.font = `700 ${w * 0.024}px ${AGIR}`; g.letterSpacing = `${w * 0.008}px`;
+        g.fillText("CRISTIANO RONALDO", w * 0.13, h * 0.81); g.letterSpacing = "0px";
+        gren(g, w, h, 0.06, 0.45);
         kunye(g, w, h, this.kunye);
       },
     },
     {
-      // sağ üst: siyah zemin, içi boş "CR" ve kırmızı 7; altında kırmızı tonlu gol sevinci, yanda dikey isim
-      ad: "cr7", w: 0.3, h: 0.4, x: 0.41, y: 0.255, odak: [0.62, 0.4],
+      // sağ üst: kırmızı baskı. Gol sevinci tam sayfa, sert kırmızı çift ton; arkada dev saydam 7, altta kalın CR7 ve hız çizgileri
+      ad: "cr7", w: 0.3, h: 0.4, x: 0.41, y: 0.255, odak: [0.7, 0.35],
       kunye: "Foto: Alejandro Ramos · CC BY-SA 2.0",
       ciz(g, w, h, foto) {
-        g.fillStyle = "#0d0d10"; g.fillRect(0, 0, w, h);
-        fotoAlani(g, 0, h * 0.36, w, h * 0.5, foto, this.odak, "#3a0a10");
-        if (foto) cifttonla(g, 0, h * 0.36, w, h * 0.5, [16, 4, 6], [255, 236, 228], 0.8);
-        const ust = g.createLinearGradient(0, h * 0.36, 0, h * 0.5);
-        ust.addColorStop(0, "#0d0d10"); ust.addColorStop(1, "rgba(13,13,16,0)");
-        g.fillStyle = ust; g.fillRect(0, h * 0.36, w, h * 0.14);
-        const alt = g.createLinearGradient(0, h * 0.74, 0, h * 0.86);
-        alt.addColorStop(0, "rgba(13,13,16,0)"); alt.addColorStop(1, "#0d0d10");
-        g.fillStyle = alt; g.fillRect(0, h * 0.74, w, h * 0.12);
-        g.save(); g.translate(w * 0.07, h * 0.36); g.scale(0.72, 1.5);
-        g.font = `900 ${w * 0.4}px ${AGIR}`; g.textAlign = "left";
-        g.lineWidth = w * 0.008; g.strokeStyle = "#f1efe9"; g.strokeText("CR", 0, 0);
-        g.fillStyle = "#d21f2b"; g.fillText("7", g.measureText("CR").width - w * 0.02, 0);
-        g.restore();
-        g.save(); g.translate(w * 0.94, h * 0.05); g.rotate(Math.PI / 2);
-        g.fillStyle = "rgba(241,239,233,.8)"; g.font = `800 ${w * 0.05}px ${AGIR}`; g.letterSpacing = `${w * 0.03}px`;
-        g.fillText("RONALDO", 0, 0); g.restore();
-        g.letterSpacing = "0px";
-        g.fillStyle = "#f1efe9"; g.font = `700 ${w * 0.034}px ${AGIR}`; g.textAlign = "left"; g.letterSpacing = `${w * 0.006}px`;
-        g.fillText("2002 SPORTING · 2003 MAN UTD", w * 0.07, h * 0.9);
-        g.fillText("2009 MADRİD · 2018 TORİNO", w * 0.07, h * 0.94);
-        g.letterSpacing = "0px";
-        gren(g, w, h, 0.07, 0.35);
+        g.fillStyle = "#7d0a12"; g.fillRect(0, 0, w, h);
+        fotoAlani(g, 0, 0, w, h, foto, this.odak, "#7d0a12");
+        if (foto) { canlandir(g, 0, 0, w, h, 1.3, 1.1); cifttonla(g, 0, 0, w, h, [30, 0, 6], [255, 228, 214], 0.75); }
+        // dev 7, fotoğrafın üstünde ekran karışımıyla parlar
+        g.globalCompositeOperation = "screen";
+        g.fillStyle = "rgba(255,60,70,.35)"; g.font = `900 ${h * 0.95}px ${AGIR}`; g.textAlign = "center";
+        g.fillText("7", w * 0.5, h * 0.82);
+        g.globalCompositeOperation = "source-over";
+        // hız çizgileri
+        for (let i = 0; i < 26; i++) {
+          const y = h * ozluRastgele(i * 4.7), uz = w * (0.15 + ozluRastgele(i * 2.3) * 0.35);
+          g.fillStyle = `rgba(255,255,255,${0.08 + ozluRastgele(i) * 0.12})`;
+          g.fillRect(ozluRastgele(i * 9.9) > 0.5 ? 0 : w - uz, y, uz, h * 0.003);
+        }
+        const alt = g.createLinearGradient(0, h * 0.62, 0, h);
+        alt.addColorStop(0, "rgba(40,0,6,0)"); alt.addColorStop(1, "rgba(40,0,6,.95)");
+        g.fillStyle = alt; g.fillRect(0, h * 0.62, w, h * 0.38);
+        sikiYazi(g, "CR7", w / 2 + w * 0.012, h * 0.93, w * 0.42, { renk: "#120005", hiza: "center", daralt: 0.88 });
+        sikiYazi(g, "CR7", w / 2, h * 0.925, w * 0.42, { renk: "#ffffff", hiza: "center", daralt: 0.88 });
+        g.fillStyle = "#ffffff"; g.font = `800 ${w * 0.045}px ${AGIR}`; g.textAlign = "left"; g.letterSpacing = `${w * 0.02}px`;
+        g.fillText("SIUUU", w * 0.07, h * 0.08); g.letterSpacing = "0px";
+        g.textAlign = "right"; g.font = `600 ${w * 0.03}px ${AGIR}`; g.fillStyle = "rgba(255,255,255,.8)";
+        g.fillText("BERNABÉU · 2010", w * 0.93, h * 0.08);
+        gren(g, w, h, 0.09, 0.4);
         kunye(g, w, h, this.kunye);
       },
     },
