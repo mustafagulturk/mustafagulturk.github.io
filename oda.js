@@ -2418,7 +2418,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
 
   // poster kümesi grubun merkezinin biraz üstünde ortalanır (üst sıra daha uzun)
   function galeriOdak() {
-    const o = ekranaBak(galeri, galeri, GALERI_W, GALERI_H, 1.12);
+    const o = ekranaBak(galeri, galeri, GALERI_W, GALERI_H, kamera.aspect >= 1 ? 1.6 : 1.12);
     const yukari = v(0, 0.075 * GALERI_OLCEK, 0);
     return { kamera: o.kamera.add(yukari), hedef: o.hedef.add(yukari) };
   }
@@ -2432,7 +2432,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
     { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.54, 1.2, 0.7), hedef: v(0.56, 0.76, 0.28) }), panel: true },
     { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 0.7, 0.13, 0.12), panel: true },
-    { ad: "galeri", grup: galeri, baslik: "Ronaldo posterleri", odak: () => galeriOdak() },
+    { ad: "galeri", grup: galeri, baslik: "Ronaldo posterleri", odak: () => galeriOdak(), panel: true },
     { ad: "c2", grup: c2, baslik: "C2 harita ekranı", odak: () => onden(c2, 1.25, 0, -0.08), panel: true },
     { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.5, 0.03, 0.55), panel: true },
     { ad: "gecit", grup: gecit, baslik: "Taktik mesaj ağ geçidi", odak: () => onden(gecit, 0.7, 0.03, 0.35), panel: true },

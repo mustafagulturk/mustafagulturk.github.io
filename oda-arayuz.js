@@ -2,7 +2,7 @@
  * 3D odanın sayfayla bağlantısı: odayı açar/kapatır, nesneye yaklaşılınca ilgili HTML katmanını gösterir.
  * WebGL yoksa ya da ziyaretçi "Klasik görünüm"ü seçtiyse normal site gösterilir.
  */
-import { odaBaslat } from "./oda.js?v=20261029a";
+import { odaBaslat } from "./oda.js?v=20261030a";
 
 const kok = document.documentElement;
 const $ = (s) => document.querySelector(s);
@@ -147,7 +147,7 @@ function odakta(ad, dikdortgen) {
     else anaEkran();
     goster(telefon);
     telefonNot.hidden = false;
-  } else if (ad !== "galeri") {
+  } else {
     panel.querySelectorAll("[data-oda-panel]").forEach((s) => s.classList.toggle("aktif", s.dataset.odaPanel === ad));
     goster(panel);
   }
