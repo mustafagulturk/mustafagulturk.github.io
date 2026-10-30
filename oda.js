@@ -12,7 +12,7 @@
  *     Telemetri kutusu (Nucleo kartı + sensörler) → gömülü telemetri
  *     Ağ anahtarı   → Taktik Mesaj Ağ Geçidi
  * Pencerenin solunda, altın rozetlere asılı Türk bayrağı. Sol duvarda Gültürk kasabı köşesi (altın çerçeveli pano, Şam çeliği bıçaklar).
- * Arka duvarda, diplomanın sağında C2 operasyon ekranı → C2 Map Display.
+ * Arka duvarda, diplomanın sağında C2 operasyon ekranı → C2 Map Display; onun sağında altı çerçeveli Ronaldo poster duvarı.
  * 28-30 Ekim'de (ya da ?bayram=1 ile): flama dizisi, sol duvarda 29 Ekim afişi, masa bayrağı, pencerede havai fişek.
  * Bütün modeller kodla kurulur, dışarıdan model dosyası yüklenmez.
  */
@@ -1818,6 +1818,309 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
   }
   c2Ciz(1);
 
+  // ---- Arka duvar, C2 ekranının sağı: Ronaldo poster duvarı ----
+  // Altı siyah çerçeve iki sıra hâlinde; ortadaki büyük çerçeve Kyiv 2018 finali.
+  // Fotoğraflar Wikimedia Commons'tan, CC lisanslı (assets/posterler/, künye README'de ve her posterin altında).
+  // Poster tuvale önce fotoğrafsız çizilir, fotoğraf yüklenince yeniden çizilir.
+  const galeri = new THREE.Group();
+  const posterCerceveMat = mat(0x111215, { roughness: 0.45, metalness: 0.2 });
+  const POSTER_PX = 1000; // poster dokusunda metre başına piksel
+  const AGIR = "'Inter', 'Segoe UI', system-ui, sans-serif";
+  const SERIF = "Georgia, 'Times New Roman', serif";
+
+  /** Fotoğrafı alana sığdırıp kırpar (odak: 0-1 arası yatay/dikey kaydırma); fotoğraf yoksa koyu degrade. */
+  function fotoAlani(g, x, y, w, h, foto, odak = [0.5, 0.5], yedek = "#22252c") {
+    g.save();
+    g.beginPath(); g.rect(x, y, w, h); g.clip();
+    if (foto) {
+      const o = Math.max(w / foto.width, h / foto.height);
+      const fw = foto.width * o, fh = foto.height * o;
+      g.drawImage(foto, x + (w - fw) * odak[0], y + (h - fh) * odak[1], fw, fh);
+    } else {
+      const d = g.createLinearGradient(x, y, x, y + h);
+      d.addColorStop(0, yedek); d.addColorStop(1, "#0c0d10");
+      g.fillStyle = d; g.fillRect(x, y, w, h);
+    }
+    g.restore();
+  }
+
+  /** Alandaki pikselleri iki renk arasına eşler (duotone); sepya, kırmızı ve gece mavisi baskılar için. */
+  function cifttonla(g, x, y, w, h, koyu, acik, karisim = 1) {
+    x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+    const v = g.getImageData(x, y, w, h), d = v.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const l = Math.min(1, ((d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11) / 255) * 1.08);
+      for (let k = 0; k < 3; k++) d[i + k] = d[i + k] * (1 - karisim) + (koyu[k] + (acik[k] - koyu[k]) * l) * karisim;
+    }
+    g.putImageData(v, x, y);
+  }
+
+  /** Baskı dokusu: ince gren ve kenarlara doğru kararma. */
+  function gren(g, w, h, yogun = 0.1, kenar = 0.55) {
+    for (let i = 0; i < (w * h) / 90; i++) {
+      g.fillStyle = `rgba(${ozluRastgele(i) > 0.5 ? "255,255,255" : "0,0,0"},${ozluRastgele(i * 1.7) * yogun})`;
+      g.fillRect(ozluRastgele(i * 3.1) * w, ozluRastgele(i * 7.3) * h, 2, 2);
+    }
+    const k = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.75);
+    k.addColorStop(0, "rgba(0,0,0,0)"); k.addColorStop(1, `rgba(0,0,0,${kenar})`);
+    g.fillStyle = k; g.fillRect(0, 0, w, h);
+  }
+
+  /** Fotoğrafa kontrast ve doygunluk verir; renkli, çarpıcı baskılar için. */
+  function canlandir(g, x, y, w, h, kontrast = 1.25, doygunluk = 1.3, isitma = 0) {
+    x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+    const v = g.getImageData(x, y, w, h), d = v.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const l = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11;
+      for (let k = 0; k < 3; k++) {
+        let c = l + (d[i + k] - l) * doygunluk;
+        c = (c - 128) * kontrast + 128 + (k === 0 ? isitma : k === 2 ? -isitma : 0);
+        d[i + k] = c < 0 ? 0 : c > 255 ? 255 : c;
+      }
+    }
+    g.putImageData(v, x, y);
+  }
+
+  /** Dar, sıkışık başlık yazısı: yatayda daraltılmış kalın font. */
+  function sikiYazi(g, metin, x, y, boy, { renk = "#fff", hiza = "left", daralt = 0.78, kontur = 0 } = {}) {
+    g.save(); g.translate(x, y); g.scale(daralt, 1);
+    g.font = `900 ${boy}px ${AGIR}`; g.textAlign = hiza;
+    if (kontur) { g.lineWidth = kontur; g.strokeStyle = renk; g.strokeText(metin, 0, 0); }
+    else { g.fillStyle = renk; g.fillText(metin, 0, 0); }
+    g.restore();
+  }
+
+  function kunye(g, w, h, metin, renk = "rgba(255,255,255,.55)") {
+    g.fillStyle = renk; g.font = `500 ${w * 0.018}px ${AGIR}`; g.textAlign = "right";
+    g.fillText(metin, w * 0.97, h * 0.988);
+  }
+
+  const POSTERLER = [
+    {
+      // sol üst: eski baskı. Sepya çift ton, gren ve yıpranmış kenar; üstte dev CR7, altta isim şeridi
+      ad: "sepya", w: 0.3, h: 0.4, x: -0.41, y: 0.255, odak: [0.5, 0.25],
+      kunye: "Foto: KANO PHOTO · CC BY-SA 2.0",
+      ciz(g, w, h, foto) {
+        g.fillStyle = "#e4d2b0"; g.fillRect(0, 0, w, h);
+        fotoAlani(g, w * 0.06, h * 0.05, w * 0.88, h * 0.78, foto, this.odak, "#7a5a33");
+        if (foto) cifttonla(g, w * 0.06, h * 0.05, w * 0.88, h * 0.78, [46, 28, 12], [236, 214, 170]);
+        const ust = g.createLinearGradient(0, h * 0.05, 0, h * 0.3);
+        ust.addColorStop(0, "rgba(40,24,10,.75)"); ust.addColorStop(1, "rgba(40,24,10,0)");
+        g.fillStyle = ust; g.fillRect(w * 0.06, h * 0.05, w * 0.88, h * 0.25);
+        sikiYazi(g, "CR7", w * 0.1, h * 0.19, w * 0.27, { renk: "#f3e6c8" });
+        g.fillStyle = "#f3e6c8"; g.font = `700 ${w * 0.034}px ${AGIR}`; g.textAlign = "right"; g.letterSpacing = `${w * 0.008}px`;
+        g.fillText("MADRİD", w * 0.9, h * 0.11); g.fillText("2009", w * 0.9, h * 0.145);
+        g.letterSpacing = "0px";
+        sikiYazi(g, "CRISTIANO RONALDO", w / 2, h * 0.92, w * 0.115, { renk: "#2e1c0b", hiza: "center", daralt: 0.62 });
+        g.fillStyle = "#2e1c0b"; g.fillRect(w * 0.06, h * 0.845, w * 0.88, h * 0.004);
+        gren(g, w, h, 0.14, 0.45);
+        // yıpranmış kenar: kenar boyunca düzensiz açık lekeler
+        for (let i = 0; i < 220; i++) {
+          const t = ozluRastgele(i * 9.1), yan = Math.floor(ozluRastgele(i * 4.4) * 4), r = w * (0.004 + ozluRastgele(i * 2.2) * 0.012);
+          const [px, py] = [[t * w, 0], [w, t * h], [t * w, h], [0, t * h]][yan];
+          g.fillStyle = "rgba(240,226,196,.9)"; g.beginPath(); g.arc(px, py, r * 2, 0, Math.PI * 2); g.fill();
+        }
+        kunye(g, w, h, this.kunye, "rgba(46,28,11,.6)");
+      },
+    },
+    {
+      // sol alt: krem kâğıt, solda kalın isim, sağda ince numara; fotoğraf beyaz paspartulu, altta kariyer satırı
+      ad: "bernabeu", w: 0.3, h: 0.4, x: -0.41, y: -0.205, odak: [0.32, 0.6],
+      kunye: "Foto: Jan SOLO · CC BY-SA 2.0",
+      ciz(g, w, h, foto) {
+        g.fillStyle = "#f2ede2"; g.fillRect(0, 0, w, h);
+        g.fillStyle = "#1a1b1f"; g.textAlign = "left"; g.font = `800 ${w * 0.105}px ${AGIR}`;
+        g.fillText("Cristiano", w * 0.08, h * 0.12); g.fillText("Ronaldo", w * 0.08, h * 0.205);
+        g.font = `200 ${w * 0.2}px ${AGIR}`; g.textAlign = "right"; g.fillStyle = "#b3182a";
+        g.fillText("7", w * 0.92, h * 0.2);
+        fotoAlani(g, w * 0.08, h * 0.25, w * 0.84, h * 0.6, foto, this.odak);
+        g.fillStyle = "#1a1b1f"; g.textAlign = "left"; g.font = `800 ${w * 0.06}px ${AGIR}`;
+        g.fillText("BERNABÉU", w * 0.08, h * 0.915);
+        g.font = `500 ${w * 0.028}px ${AGIR}`; g.fillStyle = "#55565c";
+        g.fillText("450 GOL · 438 MAÇ · 4 ŞAMPİYONLAR LİGİ", w * 0.08, h * 0.95);
+        gren(g, w, h, 0.05, 0.12);
+        kunye(g, w, h, this.kunye, "rgba(26,27,31,.5)");
+      },
+    },
+    {
+      // orta üst (büyük): 2018 finali. Renkli, sert kontrastlı portre; üstte altın FINAL, altta altın 2018
+      ad: "kyiv", w: 0.42, h: 0.5, x: 0, y: 0.305, odak: [0.5, 0.12],
+      kunye: "Foto: Антон Зайцев · CC BY-SA 3.0",
+      ciz(g, w, h, foto) {
+        g.fillStyle = "#05070f"; g.fillRect(0, 0, w, h);
+        fotoAlani(g, 0, h * 0.08, w, h * 0.92, foto, this.odak, "#1b2347");
+        if (foto) canlandir(g, 0, h * 0.08, w, h * 0.92, 1.35, 1.15, -6);
+        // sahne ışığı: sol üstten süzülen soğuk huzme, kenarlarda derin karanlık
+        const huzme = g.createLinearGradient(0, 0, w * 0.8, h * 0.6);
+        huzme.addColorStop(0, "rgba(140,180,255,.35)"); huzme.addColorStop(0.5, "rgba(140,180,255,0)");
+        g.globalCompositeOperation = "screen"; g.fillStyle = huzme; g.fillRect(0, 0, w, h); g.globalCompositeOperation = "source-over";
+        const ust = g.createLinearGradient(0, 0, 0, h * 0.3);
+        ust.addColorStop(0, "#05070f"); ust.addColorStop(1, "rgba(5,7,15,0)");
+        g.fillStyle = ust; g.fillRect(0, 0, w, h * 0.3);
+        const alt = g.createLinearGradient(0, h * 0.5, 0, h);
+        alt.addColorStop(0, "rgba(5,7,15,0)"); alt.addColorStop(0.55, "rgba(5,7,15,.85)"); alt.addColorStop(1, "#05070f");
+        g.fillStyle = alt; g.fillRect(0, h * 0.5, w, h * 0.5);
+        // altın FINAL ve yanlarında ince çizgiler
+        const altin = g.createLinearGradient(0, h * 0.04, 0, h * 0.11);
+        altin.addColorStop(0, "#fff1c1"); altin.addColorStop(0.5, "#e3b04b"); altin.addColorStop(1, "#a87420");
+        g.fillStyle = altin; g.font = `800 ${w * 0.07}px ${AGIR}`; g.textAlign = "center"; g.letterSpacing = `${w * 0.06}px`;
+        g.fillText("FINAL", w / 2 + w * 0.03, h * 0.095); g.letterSpacing = "0px";
+        g.fillStyle = "#e3b04b"; g.fillRect(w * 0.12, h * 0.078, w * 0.2, h * 0.003); g.fillRect(w * 0.68, h * 0.078, w * 0.2, h * 0.003);
+        // altta altın 2018
+        g.save(); g.shadowColor = "rgba(0,0,0,.85)"; g.shadowBlur = w * 0.03;
+        sikiYazi(g, "2018", w / 2, h * 0.9, w * 0.2, { renk: altin, hiza: "center", daralt: 0.9 });
+        g.restore();
+        g.fillStyle = "rgba(255,255,255,.85)"; g.font = `700 ${w * 0.026}px ${AGIR}`; g.textAlign = "center";
+        g.letterSpacing = `${w * 0.014}px`; g.fillText("26 MAYIS 2018 · 13. KUPA · NO 7", w / 2, h * 0.955); g.letterSpacing = "0px";
+        gren(g, w, h, 0.07, 0.45);
+        kunye(g, w, h, this.kunye);
+      },
+    },
+    {
+      // orta alt (yatay): renkli, karanlıktan çıkan portre sağda; solda büyük, sıkışık söz, "THE BEST" kırmızı
+      ad: "soz", w: 0.42, h: 0.32, x: 0, y: -0.165, odak: [0.45, 0.3],
+      kunye: "Foto: Tsutomu Takasu · CC BY 2.0",
+      ciz(g, w, h, foto) {
+        g.fillStyle = "#07080b"; g.fillRect(0, 0, w, h);
+        fotoAlani(g, w * 0.4, 0, w * 0.6, h, foto, this.odak, "#4a0d14");
+        if (foto) canlandir(g, w * 0.4, 0, w * 0.6, h, 1.4, 1.35, 8);
+        const gec = g.createLinearGradient(w * 0.4, 0, w * 0.66, 0);
+        gec.addColorStop(0, "#07080b"); gec.addColorStop(1, "rgba(7,8,11,0)");
+        g.fillStyle = gec; g.fillRect(w * 0.4, 0, w * 0.26, h);
+        // kırmızı kenar ışığı
+        const kenar = g.createRadialGradient(w * 1.02, h * 0.5, 0, w * 1.02, h * 0.5, w * 0.5);
+        kenar.addColorStop(0, "rgba(220,30,45,.45)"); kenar.addColorStop(1, "rgba(220,30,45,0)");
+        g.globalCompositeOperation = "screen"; g.fillStyle = kenar; g.fillRect(0, 0, w, h); g.globalCompositeOperation = "source-over";
+        g.fillStyle = "rgba(255,255,255,.55)"; g.font = `italic ${w * 0.05}px ${SERIF}`; g.textAlign = "left";
+        g.fillText("“", w * 0.055, h * 0.2);
+        sikiYazi(g, "IN MY MIND", w * 0.06, h * 0.36, w * 0.095, { renk: "#f3efe4", daralt: 0.72 });
+        sikiYazi(g, "I'M ALWAYS", w * 0.06, h * 0.52, w * 0.095, { renk: "#f3efe4", daralt: 0.72 });
+        sikiYazi(g, "THE BEST", w * 0.06, h * 0.74, w * 0.14, { renk: "#e0182d", daralt: 0.72 });
+        g.fillStyle = "#e0182d"; g.fillRect(w * 0.06, h * 0.8, w * 0.05, h * 0.01);
+        g.fillStyle = "rgba(243,239,228,.75)"; g.font = `700 ${w * 0.024}px ${AGIR}`; g.letterSpacing = `${w * 0.008}px`;
+        g.fillText("CRISTIANO RONALDO", w * 0.13, h * 0.81); g.letterSpacing = "0px";
+        gren(g, w, h, 0.06, 0.45);
+        kunye(g, w, h, this.kunye);
+      },
+    },
+    {
+      // sağ üst: kırmızı baskı. Gol sevinci tam sayfa, sert kırmızı çift ton; arkada dev saydam 7, altta kalın CR7 ve hız çizgileri
+      ad: "cr7", w: 0.3, h: 0.4, x: 0.41, y: 0.255, odak: [0.7, 0.35],
+      kunye: "Foto: Alejandro Ramos · CC BY-SA 2.0",
+      ciz(g, w, h, foto) {
+        g.fillStyle = "#7d0a12"; g.fillRect(0, 0, w, h);
+        fotoAlani(g, 0, 0, w, h, foto, this.odak, "#7d0a12");
+        if (foto) { canlandir(g, 0, 0, w, h, 1.3, 1.1); cifttonla(g, 0, 0, w, h, [30, 0, 6], [255, 228, 214], 0.75); }
+        // dev 7, fotoğrafın üstünde ekran karışımıyla parlar
+        g.globalCompositeOperation = "screen";
+        g.fillStyle = "rgba(255,60,70,.35)"; g.font = `900 ${h * 0.95}px ${AGIR}`; g.textAlign = "center";
+        g.fillText("7", w * 0.5, h * 0.82);
+        g.globalCompositeOperation = "source-over";
+        // hız çizgileri
+        for (let i = 0; i < 26; i++) {
+          const y = h * ozluRastgele(i * 4.7), uz = w * (0.15 + ozluRastgele(i * 2.3) * 0.35);
+          g.fillStyle = `rgba(255,255,255,${0.08 + ozluRastgele(i) * 0.12})`;
+          g.fillRect(ozluRastgele(i * 9.9) > 0.5 ? 0 : w - uz, y, uz, h * 0.003);
+        }
+        const alt = g.createLinearGradient(0, h * 0.62, 0, h);
+        alt.addColorStop(0, "rgba(40,0,6,0)"); alt.addColorStop(1, "rgba(40,0,6,.95)");
+        g.fillStyle = alt; g.fillRect(0, h * 0.62, w, h * 0.38);
+        sikiYazi(g, "CR7", w / 2 + w * 0.012, h * 0.93, w * 0.42, { renk: "#120005", hiza: "center", daralt: 0.88 });
+        sikiYazi(g, "CR7", w / 2, h * 0.925, w * 0.42, { renk: "#ffffff", hiza: "center", daralt: 0.88 });
+        g.fillStyle = "#ffffff"; g.font = `800 ${w * 0.045}px ${AGIR}`; g.textAlign = "left"; g.letterSpacing = `${w * 0.02}px`;
+        g.fillText("SIUUU", w * 0.07, h * 0.08); g.letterSpacing = "0px";
+        g.textAlign = "right"; g.font = `600 ${w * 0.03}px ${AGIR}`; g.fillStyle = "rgba(255,255,255,.8)";
+        g.fillText("BERNABÉU · 2010", w * 0.93, h * 0.08);
+        gren(g, w, h, 0.09, 0.4);
+        kunye(g, w, h, this.kunye);
+      },
+    },
+    {
+      // sağ alt: sözlük maddesi "DİSİPLİN"; altında soğuk tonlu frikik anı
+      ad: "frikik", w: 0.3, h: 0.4, x: 0.41, y: -0.205, odak: [0.46, 0.5],
+      kunye: "Foto: Sdo216 · CC BY-SA 3.0",
+      ciz(g, w, h, foto) {
+        g.fillStyle = "#16171b"; g.fillRect(0, 0, w, h);
+        sikiYazi(g, "DİSİPLİN", w * 0.07, h * 0.13, w * 0.19, { renk: "#ecebe6", daralt: 0.75 });
+        g.fillStyle = "rgba(236,235,230,.7)"; g.font = `italic ${w * 0.04}px ${SERIF}`; g.textAlign = "left";
+        g.fillText("isim · /di-si-plin/", w * 0.07, h * 0.18);
+        g.fillStyle = "rgba(236,235,230,.35)"; g.fillRect(w * 0.07, h * 0.2, w * 0.86, 2);
+        g.fillStyle = "#ecebe6"; g.font = `${w * 0.042}px ${SERIF}`;
+        ["Kimse bakmazken de sahaya ilk", "çıkmak; yeteneği her sabah", "yeniden hak etmek."].forEach((t, i) => g.fillText(t, w * 0.07, h * (0.25 + i * 0.045)));
+        fotoAlani(g, w * 0.07, h * 0.42, w * 0.86, h * 0.46, foto, this.odak);
+        if (foto) cifttonla(g, w * 0.07, h * 0.42, w * 0.86, h * 0.46, [10, 16, 22], [226, 238, 240], 0.55);
+        g.fillStyle = "#d21f2b"; g.fillRect(w * 0.07, h * 0.9, w * 0.1, h * 0.006);
+        g.fillStyle = "#ecebe6"; g.font = `700 ${w * 0.034}px ${AGIR}`; g.letterSpacing = `${w * 0.008}px`;
+        g.fillText("OLD TRAFFORD · 2009", w * 0.2, h * 0.906); g.letterSpacing = "0px";
+        gren(g, w, h, 0.06, 0.35);
+        kunye(g, w, h, this.kunye);
+      },
+    },
+  ];
+
+  function posterDokusu(p, foto) {
+    return tuvalDokusu(Math.round(p.w * POSTER_PX * 2), Math.round(p.h * POSTER_PX * 2), (g, w, h) => p.ciz(g, w, h, foto));
+  }
+
+  /** Dört çıtadan çerçeve: yerel merkez (0,0), ön yüzü +z. */
+  function cerceve(w, h, kalin, derin, malzeme) {
+    const c = new THREE.Group();
+    c.add(mesh(kutu(w, kalin, derin, 0.003), malzeme, 0, h / 2 - kalin / 2, derin / 2));
+    c.add(mesh(kutu(w, kalin, derin, 0.003), malzeme, 0, -h / 2 + kalin / 2, derin / 2));
+    c.add(mesh(kutu(kalin, h - kalin * 2, derin, 0.003), malzeme, -w / 2 + kalin / 2, 0, derin / 2));
+    c.add(mesh(kutu(kalin, h - kalin * 2, derin, 0.003), malzeme, w / 2 - kalin / 2, 0, derin / 2));
+    return c;
+  }
+
+  for (const p of POSTERLER) {
+    const parca = new THREE.Group();
+    parca.position.set(p.x, p.y, 0);
+    const K = 0.018;
+    parca.add(cerceve(p.w, p.h, K, 0.024, posterCerceveMat));
+    const m = new THREE.MeshStandardMaterial({ map: posterDokusu(p, null), roughness: 0.6 });
+    parca.add(mesh(new THREE.PlaneGeometry(p.w - K * 2, p.h - K * 2), m, 0, 0, 0.006));
+    galeri.add(parca);
+    resimYukle(`assets/posterler/${p.ad}.jpg`).then((foto) => {
+      if (!foto) return;
+      m.map.dispose();
+      m.map = posterDokusu(p, foto);
+      m.needsUpdate = true;
+    });
+  }
+  // C2 ekranıyla arasında bir el boşluk; alt sıra kabinin üstünden görünür
+  const GALERI_OLCEK = 0.8, GALERI_W = 1.12 * GALERI_OLCEK, GALERI_H = 0.96 * GALERI_OLCEK;
+  galeri.scale.setScalar(GALERI_OLCEK);
+  galeri.position.set(2.0, 1.65, -0.6); // üst kenar C2 ekranının üst kenarıyla aynı hizada
+  sahne.add(galeri);
+
+  // galeriyi tavandan aydınlatan ılık spot: gece belirgin, gündüz hafif; çerçeveler duvara gölge düşürür
+  const galeriHedef = new THREE.Object3D();
+  galeriHedef.position.set(2.0, 1.63, -0.6);
+  sahne.add(galeriHedef);
+  const galeriSpotGovde = new THREE.Group();
+  galeriSpotGovde.position.set(2.0, TAVAN_Y, 0.25);
+  galeriSpotGovde.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.012, 24), mat(0x1d1f26, { metalness: 0.5, roughness: 0.4 }), 0, -0.006, 0));
+  const galeriKafa = new THREE.Group();
+  galeriKafa.position.y = -0.05;
+  const galeriKafaGovde = mesh(new THREE.CylinderGeometry(0.024, 0.03, 0.08, 24), mat(0x1d1f26, { metalness: 0.5, roughness: 0.4 }), 0, -0.04, 0);
+  const galeriMercekMat = new THREE.MeshStandardMaterial({ color: 0xffeab0, emissive: 0xffc77a, emissiveIntensity: 0 });
+  const galeriMercek = mesh(new THREE.CircleGeometry(0.022, 24), galeriMercekMat, 0, -0.0805, 0);
+  galeriMercek.rotation.x = Math.PI / 2;
+  galeriKafa.add(galeriKafaGovde, galeriMercek);
+  galeriSpotGovde.add(mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.05, 8), mat(0x1d1f26), 0, -0.03, 0));
+  const galeriYon = galeriHedef.position.clone().sub(v3(2.0, TAVAN_Y - 0.05, 0.25)).normalize();
+  galeriKafa.quaternion.setFromUnitVectors(v3(0, -1, 0), galeriYon);
+  galeriSpotGovde.add(galeriKafa);
+  sahne.add(galeriSpotGovde);
+  const galeriSpot = new THREE.SpotLight(0xffd9a0, 0, 3.5, 0.5, 0.6, 1.4);
+  galeriSpot.position.set(2.0, TAVAN_Y - 0.05, 0.25).addScaledVector(galeriYon, 0.09);
+  galeriSpot.target = galeriHedef;
+  galeriSpot.castShadow = true;
+  galeriSpot.shadow.mapSize.set(1024, 1024);
+  galeriSpot.shadow.bias = -0.0004;
+  galeriSpot.shadow.radius = 4;
+  sahne.add(galeriSpot);
+
   // Yetenek kabini: masanın sağında, arka duvara yaslı camlı mini sunucu kabini; her ünite bir yetenek grubu, her yuva bir yetenek
   const pano = new THREE.Group();
   const KAB_W = 0.52, KAB_D = 0.55, KAB_H = 1.14, KAB_Y = 0.07, IC_W = 0.43, UW = IC_W + 0.03;
@@ -2217,6 +2520,8 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     kasapSpot.intensity = gece ? 5 : 1.8;
     kasapMercekMat.emissiveIntensity = gece ? 2.5 : 0.4;
     kasapLedMat.emissiveIntensity = gece ? 2.4 : 0.8;
+    galeriSpot.intensity = gece ? 6 : 2.5;
+    galeriMercekMat.emissiveIntensity = gece ? 2.5 : 0.4;
     spotMercekMat.emissiveIntensity = gece ? 3 : 0;
     // kadife ışıltısı gündüz pencereden gelen ılık ışıkla canlanır, gece söner
     bayrakMat.sheen = gece ? 0.2 : 0.45;
@@ -2258,6 +2563,13 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     return { kamera: o.kamera.add(sol), hedef: o.hedef.add(sol) };
   }
 
+  // poster kümesi grubun merkezinin biraz üstünde ortalanır (üst sıra daha uzun)
+  function galeriOdak() {
+    const o = ekranaBak(galeri, galeri, GALERI_W, GALERI_H, kamera.aspect >= 1 ? 1.6 : 1.12);
+    const yukari = v(0, 0.075 * GALERI_OLCEK, 0);
+    return { kamera: o.kamera.add(yukari), hedef: o.hedef.add(yukari) };
+  }
+
   etkilesimler.push(
     { ad: "monitor", grup: monitor, baslik: "Projeler", odak: () => ekranaBak(monitor, ekran, EKRAN_W, EKRAN_H, kamera.aspect < 1 ? 1.06 : 1.28), yuzey: ekran, w: EKRAN_W, h: EKRAN_H, sehim: EKRAN_SEHIM },
     { ad: "telefon", grup: stand, baslik: "Telefonda oyna", odak: () => ekranaBak(telefon, telEkran, TEL_W, TEL_H, kamera.aspect < 1 ? 1.45 : 1.25), yuzey: telEkran, w: TEL_W, h: TEL_H },
@@ -2267,6 +2579,7 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     { ad: "zarf", grup: zarf, baslik: "İletişim", odak: () => ({ kamera: v(-0.5, 1.35, 0.95), hedef: v(-0.6, 0.76, 0.28) }), panel: true },
     { ad: "defter", grup: defter, baslik: "CV", odak: () => ({ kamera: v(0.54, 1.2, 0.7), hedef: v(0.56, 0.76, 0.28) }), panel: true },
     { ad: "radar", grup: radar, baslik: "Radar · hedef takibi", odak: () => onden(radar, 0.7, 0.13, 0.12), panel: true },
+    { ad: "galeri", grup: galeri, baslik: "Ronaldo posterleri", odak: () => galeriOdak(), panel: true },
     { ad: "c2", grup: c2, baslik: "C2 harita ekranı", odak: () => onden(c2, 1.25, 0, -0.08), panel: true },
     { ad: "telemetri", grup: telemetri, baslik: "Gömülü telemetri kartı", odak: () => onden(telemetri, 0.5, 0.03, 0.55), panel: true },
     { ad: "gecit", grup: gecit, baslik: "Taktik mesaj ağ geçidi", odak: () => onden(gecit, 0.7, 0.03, 0.35), panel: true },
@@ -2513,11 +2826,11 @@ export async function odaBaslat({ kap, etiket, ipucu, geri, katmanlar, onOdak, o
     surukGeriDon();
     fareYumusak.lerp(odaktaki ? new THREE.Vector2() : fareKonum, 0.05);
     // genel görünüşte baş hareketi, insan başı gibi: ortada sakin, kenara gittikçe açılan dönüş.
-    // Sola ~63° (yan duvar ve bayrak görünür), sağa ~23°. Gözler boyun ekseninin önünde olduğundan
+    // Sola ~63° (yan duvar ve bayrak görünür), sağa ~27° (poster duvarı görünür). Gözler boyun ekseninin önünde olduğundan
     // dönerken bakış noktası boyun etrafında hafifçe yay çizer; baş dönüş yönüne biraz da yatar.
     const fx = fareYumusak.x, fy = fareYumusak.y;
     const k = Math.min(1, Math.abs(fx) / 0.8), kd = k * k * (3 - 2 * k); // ekranın %10'u kenarda tam dönüş
-    const yaw = -Math.sign(fx) * kd * (fx < 0 ? 1.1 : 0.4);
+    const yaw = -Math.sign(fx) * kd * (fx < 0 ? 1.1 : 0.48);
     const pitch = -fy * (fy < 0 ? 0.22 : 0.14); // yukarı (tavana) biraz daha fazla
     bakis.subVectors(kameraDurum.hedef, kameraDurum.konum);
     bakisSag.set(-bakis.z, 0, bakis.x).normalize();

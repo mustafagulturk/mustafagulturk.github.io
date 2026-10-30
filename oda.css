@@ -205,6 +205,10 @@
 .op-buyuk { display: block; font-size: 1.15rem; font-weight: 700; margin: 6px 0 16px; color: #38bdf8; word-break: break-all; }
 .op-btnler { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .op-ana { background: #38bdf8; color: #0b1120; border-color: transparent; }
+/* Ronaldo poster duvarı: tek kelimelik GOAT kartı */
+.oda-panel .op-goat { text-align: center; }
+.oda-panel .op-goat h3 { font-size: 4.2rem; font-weight: 900; letter-spacing: .06em; margin: 10px 0 4px; background: linear-gradient(180deg, #ffe7a3, #d4a537 60%, #9c7420); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.oda-panel .op-goat p:last-child { font: 700 1.8rem/1.2 "JetBrains Mono", monospace; opacity: 1; margin: 0; }
 
 /* Klasik görünümden odaya dönüş butonu */
 .oda-don[hidden] { display: none; }
